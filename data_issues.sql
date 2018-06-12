@@ -1,0 +1,17 @@
+
+--item missing issue
+Select * from CRMADMIN.V_WEB_CUSTOMER_GRP where CUSTOMER_NBR_STND = 36211;
+
+Select * from CRMADMIN.V_WEB_CUSTOMER_GRP_RTL_PRICE where FACILITYID = '008' and ITEM_NBR_HS in ('1620582', '0316943') and CUST_GROUP_NBR = 988211;
+
+
+--retail issue
+Select * from CRMADMIN.V_WEB_ITEM_CORE where FACILITYID = '058'  and ITEM_NBR_HS in ('0803346', '0803650');
+
+Select * from CRMADMIN.V_WEB_CUSTOMER_ITEM_DEAUTH where FACILITYID = '058'  and ITEM_NBR_HS = '0803346' and CUSTOMER_NBR_STND = 328 ;
+
+
+--item authorization issue store 937
+Select * from CRMADMIN.V_WEB_CUSTOMER_ITEM_DEAUTH where CUSTOMER_NBR_STND = 957 and ITEM_NBR_HS in ('0101626', '0778878');
+
+Select * from CRMADMIN.V_WEB_ITEM_CORE where FACILITYID = '001'  and ITEM_NBR_HS in ('0101626', '0778878');

@@ -1,0 +1,60 @@
+--fillrate
+Select FACILITYID, CUSTOMER_NO_FULL, sum(QTY_ORDERED) as qty_ord, sum(QTY_ADJUSTED) qty_adj, sum(QTY_SOLD) qty_sold, sum(QTY_SUBBED) qty_sub, sum(QTY_SCRATCHED) qty_scr 
+  from CRMADMIN.T_WHSE_SALES_HISTORY_DTL
+ where FACILITYID = '008'
+   and BILLING_DATE in ( '2010-03-12')
+   and (ITEM_NBR_HS, CUSTOMER_NO_FULL) in (
+
+SELECT   
+         X.ITEM_NBR_HS2 as ITEM_SC, B.CUSTOMER_NBR_FULL 
+         
+FROM     CRMADMIN.T_FG_BILLING B 
+         left outer join CRMADMIN.T_FG_BYRS_XREF X on B.ITEM_NBR_HS = X.ITEM_NBR_HS1 
+         left outer join CRMADMIN.T_WHSE_ITEM SC on SC.FACILITYID = X.FACILITYID2 and SC.ITEM_NBR_HS = X.ITEM_NBR_HS2 
+         left outer join CRMADMIN.T_WHSE_ITEM FG on FG.FACILITYID = X.FACILITYID1 and FG.ITEM_NBR_HS = X.ITEM_NBR_HS1
+WHERE   X.ITEM_NBR_HS2 is not null and BILLING_DATE in ( '2010-03-11'))
+group by FACILITYID, CUSTOMER_NO_FULL;
+
+
+-- orders created 
+SELECT   B.BILLING_DATE , 
+         B.BILLING_SEQ, 
+         B.CUSTOMER_NBR_FULL,
+         B.INVOICE,
+         B.ITEM_NBR_HS as ITEM_FG,
+         FG.ITEM_DESCRIP as ITEM_DESCRIP_FG,
+         FG.PACK_CASE as CASE_PACK_FG,
+         X.ITEM_NBR_HS2 as ITEM_SC,
+         SC.ITEM_DESCRIP as ITEM_DESCRIP_SC,
+         SC.PACK_CASE as CASE_PACK_SC,
+         B.QUANTITY,
+         B.UCN,
+         B.COST
+FROM     CRMADMIN.T_FG_BILLING B 
+         join CRMADMIN.T_WHSE_ITEM FG on FG.FACILITYID = '003' and FG.ITEM_NBR_HS = B.ITEM_NBR_HS
+         left outer join CRMADMIN.T_FG_BYRS_XREF X on B.ITEM_NBR_HS = X.ITEM_NBR_HS1 
+         left outer join CRMADMIN.T_WHSE_ITEM SC on SC.FACILITYID = X.FACILITYID2 and SC.ITEM_NBR_HS = X.ITEM_NBR_HS2 
+WHERE    B.BILLING_DATE = current date;
+
+--date lookup
+SELECT   distinct char(B.BILLING_DATE) || ' - ' || char(B.BILLING_SEQ) billing_sequence,
+		 B.BILLING_DATE , 
+		 B.BILLING_SEQ 
+FROM     CRMADMIN.T_FG_BILLING B ;
+
+--fill rate
+Select FACILITYID, CUSTOMER_NO_FULL, sum(QTY_ORDERED) as qty_ord, sum(QTY_ADJUSTED) qty_adj, sum(QTY_SOLD) qty_sold, sum(QTY_SUBBED) qty_sub, sum(QTY_SCRATCHED) qty_scr 
+  from CRMADMIN.T_WHSE_SALES_HISTORY_DTL
+ where FACILITYID = '008'
+   and BILLING_DATE in ( '2010-03-15')
+   and (ITEM_NBR_HS, CUSTOMER_NO_FULL) in (
+
+SELECT   
+         X.ITEM_NBR_HS2 as ITEM_SC, B.CUSTOMER_NBR_FULL 
+         
+FROM     CRMADMIN.T_FG_BILLING B 
+         left outer join CRMADMIN.T_FG_BYRS_XREF X on B.ITEM_NBR_HS = X.ITEM_NBR_HS1 
+         left outer join CRMADMIN.T_WHSE_ITEM SC on SC.FACILITYID = X.FACILITYID2 and SC.ITEM_NBR_HS = X.ITEM_NBR_HS2 
+         left outer join CRMADMIN.T_WHSE_ITEM FG on FG.FACILITYID = X.FACILITYID1 and FG.ITEM_NBR_HS = X.ITEM_NBR_HS1
+WHERE   X.ITEM_NBR_HS2 is not null and BILLING_DATE in ( '2010-03-14'))
+group by FACILITYID, CUSTOMER_NO_FULL;

@@ -1,0 +1,26 @@
+Select ITEM_NBR, CATALOG_PRICE
+from CRMADMIN.T_WHSE_SELL where (FACILITYID , ITEM_NBR, SALES_PLAN, SELL_PRICE_EFF_DATE)
+in
+(Select FACILITYID , ITEM_NBR, SALES_PLAN, max( SELL_PRICE_EFF_DATE ) EFF_DATE
+        from CRMADMIN.T_WHSE_SELL
+       where FACILITYID = '054'
+         and SELL_PRICE_EFF_DATE <= '2011-05-15'
+         and SALES_PLAN = 2
+    group by FACILITYID, ITEM_NBR, SALES_PLAN)
+order by ITEM_NBR;
+
+
+Select s.FACILITYID , s.ITEM_NBR, s.SALES_PLAN, max( s.SELL_PRICE_EFF_DATE ) EFF_DATE
+        from CRMADMIN.T_WHSE_SELL s,
+             ETLADMIN.T_TEMP_FAC_ITEM f
+       where s.FACILITYID = f.FACILITYID
+         and s.ITEM_NBR = f.ITEM_NBR
+         and s.SELL_PRICE_EFF_DATE <= '2011-05-15'
+         and s.SALES_PLAN = 2
+    group by s.FACILITYID, s.ITEM_NBR, s.SALES_PLAN
+;
+
+Select s.FACILITYID , s.ITEM_NBR, s.SALES_PLAN, s.CATALOG_PRICE
+        from CRMADMIN.T_WHSE_SELL s
+ where s.FACILITYID =  '054'
+   and s.ITEM_NBR = '717420'

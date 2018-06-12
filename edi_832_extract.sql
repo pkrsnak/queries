@@ -1,0 +1,55 @@
+SELECT   i.FACILITYID,
+         c.CUSTOMER_NBR_STND,
+         i.UPC_UNIT,
+         i.ITEM_NBR_HS,
+         i.PACK_CASE,
+         i.ITEM_SIZE,
+         i.ITEM_SIZE_UOM,
+         case d.ITEM_AUTH_CD 
+              when 'N' then 'N' 
+              else 'Y' 
+         end ITEM_AUTH,
+         s.START_DATE,
+         s.END_DATE,
+         case c.BURDENED_COST_FLG 
+              when 'N' then s.UNBURDENED_COST_CASE_AMT 
+              else s.BURDENED_COST_CASE_AMT 
+         end COST_AMOUNT,
+         i.BILLING_STATUS_BACKSCREEN
+FROM     CRMADMIN.V_WEB_ITEM_CORE AS i 
+         inner join CRMADMIN.V_WEB_CUSTOMER_ITEM_COST AS s ON i.ITEM_NBR_HS = s.ITEM_NBR_HS AND i.FACILITYID = s.FACILITYID 
+         inner join CRMADMIN.V_WEB_CUSTOMER_FAC c on s.FACILITYID = c.FACILITYID and s.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND 
+         left outer join CRMADMIN.V_WEB_CUSTOMER_ITEM_DEAUTH d on i.FACILITYID = d.FACILITYID and i.ITEM_NBR_HS = d.ITEM_NBR_HS and c.FACILITYID = d.FACILITYID and c.CUSTOMER_NBR_STND = d.CUSTOMER_NBR_STND
+WHERE    s.STATUS_CD = 'C'
+AND      i.INSITE_DISPLAY_FLG = 'N'
+AND      s.CUSTOMER_NBR_STND = 1429
+AND      s.FACILITYID = '058'
+;
+
+/*
+CUSTOMER_NBR_STND
+1429
+1426
+1430
+1423
+1433
+1432
+5934
+1437
+5935
+5936
+1403
+1428
+1411
+1406
+1404
+5937
+1413
+1425
+1397
+1424
+1412
+1420
+1414
+1418
+*/

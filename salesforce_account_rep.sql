@@ -1,0 +1,58 @@
+--salesforce account
+SELECT   cf.FACILITYID,
+         cf.HOME_BRANCH,
+         cf.TERRITORY_NO,
+         cf.CUSTOMER_NBR_STND,
+         cf.CUSTOMER_NO_FULL,
+         cf.NAME,
+         cf.ADDRESS1,
+         cf.ADDRESS2,
+         cf.CITY,
+         cf.STATE_CD,
+         cf.ZIP_CD,
+         cf.BILL_TO_NAME,
+         cf.BILL_TO_ADDRESS1,
+         cf.BILL_TO_ADDRESS2,
+         cf.BILL_TO_CITY,
+         cf.BILL_TO_STATE,
+         cf.BILL_TO_ZIP_CDE,
+         cf.BILL_TO_COUNTRY,
+         cf.BILL_TO_PHONE_NBR,
+         cf.BILL_TO_FAX_NBR,
+         cf.BILL_TO_EMAIL,
+         cf.STATUS_CD,
+         cf.MDM_CUSTOMER_FLAG,
+         cf.FEDERAL_ID_NO,
+         cf.STORE_LICENSE_ID,
+         cf.STORE_CIGARETTE_TAX_ID,
+         cf.STORE_TOBACCO_TAX_ID,
+         c.BILLABLE_FLAG,
+         c.TIME_ZONE_CUST,
+         c.MDM_CUST_STATUS_CD
+FROM     CRMADMIN.V_WEB_CUSTOMER_FAC cf 
+         inner join CRMADMIN.V_WEB_CUSTOMER c on cf.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND
+;
+
+--salesforce rep
+SELECT   FACILITYID,
+         TERRITORY_NO,
+         CUSTOMER_NO_FULL,
+         CUSTOMER_NBR_STND,
+         RETAIL_REP_KEY,
+         RETAIL_REP_CODE,
+         RETAIL_REP_NAME,
+         RETAIL_REP_PHONE1,
+         RETAIL_REP_PHONE2,
+         RETAIL_REP_MOBILE,
+         RETAIL_REP_FAX,
+         RETAIL_REP_EMAIL,
+         RETAIL_REP_TYPE,
+         RETAIL_REP_TYPE_DESC,
+         RETAIL_REP_DIVISION_CODE,
+         RETAIL_REP_DIVISION_DESC,
+         RETAIL_REP_REGION_CODE,
+         RETAIL_REP_REGION_DESC,
+         MDSE_DEPT_KEY,
+         MDSE_DEPT_CD
+FROM     CRMADMIN.V_WEB_CUSTOMER_DEPT_REP
+;

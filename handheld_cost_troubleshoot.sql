@@ -1,0 +1,52 @@
+SELECT   od.FACILITYID,
+         od.CUSTOMER_NBR_STND,
+         od.SHIP_DATE,
+         count(*)
+FROM     CRMADMIN.T_WHSE_ORDER_DTL od
+WHERE    od.CUSTOMER_NBR_STND in (332, 1065, 5016, 562865)
+AND      od.SHIP_DATE > current date
+GROUP BY od.FACILITYID, od.CUSTOMER_NBR_STND, od.SHIP_DATE;
+
+SELECT   od.FACILITYID,
+         od.ITEM_NBR_HS,
+         od.CUSTOMER_NBR_STND
+FROM     CRMADMIN.T_WHSE_ORDER_DTL od 
+WHERE    od.CUSTOMER_NBR_STND = 332
+AND      od.FACILITYID = '058'
+AND      od.SHIP_DATE = '2017-05-03'
+;
+
+
+SELECT   od.FACILITYID,
+         od.ITEM_NBR_HS,
+         od.CUSTOMER_NBR_STND,
+         cic.START_DATE,
+         cic.END_DATE,
+         cic.UNBURDENED_COST_UNIT_AMT,
+         cic.UNBURDENED_COST_CASE_AMT,
+         cic.BURDENED_COST_UNIT_AMT,
+         cic.BURDENED_COST_CASE_AMT
+FROM     CRMADMIN.T_WHSE_ORDER_DTL od 
+         left outer join CRMADMIN.V_WEB_CUSTOMER_ITEM_COST cic on od.FACILITYID = cic.FACILITYID and od.ITEM_NBR_HS = cic.ITEM_NBR_HS and od.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and (current date between cic.START_DATE and cic.END_DATE or current date > cic.START_DATE and cic.END_DATE is null)
+WHERE    od.CUSTOMER_NBR_STND = 447
+AND      od.FACILITYID = '058'
+AND      od.SHIP_DATE > current date
+--and      (od.SHIP_DATE between cic.START_DATE and cic.END_DATE or od.SHIP_DATE > cic.START_DATE and cic.END_DATE is null)
+;
+
+
+SELECT   od.FACILITYID,
+         od.ITEM_NBR_HS,
+         od.CUSTOMER_NBR_STND,
+         cic.EFF_START_DATE,
+         cic.EFF_END_DATE,
+         cic.UNBURDENED_FINAL_SELL_NET_AMT,
+         cic.FULLBURDENED_FINAL_SELL_NET_AMT,
+         cic.UNBURDENED_FINAL_SELL_NO_ALLOW_AMT,
+         cic.FULLBURDENED_FINAL_SELL_NO_ALLOW_AMT
+FROM     CRMADMIN.T_WHSE_ORDER_DTL od 
+         left outer join CRMADMIN.T_WHSE_CUST_ITEM_COST cic on od.FACILITYID = cic.FACILITYID and od.ITEM_NBR_HS = cic.ITEM_NBR_HS and od.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND
+WHERE    od.CUSTOMER_NBR_STND = 332
+AND      od.FACILITYID = '058'
+AND      od.SHIP_DATE = '2017-05-03'
+;

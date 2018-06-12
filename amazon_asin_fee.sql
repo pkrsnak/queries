@@ -62,7 +62,7 @@ SELECT   '654664655' as po_id,
 FROM     CRMADMIN.T_WHSE_SALES_HISTORY_DTL shd 
          inner join CRMADMIN.V_WED d on shd.BILLING_DATE = d.LOOKUP_DATE 
          inner join CRMADMIN.T_WHSE_CUST c on shd.FACILITYID = c.FACILITYID and shd.CUSTOMER_NO_FULL = c.CUSTOMER_NO_FULL 
-         inner join CRMADMIN.T_WHSE_CUST_GRP cg on c.FACILITYID = cg.FACILITYID and c.CUSTOMER_NBR_STND = cg.CUSTOMER_NBR_STND and CUSTOMER_GRP_TYPE = '75' 
+         inner join CRMADMIN.T_WHSE_CUST_GRP cg on c.FACILITYID = cg.FACILITYID and c.CUSTOMER_NBR_STND = cg.CUSTOMER_NBR_STND and CUSTOMER_GRP_TYPE = '75' AND current date >= cg.START_DATE AND (current date <= cg.END_DATE OR cg.END_DATE is null)
          inner join CRMADMIN.T_WHSE_ITEM i on shd.FACILITYID = i.FACILITYID and shd.ITEM_NBR_HS = i.ITEM_NBR_HS 
          left outer join ETLADMIN.T_TEMP_UPC asin on i.UPC_UNIT_CD = asin.UPC_UNIT
 WHERE    shd.BILLING_DATE between current date - 90 days and current date
@@ -73,7 +73,7 @@ group by facilityid, item_nbr_hs, upc_unit_cd, item_descrip
 --group by upc_unit
 order by sum(qty_shipped) desc
 ;
-*/
+;*/
 
 --inventory feed - downstream
 create or replace view CRMADMIN.V_AMZ_INVENTORY_FEED_DS

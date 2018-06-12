@@ -87,7 +87,6 @@ and i.ITEM_TYPE_CD not in ('I')
 
 create or replace view ediadmin.V_EDI_CATALOG_BASE
 as
-;
 SELECT   c.FACILITYID,                   --?????????????????  cic
          c.CUSTOMER_NBR_STND,                   --?????????????????  cic
          i.ITEM_NBR_HS,
@@ -166,12 +165,12 @@ WHERE    (cid.ITEM_AUTH_CD is null
      OR  cid.ITEM_AUTH_CD = 'Y')
 AND      (i.PRIVATE_LABEL_KEY = vwcpb.PRIV_BRAND_KEY
      OR  i.PRIVATE_LABEL_KEY is null)
-AND      i.FACILITYID = '015'
-AND      c.CUSTOMER_NBR_STND = 6467
-AND      i.BILLING_STATUS_BACKSCREEN in ('A', 'W', 'S')
-AND      i.ITEM_TYPE_CD not in ('I')
-AND      i.INSITE_FLG = 'N'
-AND      current date between cic.START_DATE and cic.END_DATE_REAL
+--AND      i.FACILITYID = '015'
+--AND      c.CUSTOMER_NBR_STND = 6467
+--AND      i.BILLING_STATUS_BACKSCREEN in ('A', 'W', 'S')
+--AND      i.ITEM_TYPE_CD not in ('I')
+--AND      i.INSITE_FLG = 'N'
+--AND      current date between cic.START_DATE and cic.END_DATE_REAL
 ;
 
 grant select on ediadmin.V_EDI_CATALOG_BASE to user CRMEXPLN;

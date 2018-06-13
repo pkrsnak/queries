@@ -216,7 +216,7 @@ FROM     CRMADMIN.T_WHSE_CUST cust
          left outer join CRMADMIN.T_WHSE_CUST_BANNER banner on cust.BANNER_ID = banner.BANNER_ID
 WHERE    (cust.FACILITYID not in ('001', '071', '002')
      AND cust.CONTRACT_END_DATE > current date - 30 days
-     AND dx.PROCESS_ACTIVE_FLAG = 'Y'
+--     AND dx.PROCESS_ACTIVE_FLAG = 'Y'
      AND corp.ACTIVE = 'Y'
      AND cust.FACILITYID = cust.HOME_BRANCH
      AND cust.MDM_CUST_STATUS_CD not in (3, 9)
@@ -227,7 +227,7 @@ WHERE    (cust.FACILITYID not in ('001', '071', '002')
 --        AND cust.INACTIVE_DATE < current date - 30 days))
 OR       (cust.FACILITYID = '001'
      AND cust.CONTRACT_END_DATE > current date - 30 days
-     AND dx.PROCESS_ACTIVE_FLAG = 'Y'
+--     AND dx.PROCESS_ACTIVE_FLAG = 'Y'
      AND cust.FACILITYID = cust.HOME_BRANCH
      AND corp.ACTIVE = 'Y'
      AND cust.CUST_CLASS_CD not in (14)
@@ -343,7 +343,7 @@ SELECT   corp.CORP_CODE,
          case when cust.FACILITYID = cust.HOME_BRANCH then 'Y' else 'N' end FACILITYID_PRIMARY,
          cust.STATE_SLS_ID_NO,
          cust.ALLOW_B4_AFTER,
-         cust.ITEM_AUTH_METHOD_CD, 
+         case cust.FACILITYID when '001' then 'E' else cust.ITEM_AUTH_METHOD_CD end ITEM_AUTH_METHOD_CD, 
          case cust.FACILITYID when '001' then corp.CORP_BURDEN_COST_IND else case cust.MKUP_FRT_SPREAD_FLAG when '1' then 'Y' when '2' then 'Y' else 'N' end end BURDENED_COST_FLG,
          cust.BILLABLE_FLAG,
          cust.TIME_ZONE_CUST,
@@ -357,7 +357,7 @@ FROM     CRMADMIN.T_WHSE_CUST cust
          inner join CRMADMIN.V_WEB_FACILITY dx on cust.FACILITYID = dx.FACILITYID
 WHERE    ((cust.FACILITYID not in ('001')
      AND cust.CONTRACT_END_DATE > current date - 30 days
-     AND dx.PROCESS_ACTIVE_FLAG = 'Y'
+--     AND dx.PROCESS_ACTIVE_FLAG = 'Y'
      AND corp.ACTIVE = 'Y'
      AND cust.MDM_CUST_STATUS_CD not in (3, 9)
      AND cust.TERRITORY_NO not in (29, 39, 59)
@@ -367,7 +367,7 @@ WHERE    ((cust.FACILITYID not in ('001')
 --        AND cust.INACTIVE_DATE < current date - 30 days))
 OR       (cust.FACILITYID = '001'
      AND cust.CONTRACT_END_DATE > current date - 30 days
-     AND dx.PROCESS_ACTIVE_FLAG = 'Y'
+--     AND dx.PROCESS_ACTIVE_FLAG = 'Y'
      AND cust.TERRITORY_NO not in (29, 39, 59)
      AND cust.CUST_CLASS_CD not in (14)
      AND cust.MDM_CUST_STATUS_CD not in (3, 9)

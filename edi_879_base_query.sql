@@ -87,8 +87,9 @@ and i.ITEM_TYPE_CD not in ('I')
 
 create or replace view ediadmin.V_EDI_CATALOG_BASE
 as
-SELECT   c.FACILITYID,                   --?????????????????  cic
-         c.CUSTOMER_NBR_STND,                   --?????????????????  cic
+;
+SELECT   c.FACILITYID,
+         c.CUSTOMER_NBR_STND,
          i.ITEM_NBR_HS,
          trim(case when trim(i.ROOT_DESC) = '' then i.ITEM_DESCRIP else i.ROOT_DESC end) as DESCRIPTION,
          v.MASTER_VENDOR_DESC as manufacturer,
@@ -145,28 +146,43 @@ SELECT   c.FACILITYID,                   --?????????????????  cic
          cic.UNBURDENED_COST_CASE_AMT,
          cic.BURDENED_COST_CASE_NET_AMT,
          cic.UNBURDENED_COST_CASE_NET_AMT,
-         cic.OI_ALLOWANCE_START_DATE, cic.OI_ALLOWANCE_END_DATE, cic.OI_ALLOWANCE_AMT,
-         cic.PA_ALLOWANCE_START_DATE, cic.PA_ALLOWANCE_END_DATE, cic.PA_ALLOWANCE_AMT,
+         cic.OI_ALLOWANCE_START_DATE,
+         cic.OI_ALLOWANCE_END_DATE,
+         cic.OI_ALLOWANCE_AMT,
+         cic.PA_ALLOWANCE_START_DATE,
+         cic.PA_ALLOWANCE_END_DATE,
+         cic.PA_ALLOWANCE_AMT,
          '' as COMMENTS,
          vwicsg.PALLET_QTY,
          i.INSITE_FLG,
          i.ITEM_TYPE_CD,
-         i.BILLING_STATUS_BACKSCREEN
+         i.BILLING_STATUS_BACKSCREEN,
+         case 
+              when cid.ITEM_AUTH_CD is null then 'Y' 
+              else case 
+                        when cid.ITEM_AUTH_CD = 'Y' then 'Y' 
+                        else 'N' 
+                   end 
+         end ITEM_AUTH_FLG,
+         case 
+              when i.PRIVATE_LABEL_KEY = vwcpb.PRIV_BRAND_KEY then 'Y' 
+              else case 
+                        when i.PRIVATE_LABEL_KEY is null then 'Y' 
+                        else 'N' 
+                   end 
+         end PRIVATE_BRAND_AUTH_FLG
 FROM     CRMADMIN.T_WHSE_ITEM i 
          inner join CRMADMIN.T_WHSE_VENDOR v on i.FACILITYID = v.FACILITYID and i.VENDOR_NBR = v.VENDOR_NBR 
-         inner join CRMADMIN.V_WEB_CUSTOMER_FAC c on i.FACILITYID = c.FACILITYID 
-         inner join CRMADMIN.V_WEB_CUSTOMER_ITEM_COST cic on i.FACILITYID = cic.FACILITYID and c.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and i.ITEM_NBR_HS = cic.ITEM_NBR_HS and cic.MASTER_ITEM_FLG = 'Y' 
-         inner join CRMADMIN.V_WEB_CUSTOMER_MDSE_DEPT cmd on i.FACILITYID = cmd.FACILITYID and cmd.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and i.MERCH_DEPT = cmd.MDSE_DEPT_CD  
+         inner join CRMADMIN.T_WHSE_CUST c on i.FACILITYID = c.FACILITYID --and c.CUSTOMER_NBR_STND > 0 
+         inner join CRMADMIN.V_WEB_CUSTOMER_MDSE_DEPT cmd on i.FACILITYID = cmd.FACILITYID and cmd.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and i.MERCH_DEPT = cmd.MDSE_DEPT_CD 
          inner join CRMADMIN.T_WHSE_WAREHOUSE_CODE wc on i.FACILITYID = wc.FACILITYID and i.WAREHOUSE_CODE = wc.WAREHOUSE_CODE 
+         inner join CRMADMIN.V_WEB_CUSTOMER_ITEM_COST cic on i.FACILITYID = cic.FACILITYID and c.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and i.ITEM_NBR_HS = cic.ITEM_NBR_HS and cic.MASTER_ITEM_FLG = 'Y' 
          left outer join CRMADMIN.V_WEB_CUSTOMER_PRVT_BRAND vwcpb on i.FACILITYID = vwcpb.FACILITYID and vwcpb.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and i.PRIVATE_LABEL_KEY = vwcpb.PRIV_BRAND_KEY 
          left outer join CRMADMIN.V_WEB_ITEM_CORE_SUPP_GR vwicsg on i.FACILITYID = vwicsg.FACILITYID and i.ITEM_NBR_HS = vwicsg.ITEM_NBR_HS 
-         left outer join CRMADMIN.V_WEB_CUSTOMER_ITEM_DEAUTH cid on i.FACILITYID = cid.FACILITYID and cid.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and i.ITEM_NBR_HS = cid.ITEM_NBR_HS 
-WHERE    (cid.ITEM_AUTH_CD is null
-     OR  cid.ITEM_AUTH_CD = 'Y')
-AND      (i.PRIVATE_LABEL_KEY = vwcpb.PRIV_BRAND_KEY
-     OR  i.PRIVATE_LABEL_KEY is null)
---AND      i.FACILITYID = '015'
---AND      c.CUSTOMER_NBR_STND = 6467
+         left outer join CRMADMIN.T_WHSE_ITEM_AUTH cid on i.FACILITYID = cid.FACILITYID and cid.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and i.ITEM_NBR_HS = cid.ITEM_NBR_HS and (cid.EXP_DATE is null or cid.EXP_DATE >= current date) and cid.ITEM_ACTIVE_FLG = 'Y' and cid.ITEM_AUTH_CD <> 'Y'
+--WHERE    1=1
+--AND      i.FACILITYID = '058'
+--AND      c.CUSTOMER_NBR_STND = 85
 --AND      i.BILLING_STATUS_BACKSCREEN in ('A', 'W', 'S')
 --AND      i.ITEM_TYPE_CD not in ('I')
 --AND      i.INSITE_FLG = 'N'

@@ -194,7 +194,10 @@ SELECT   Distinct corp.CORP_CODE,
          cust.MDM_UPDATE_DATE,
          cust.CONTRACT_START_DATE,
          cust.CONTRACT_END_DATE,
-         case when current date between cust.CONTRACT_START_DATE and cust.CONTRACT_END_DATE then 'A' else 'D' end CONTRACT_STATUS,
+         case 
+              when current date between cust.CONTRACT_START_DATE and cust.CONTRACT_END_DATE then 'A' 
+              else 'D' 
+         end CONTRACT_STATUS,
          cust.MANAGER,
          cust.OWNER,
          upper(cust.TIME_ZONE_CUST) TIME_ZONE_CUST,
@@ -211,30 +214,18 @@ SELECT   Distinct corp.CORP_CODE,
          cust.STATEMENT_FREQ,
          cust.STATEMENT_FREQ_DESC
 FROM     CRMADMIN.T_WHSE_CUST cust 
-         inner join CRMADMIN.T_WHSE_CORPORATION_MDM corp on corp.CUSTOMER_NBR_STND = cust.CUSTOMER_NBR_STND
+         inner join CRMADMIN.T_WHSE_CORPORATION_MDM corp on corp.CUSTOMER_NBR_STND = cust.CUSTOMER_NBR_STND 
          inner join CRMADMIN.V_WEB_FACILITY dx on cust.FACILITYID = dx.FACILITYID 
          left outer join CRMADMIN.T_WHSE_CUST_BANNER banner on cust.BANNER_ID = banner.BANNER_ID
-WHERE    (cust.FACILITYID not in ('001', '071', '002')
-     AND cust.CONTRACT_END_DATE > current date - 30 days
---     AND dx.PROCESS_ACTIVE_FLAG = 'Y'
-     AND corp.ACTIVE = 'Y'
-     AND cust.FACILITYID = cust.HOME_BRANCH
-     AND cust.MDM_CUST_STATUS_CD not in (3, 9)
-     AND cust.TERRITORY_NO not in (29, 39, 59)
-     AND cust.CUST_CLASS_CD not in (14)
-     AND cust.STATUS_CD not in ('P', 'Z'))
---     AND not(cust.STATUS_CD = 'D'
---        AND cust.INACTIVE_DATE < current date - 30 days))
-OR       (cust.FACILITYID = '001'
-     AND cust.CONTRACT_END_DATE > current date - 30 days
---     AND dx.PROCESS_ACTIVE_FLAG = 'Y'
-     AND cust.FACILITYID = cust.HOME_BRANCH
-     AND corp.ACTIVE = 'Y'
-     AND cust.CUST_CLASS_CD not in (14)
-     AND cust.TERRITORY_NO not in (29, 39, 59)
-     AND cust.MDM_CUST_STATUS_CD not in (3, 9)
---     AND (cust.STATUS_CD not in ('P', 'Z') or cust.STATUS_CD is null)
-)
+WHERE    dx.UPSTREAM_DC_TYP_CD = 'D'
+AND      cust.CONTRACT_END_DATE > current date - 30 days
+AND      corp.ACTIVE = 'Y'
+AND      cust.FACILITYID = cust.HOME_BRANCH
+AND      cust.MDM_CUST_STATUS_CD not in (3, 9)
+AND      cust.TERRITORY_NO not in (29, 39, 59)
+AND      cust.CUST_CLASS_CD not in (14)
+AND      (cust.STATUS_CD not in ('P', 'Z')
+     OR  cust.STATUS_CD is null)
 ;
 
 grant select on CRMADMIN.V_WEB_CUSTOMER to user CRMEXPLN;
@@ -282,10 +273,13 @@ SELECT   corp.CORP_CODE,
          cust.REMIT_ZIP,
          cust.MDM_CUSTOMER_FLAG,
          cust.MDM_CUSTOMER_LASTUPDATE,
-         cust.STATUS_CD,  --change to using contract dates?
+         cust.STATUS_CD,
          cust.CONTRACT_START_DATE,
          cust.CONTRACT_END_DATE,
-         case when current date between cust.CONTRACT_START_DATE and cust.CONTRACT_END_DATE then 'A' else 'D' end CONTRACT_STATUS,
+         case 
+              when current date between cust.CONTRACT_START_DATE and cust.CONTRACT_END_DATE then 'A' 
+              else 'D' 
+         end CONTRACT_STATUS,
          cust.COUNTY_CD_MDM,
          cust.COUNTY_KEY_MDM,
          cust.COUNTY_DESCRIPTION_MDM,
@@ -337,52 +331,55 @@ SELECT   corp.CORP_CODE,
          cust.MEMBERSHIP_CODE,
          cust.MEMBERSHIP_KEY,
          cust.MEMBERSHIP_DESC,
-         cust.STORE_TYPE, 
-         case cust.PRIVATE_RTL_DEPT_FLAG when 'Y' then 'Y' else 'N' end  as custom_depts_flg,
+         cust.STORE_TYPE,
+         case cust.PRIVATE_RTL_DEPT_FLAG 
+              when 'Y' then 'Y' 
+              else 'N' 
+         end as custom_depts_flg,
          cust.DCUST_ON_DEPT_ORDERING as dept_order_flg,
-         case when cust.FACILITYID = cust.HOME_BRANCH then 'Y' else 'N' end FACILITYID_PRIMARY,
+         case 
+              when cust.FACILITYID = cust.HOME_BRANCH then 'Y' 
+              else 'N' 
+         end FACILITYID_PRIMARY,
          cust.STATE_SLS_ID_NO,
          cust.ALLOW_B4_AFTER,
-         case cust.FACILITYID when '001' then 'E' else cust.ITEM_AUTH_METHOD_CD end ITEM_AUTH_METHOD_CD, 
-         case cust.FACILITYID when '001' then corp.CORP_BURDEN_COST_IND else case cust.MKUP_FRT_SPREAD_FLAG when '1' then 'Y' when '2' then 'Y' else 'N' end end BURDENED_COST_FLG,
+         case cust.FACILITYID 
+              when '001' then 'E' 
+              else cust.ITEM_AUTH_METHOD_CD 
+         end ITEM_AUTH_METHOD_CD,
+         case cust.FACILITYID 
+              when '001' then corp.CORP_BURDEN_COST_IND 
+              else case cust.MKUP_FRT_SPREAD_FLAG 
+                        when '1' then 'Y' 
+                        when '2' then 'Y' 
+                        else 'N' 
+                   end 
+         end BURDENED_COST_FLG,
          cust.BILLABLE_FLAG,
          cust.TIME_ZONE_CUST,
-         cust.MDM_CUST_STATUS_CD, 
-         case cust.FACILITYID when '001' then 'N' else case cust.ARDA_FLG when 'Y' then 'Y' else 'N' end end ARDA_FLG,
+         cust.MDM_CUST_STATUS_CD,
+         case cust.FACILITYID 
+              when '001' then 'N' 
+              else case cust.ARDA_FLG 
+                        when 'Y' then 'Y' 
+                        else 'N' 
+                   end 
+         end ARDA_FLG,
          dx.UPSTREAM_DC_TYP_CD,
          dx.HANDHELD_STATUS_CD,
          dx.INSITE_STATUS_CD
 FROM     CRMADMIN.T_WHSE_CUST cust 
-         inner join CRMADMIN.T_WHSE_CORPORATION_MDM corp on corp.CUSTOMER_NBR_STND = cust.CUSTOMER_NBR_STND AND corp.ACTIVE = 'Y'
+         inner join CRMADMIN.T_WHSE_CORPORATION_MDM corp on corp.CUSTOMER_NBR_STND = cust.CUSTOMER_NBR_STND AND corp.ACTIVE = 'Y' 
          inner join CRMADMIN.V_WEB_FACILITY dx on cust.FACILITYID = dx.FACILITYID
-WHERE    ((cust.FACILITYID not in ('001')
-     AND cust.CONTRACT_END_DATE > current date - 30 days
---     AND dx.PROCESS_ACTIVE_FLAG = 'Y'
-     AND corp.ACTIVE = 'Y'
-     AND cust.MDM_CUST_STATUS_CD not in (3, 9)
-     AND cust.TERRITORY_NO not in (29, 39, 59)
-     AND cust.CUST_CLASS_CD not in (14)
-     AND cust.STATUS_CD not in ('P', 'Z'))
---     AND not(cust.STATUS_CD = 'D'
---        AND cust.INACTIVE_DATE < current date - 30 days))
-OR       (cust.FACILITYID = '001'
-     AND cust.CONTRACT_END_DATE > current date - 30 days
---     AND dx.PROCESS_ACTIVE_FLAG = 'Y'
-     AND cust.TERRITORY_NO not in (29, 39, 59)
-     AND cust.CUST_CLASS_CD not in (14)
-     AND cust.MDM_CUST_STATUS_CD not in (3, 9)
---     AND (cust.STATUS_CD not in ('P', 'Z') or cust.STATUS_CD is null)
-))
+WHERE    cust.CONTRACT_END_DATE > current date - 30 days
+AND      corp.ACTIVE = 'Y'
+AND      cust.MDM_CUST_STATUS_CD not in (3, 9)
+AND      cust.TERRITORY_NO not in (29, 39, 59)
+AND      cust.CUST_CLASS_CD not in (14)
+AND      (cust.STATUS_CD not in ('P', 'Z')
+     OR  cust.STATUS_CD is null)
 ;
 
-/*
-WHERE    corp.ACTIVE = 'Y'
-     AND cust.TERRITORY_NO not in (29, 39, 59)
-     AND dx.PROCESS_ACTIVE_FLAG = 'Y'
-     AND cust.CUSTOMER_NBR_STND > 9
-AND cust.FACILITYID not in ('002', '071')
-     AND cust.CONTRACT_END_DATE > current date - 30 days
-*/
 
 grant select on CRMADMIN.V_WEB_CUSTOMER_FAC to user CRMEXPLN;
 grant control on CRMADMIN.V_WEB_CUSTOMER_FAC to user ETL;

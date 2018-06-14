@@ -601,11 +601,9 @@ FROM     CRMADMIN.T_WHSE_ALLOWANCES allow
          inner join CRMADMIN.V_WEB_FACILITY dx on allow.FACILITYID = dx.FACILITYID
 WHERE    allow.STATUS = 'A'
 AND      dx.PROCESS_ACTIVE_FLAG = 'Y'
-AND      ALLOW_TYPE not in ('VENDRPA', 'RPA')
---AND      allow.ALLOW_TYPE not in ('VENDRPA')
+--AND      ALLOW_TYPE not in ('VENDRPA', 'RPA')
+AND      allow.ALLOW_TYPE not in ('VENDRPA')
 AND      allow.ALLOW_AMT <> 0
---and allow.FACILITYID = '015'
---and allow.ALLOW_CUST_GRP = 3
 ;
 
 grant select on CRMADMIN.V_WEB_CUSTOMER_ITEM_PROMO to user CRMEXPLN;

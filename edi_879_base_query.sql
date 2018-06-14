@@ -88,6 +88,7 @@ and i.ITEM_TYPE_CD not in ('I')
 
 create or replace view ediadmin.V_EDI_CATALOG_BASE
 as
+;
 SELECT   c.FACILITYID,
          c.CUSTOMER_NBR_STND,
          i.ITEM_NBR_HS,
@@ -157,20 +158,8 @@ SELECT   c.FACILITYID,
          i.INSITE_FLG,
          i.ITEM_TYPE_CD,
          i.BILLING_STATUS_BACKSCREEN,
-         case 
-              when cid.ITEM_AUTH_CD is null then 'Y' 
-              else case 
-                        when cid.ITEM_AUTH_CD = 'Y' then 'Y' 
-                        else 'N' 
-                   end 
-         end ITEM_AUTH_FLG,
-         case 
-              when i.PRIVATE_LABEL_KEY = vwcpb.PRIV_BRAND_KEY then 'Y' 
-              else case 
-                        when i.PRIVATE_LABEL_KEY is null then 'Y' 
-                        else 'N' 
-                   end 
-         end PRIVATE_BRAND_AUTH_FLG
+         case when cid.ITEM_AUTH_CD is null then 'Y' else case when cid.ITEM_AUTH_CD = 'Y' then 'Y' else 'N' end end ITEM_AUTH_FLG,
+         case when i.PRIVATE_LABEL_KEY = vwcpb.PRIV_BRAND_KEY then 'Y' else case when i.PRIVATE_LABEL_KEY is null then 'Y' else 'N' end end PRIVATE_BRAND_AUTH_FLG
 FROM     CRMADMIN.T_WHSE_ITEM i 
          inner join CRMADMIN.T_WHSE_VENDOR v on i.FACILITYID = v.FACILITYID and i.VENDOR_NBR = v.VENDOR_NBR 
          inner join CRMADMIN.T_WHSE_CUST c on i.FACILITYID = c.FACILITYID --and c.CUSTOMER_NBR_STND > 0 
@@ -180,13 +169,13 @@ FROM     CRMADMIN.T_WHSE_ITEM i
          left outer join CRMADMIN.V_WEB_CUSTOMER_PRVT_BRAND vwcpb on i.FACILITYID = vwcpb.FACILITYID and vwcpb.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and i.PRIVATE_LABEL_KEY = vwcpb.PRIV_BRAND_KEY 
          left outer join CRMADMIN.V_WEB_ITEM_CORE_SUPP_GR vwicsg on i.FACILITYID = vwicsg.FACILITYID and i.ITEM_NBR_HS = vwicsg.ITEM_NBR_HS 
          left outer join CRMADMIN.T_WHSE_ITEM_AUTH cid on i.FACILITYID = cid.FACILITYID and cid.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and i.ITEM_NBR_HS = cid.ITEM_NBR_HS and (cid.EXP_DATE is null or cid.EXP_DATE >= current date) and cid.ITEM_ACTIVE_FLG = 'Y' and cid.ITEM_AUTH_CD <> 'Y'
---WHERE    1=1
---AND      i.FACILITYID = '058'
---AND      c.CUSTOMER_NBR_STND = 85
---AND      i.BILLING_STATUS_BACKSCREEN in ('A', 'W', 'S')
---AND      i.ITEM_TYPE_CD not in ('I')
---AND      i.INSITE_FLG = 'N'
---AND      current date between cic.START_DATE and cic.END_DATE_REAL
+WHERE    1=1
+AND      c.FACILITYID = '058'
+AND      c.CUSTOMER_NBR_STND = 85
+AND      i.BILLING_STATUS_BACKSCREEN in ('A', 'W', 'S')
+AND      i.ITEM_TYPE_CD not in ('I')
+AND      i.INSITE_FLG = 'N'
+AND      current date between cic.START_DATE and cic.END_DATE_REAL
 ;
 
 grant select on ediadmin.V_EDI_CATALOG_BASE to user CRMEXPLN;

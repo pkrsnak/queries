@@ -572,8 +572,8 @@ grant select on CRMADMIN.V_WEB_CUSTOMER_ITEM_PROMO_GRP to user WEB;
 CREATE OR REPLACE VIEW CRMADMIN.V_WEB_CUSTOMER_ITEM_PROMO
 as
 SELECT   allow.FACILITYID,
-         allow.REF_HS DEAL_ID,
---         case allow.ALLOW_TYPE when 'RPA' then char(int(allow.REF_HS) + 9000000) else allow.REF_HS end DEAL_ID,
+--         allow.REF_HS DEAL_ID,
+         case allow.ALLOW_TYPE when 'RPA' then varchar(int(allow.REF_HS) + 9000000) else allow.REF_HS end DEAL_ID,
 --         case allow.ALLOW_TYPE when 'RPA' then '-' || trim(allow.REF_HS) else allow.REF_HS end DEAL_ID,
          allow.ALLOW_CUST_GRP CUSTOMER_GRP_CLASS,
          allow.ITEM_NBR_HS,

@@ -22,7 +22,7 @@ FROM     (( select dxref.SWAT_ID SWAT_ID , dxref.PLATFORM_TYPE PLATFORM_TYPE fro
          inner join ( select lxref.FACILITYID FACILITYID , lxref.LAWSON_DEPT LAWSON_DEPT , lxref.LAWSON_ACCOUNT, lxref.WHOL_SALES_CD WHOL_SALES_CD , lxref.TERRITORY_NO TERRITORY_NO from CRMADMIN.V_WHSE_LAWSON_ACCT_TO_WSC_TN lxref where lxref.BUSINESS_SEGMENT = '2') lxref on sls.FACILITYID = lxref.FACILITYID and sls.WHOL_SALES_CD = lxref.WHOL_SALES_CD and sls.TERRITORY_NO = lxref.TERRITORY_NO 
 WHERE    ((sls.PLATFORM_TYPE = 'LEGACY' and sls.NO_CHRGE_ITM_CDE NOT in ('*')) or sls.PLATFORM_TYPE = 'SWAT')
 --AND      sls.BILLING_DATE = current date - #NOD# days
-AND      sls.BILLING_DATE between '2018-06-06' and '2018-06-06' 
+AND      sls.BILLING_DATE between '2018-06-18' and '2018-06-18' 
 AND      sls.USDS_FLG = 'D'
 and sls.FACILITYID <> '002' 
 --and lxref.LAWSON_ACCOUNT in (225000, 225010, 248000, 331000)
@@ -57,7 +57,7 @@ FROM     (((( select dxref.SWAT_ID SWAT_ID , dxref.PLATFORM_TYPE PLATFORM_TYPE f
          inner join ETLADMIN.T_WHSE_RTL_STORE_XREF sxref on sxref.FACILITYID = sls.FACILITYID and sls.CUSTOMER_NO_FULL = sxref.CUSTOMER_NO_FULL
 WHERE    ((sls.PLATFORM_TYPE = 'LEGACY' and sls.NO_CHRGE_ITM_CDE in ('*') and sls.WHOL_SALES_CD in ('094', '015', '012', '150') and  sls.RECORD_ID = '2') or (sls.PLATFORM_TYPE = 'SWAT' and sls.CREDIT_REASON_CDE = '19'))
 --AND      sls.BILLING_DATE = current date - #NOD# days
-AND      sls.BILLING_DATE between '2018-06-06' and '2018-06-06' 
+AND      sls.BILLING_DATE between '2018-06-18' and '2018-06-18' 
 and 	 sls.FACILITYID <> '002' 
 AND      sls.USDS_FLG = 'D'
 GROUP BY sls.FACILITYID, sls.BILLING_DATE,
@@ -88,7 +88,7 @@ FROM     (((( select dxref.SWAT_ID SWAT_ID , dxref.PLATFORM_TYPE PLATFORM_TYPE f
          LEFT OUTER JOIN ETLADMIN.T_RTL_LAW_DEPT_XREF rlxref on sls.PLATFORM_TYPE = rlxref.PLATFORM_TYPE and rlxref.RTL_DEPT =  trim(sls.CUST_OVRRDE_RTL_DEPT)
 WHERE    ((sls.PLATFORM_TYPE = 'LEGACY' and sls.NO_CHRGE_ITM_CDE in ('*') AND sls.RECORD_ID = '2') or sls.PLATFORM_TYPE = 'SWAT')
 --AND      sls.BILLING_DATE = current date - #NOD# days
-AND      sls.BILLING_DATE between '2018-06-06' and '2018-06-06' 
+AND      sls.BILLING_DATE between '2018-06-18' and '2018-06-18' 
 and sls.FACILITYID <> '002' 
 AND      sls.USDS_FLG = 'D'
 and sls.LEAKAGE_AMT <> 0 
@@ -130,7 +130,7 @@ FROM     (( select dxref.SWAT_ID SWAT_ID , dxref.PLATFORM_TYPE PLATFORM_TYPE fro
          inner join ( select lxref.FACILITYID FACILITYID , lxref.LAWSON_DEPT LAWSON_DEPT , lxref.LAWSON_ACCOUNT, lxref.WHOL_SALES_CD WHOL_SALES_CD , lxref.TERRITORY_NO TERRITORY_NO from CRMADMIN.V_WHSE_LAWSON_ACCT_TO_WSC_TN lxref where lxref.BUSINESS_SEGMENT = '2') lxref on sls.FACILITYID = lxref.FACILITYID and sls.WHOL_SALES_CD = lxref.WHOL_SALES_CD and sls.TERRITORY_NO = lxref.TERRITORY_NO 
 WHERE    ((sls.PLATFORM_TYPE = 'LEGACY' and sls.NO_CHRGE_ITM_CDE NOT in ('*')) or sls.PLATFORM_TYPE = 'SWAT')
 --AND      sls.BILLING_DATE = current date - #NOD# days
-AND      sls.BILLING_DATE between '2018-06-06' and '2018-06-06' 
+AND      sls.BILLING_DATE between '2018-06-18' and '2018-06-18' 
 AND      sls.USDS_FLG = 'D'
 and sls.FACILITYID <> '002' 
 --and lxref.LAWSON_ACCOUNT in (225000, 225010, 248000, 331000)
@@ -176,7 +176,7 @@ FROM     (( select dxref.SWAT_ID SWAT_ID , dxref.PLATFORM_TYPE PLATFORM_TYPE fro
          inner join ( select lxref.FACILITYID FACILITYID , lxref.LAWSON_DEPT LAWSON_DEPT , lxref.LAWSON_ACCOUNT, lxref.WHOL_SALES_CD WHOL_SALES_CD , lxref.TERRITORY_NO TERRITORY_NO from CRMADMIN.V_WHSE_LAWSON_ACCT_TO_WSC_TN lxref where lxref.BUSINESS_SEGMENT = '2') lxref on sls.FACILITYID = lxref.FACILITYID and sls.WHOL_SALES_CD = lxref.WHOL_SALES_CD and sls.TERRITORY_NO = lxref.TERRITORY_NO 
 WHERE    ((sls.PLATFORM_TYPE = 'LEGACY' and sls.NO_CHRGE_ITM_CDE NOT in ('*')) or sls.PLATFORM_TYPE = 'SWAT')
 --AND      sls.BILLING_DATE = current date - #NOD# days
-AND      sls.BILLING_DATE between '2018-06-06' and '2018-06-06' 
+AND      sls.BILLING_DATE between '2018-06-18' and '2018-06-18' 
 AND      sls.USDS_FLG = 'D'
 and sls.FACILITYID <> '002' 
 --and lxref.LAWSON_ACCOUNT in (225000, 225010, 248000, 331000)
@@ -224,7 +224,7 @@ FROM     (( select dxref.SWAT_ID SWAT_ID , dxref.PLATFORM_TYPE PLATFORM_TYPE, dx
          inner join ( select lxref.FACILITYID FACILITYID , lxref.LAWSON_DEPT LAWSON_DEPT , lxref.LAWSON_ACCOUNT, lxref.WHOL_SALES_CD WHOL_SALES_CD , lxref.TERRITORY_NO TERRITORY_NO from CRMADMIN.V_WHSE_LAWSON_ACCT_TO_WSC_TN lxref where lxref.BUSINESS_SEGMENT = '2') lxref on sls.FACILITYID = lxref.FACILITYID and sls.WHOL_SALES_CD = lxref.WHOL_SALES_CD and sls.TERRITORY_NO = lxref.TERRITORY_NO 
 WHERE    (dxref.REGION <> 'MIDWEST' and sls.PLATFORM_TYPE = 'SWAT' and sls.ITEM_NBR_HS = '0099904')
 --AND      sls.BILLING_DATE = current date - #NOD# days
-AND      sls.BILLING_DATE between '2018-06-06' and '2018-06-06' 
+AND      sls.BILLING_DATE between '2018-06-18' and '2018-06-18' 
 AND      sls.USDS_FLG = 'D'
 and sls.FACILITYID <> '002' 
 and sls.item_dept not in ('040')
@@ -256,7 +256,7 @@ FROM     (( select dxref.SWAT_ID SWAT_ID , dxref.PLATFORM_TYPE PLATFORM_TYPE fro
          inner join ( select lxref.FACILITYID FACILITYID , lxref.LAWSON_DEPT LAWSON_DEPT , lxref.LAWSON_ACCOUNT, lxref.WHOL_SALES_CD WHOL_SALES_CD , lxref.TERRITORY_NO TERRITORY_NO from CRMADMIN.V_WHSE_LAWSON_ACCT_TO_WSC_TN lxref where lxref.BUSINESS_SEGMENT = '2') lxref on sls.FACILITYID = lxref.FACILITYID and sls.WHOL_SALES_CD = lxref.WHOL_SALES_CD and sls.TERRITORY_NO = lxref.TERRITORY_NO 
 WHERE    ((sls.PLATFORM_TYPE = 'LEGACY' and sls.NO_CHRGE_ITM_CDE NOT in ('*')) or sls.PLATFORM_TYPE = 'SWAT')
 --AND      sls.BILLING_DATE = current date - #NOD# days
-AND      sls.BILLING_DATE between '2018-06-06' and '2018-06-06' 
+AND      sls.BILLING_DATE between '2018-06-18' and '2018-06-18' 
 AND      sls.USDS_FLG = 'D'
 and sls.FACILITYID <> '002' 
 --and lxref.LAWSON_ACCOUNT = 386500
@@ -292,7 +292,7 @@ FROM     (( select dxref.SWAT_ID SWAT_ID , dxref.PLATFORM_TYPE PLATFORM_TYPE fro
          inner join ( select lxref.FACILITYID FACILITYID , lxref.LAWSON_DEPT LAWSON_DEPT , lxref.LAWSON_ACCOUNT, lxref.WHOL_SALES_CD WHOL_SALES_CD , lxref.TERRITORY_NO TERRITORY_NO from CRMADMIN.V_WHSE_LAWSON_ACCT_TO_WSC_TN lxref where lxref.BUSINESS_SEGMENT = '2') lxref on sls.FACILITYID = lxref.FACILITYID and sls.WHOL_SALES_CD = lxref.WHOL_SALES_CD and sls.TERRITORY_NO = lxref.TERRITORY_NO 
 WHERE    ((sls.PLATFORM_TYPE = 'LEGACY' and sls.NO_CHRGE_ITM_CDE NOT in ('*')) or sls.PLATFORM_TYPE = 'SWAT')
 --AND      sls.BILLING_DATE = current date - #NOD# days
-AND      sls.BILLING_DATE between '2018-01-01' and '2018-06-06' 
+AND      sls.BILLING_DATE between '2018-01-01' and '2018-06-18' 
 AND      sls.USDS_FLG = 'D'
 and sls.FACILITYID <> '002' 
 --and lxref.LAWSON_ACCOUNT = 349500
@@ -331,7 +331,7 @@ FROM     (((( select dxref.SWAT_ID SWAT_ID , dxref.PLATFORM_TYPE PLATFORM_TYPE f
 WHERE    sls.NO_CHRGE_ITM_CDE not in ('*')
 AND      sls.PLATFORM_TYPE = 'SWAT'
 --AND      sls.BILLING_DATE = current date - #NOD# days
-AND      sls.BILLING_DATE between '2018-06-06' and '2018-06-06' 
+AND      sls.BILLING_DATE between '2018-06-18' and '2018-06-18' 
 AND      sls.USDS_FLG = 'D'
 AND      sls.ITEM_DEPT not in ('040')
 GROUP BY sls.FACILITYID, sls.BILLING_DATE,
@@ -365,7 +365,7 @@ WHERE    sls.PLATFORM_TYPE = 'SWAT'
 AND      dxref.REGION <> 'MIDWEST'
 AND sls.ITEM_NBR_HS = '0099903'
 --AND      sls.BILLING_DATE = current date - #NOD# days
-AND      sls.BILLING_DATE between '2018-06-06' and '2018-06-06' 
+AND      sls.BILLING_DATE between '2018-06-18' and '2018-06-18' 
 GROUP BY sls.FACILITYID, sls.BILLING_DATE, sxref.STORE_ID, sls.INVOICE_NBR, rlxref.LAWDEPT
 having sum(sls.FINAL_SELL_AMT) <> 0
 ;

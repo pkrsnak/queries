@@ -486,17 +486,17 @@ where    INBOUND_QUANTITY_FOR_AMZ > 0
 --catalog feed
 create or replace view CRMADMIN.V_AMZ_CATALOG_FEED
 as
-SELECT   case i.FACILITYID 
+SELECT   case cic.FACILITYID 
               when '054' then '040' 
-              else i.FACILITYID 
+              else cic.FACILITYID 
          end FACILITYID,
-         c.CUSTOMER_NBR_STND,
-         case i.FACILITYID 
+         cic.CUSTOMER_NBR_STND,
+         case cic.FACILITYID 
               when '054' then 'F3SPB' 
               when '040' then 'F3SPB' 
               when '058' then 'F3SPA' 
               when '015' then 'F3SPC' 
-              else i.FACILITYID 
+              else cic.FACILITYID 
          end vendor_code,
          current timestamp catalog_effective_date_time,
          asin.FUTURE_USE asin,
@@ -515,7 +515,7 @@ SELECT   case i.FACILITYID
                                                                        else 'AVAILABLE' 
                                                                   end 
               else 'PERM_OUT_OF_STOCK' 
-         end availability_status, ---------------------------------------------------------------------------------------------------validate (status = I)
+         end availability_status,
          cic.BURDENED_COST_CASE_AMT / i.PACK_CASE item_cost_price,
          i.PACK_CASE case_Pack_Quantity,
          cic.UNBURDENED_COST_CASE_AMT case_Pack_Cost_Price,
@@ -538,26 +538,35 @@ SELECT   case i.FACILITYID
          i.BILLING_STATUS_BACKSCREEN,
          i.NATAG_MAINT_DATE,
          i.AVAILABILITY_DATE,
-         i.RE_AVAILABLE_DATE
-FROM     CRMADMIN.T_WHSE_ITEM i 
+         i.RE_AVAILABLE_DATE,
+         case i.CORP_RES when lpad(trim(cic.CORP_SWAT),3,'0') then 'Y' when '000' then 'Y' else 'N' end CORP_AUTH_FLG,
+         i.INSITE_FLG,
+         i.ITEM_TYPE_CD,
+         case when cid.ITEM_AUTH_CD is null then 'Y' else case when cid.ITEM_AUTH_CD = 'Y' then 'Y' else 'N' end end ITEM_AUTH_FLG,
+         case when i.PRIVATE_LABEL_KEY = vwcpb.PRIV_BRAND_KEY then 'Y' else case when i.PRIVATE_LABEL_KEY is null then 'Y' else 'N' end end PRIVATE_BRAND_AUTH_FLG
+FROM     TABLE( SELECT A.FACILITYID, A.CUSTOMER_NBR_STND, A.CORP_SWAT, A.ITEM_NBR_HS, START_DATE, END_DATE_REAL, BURDENED_COST_CASE_AMT, UNBURDENED_COST_CASE_AMT,
+                       BURDENED_COST_CASE_NET_AMT, UNBURDENED_COST_CASE_NET_AMT, OI_ALLOWANCE_START_DATE, OI_ALLOWANCE_END_DATE, OI_ALLOWANCE_AMT,
+                       PA_ALLOWANCE_START_DATE, PA_ALLOWANCE_END_DATE, PA_ALLOWANCE_AMT
+                  FROM CRMADMIN.V_WEB_CUSTOMER_ITEM_COST A 
+                  WHERE      A.MASTER_ITEM_FLG = 'Y' 
+                         AND A.CUSTOMER_NBR_STND > 0 
+                         AND current date between A.START_DATE and A.END_DATE_REAL
+               ) CIC 
+         inner join CRMADMIN.T_WHSE_ITEM i on i.FACILITYID = cic.FACILITYID and i.ITEM_NBR_HS = cic.ITEM_NBR_HS 
          inner join CRMADMIN.T_WHSE_VENDOR v on i.FACILITYID = v.FACILITYID and i.VENDOR_NBR = v.VENDOR_NBR 
-         inner join CRMADMIN.V_WEB_CUSTOMER_FAC c on i.FACILITYID = c.FACILITYID 
-         inner join CRMADMIN.T_WHSE_CUST_DEPT_MDM cmd on i.FACILITYID = cmd.FACILITYID and i.MERCH_DEPT = cmd.MDSE_DEPT_CD and cmd.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND AND cmd.ACTIVE = 'Y' 
-         inner join CRMADMIN.V_WEB_CUSTOMER_ITEM_COST cic on i.FACILITYID = cic.FACILITYID and i.ITEM_NBR_HS = cic.ITEM_NBR_HS and c.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and cic.MASTER_ITEM_FLG = 'Y' and cic.START_DATE <= current date + 7 days and (cic.END_DATE >= current date + 7 days or cic.END_DATE is null) 
-         left outer join CRMADMIN.V_WEB_CUSTOMER_PRVT_BRAND vwcpb on i.FACILITYID = vwcpb.FACILITYID and i.PRIVATE_LABEL_KEY = vwcpb.PRIV_BRAND_KEY and vwcpb.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND 
-         left outer join CRMADMIN.V_WEB_CUSTOMER_ITEM_DEAUTH cid on i.FACILITYID = cid.FACILITYID and cid.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and i.ITEM_NBR_HS = cid.ITEM_NBR_HS 
+         inner join CRMADMIN.V_WEB_CUSTOMER_MDSE_DEPT cmd on i.FACILITYID = cmd.FACILITYID and cmd.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and i.MERCH_DEPT = cmd.MDSE_DEPT_CD 
+         left outer join CRMADMIN.V_WEB_CUSTOMER_PRVT_BRAND vwcpb on i.FACILITYID = vwcpb.FACILITYID and vwcpb.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and i.PRIVATE_LABEL_KEY = vwcpb.PRIV_BRAND_KEY 
+         left outer join table( SELECT   FACILITYID, CUSTOMER_NBR_STND , ITEM_NBR_HS , ITEM_AUTH_CD FROM CRMADMIN.T_WHSE_ITEM_AUTH
+where (EXP_DATE is null or EXP_DATE >= current date) and ITEM_ACTIVE_FLG = 'Y' and ITEM_AUTH_CD <> 'Y') cid on i.FACILITYID = cid.FACILITYID and cid.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and i.ITEM_NBR_HS = cid.ITEM_NBR_HS
+--         left outer join CRMADMIN.T_WHSE_ITEM_AUTH cid on i.FACILITYID = cid.FACILITYID and cid.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and i.ITEM_NBR_HS = cid.ITEM_NBR_HS and (cid.EXP_DATE is null or cid.EXP_DATE >= current date) and cid.ITEM_ACTIVE_FLG = 'Y' and cid.ITEM_AUTH_CD <> 'Y'
          left outer join ETLADMIN.T_TEMP_UPC asin on i.UPC_UNIT_CD = asin.UPC_UNIT
-WHERE    (cid.ITEM_AUTH_CD is null
-     OR  cid.ITEM_AUTH_CD = 'Y')
-AND      (i.PRIVATE_LABEL_KEY = vwcpb.PRIV_BRAND_KEY
-     OR  i.PRIVATE_LABEL_KEY is null)
-AND      (i.BILLING_STATUS_BACKSCREEN not in ('P', 'Z', 'I')
+WHERE      (i.BILLING_STATUS_BACKSCREEN not in ('P', 'Z', 'I')
      AND not(i.BILLING_STATUS_BACKSCREEN = 'D'
         AND i.NATAG_MAINT_DATE < current date - 30 days))
 AND      i.ITEM_TYPE_CD not in ('I')
---AND      i.FACILITYID in ('015', '054', '040')
---AND      c.CUSTOMER_NBR_STND = 634001
-----------------------------------------------------------------------------------------------------SUPPLIES?
+AND      case i.CORP_RES when lpad(trim(cic.CORP_SWAT),3,'0') then 'Y' when '000' then 'Y' else 'N' end = 'Y'
+AND      cic.FACILITYID in ('015', '054', '040')
+AND      cic.CUSTOMER_NBR_STND = 634001
 ;
 
 grant select on CRMADMIN.V_AMZ_CATALOG_FEED to user CRMEXPLN;
@@ -698,3 +707,207 @@ select * from CRMADMIN.V_WEB_CUSTOMER_PRVT_BRAND where CUSTOMER_NBR_STND = 63400
 
 select FACILITYID, count(*) from CRMADMIN.V_WEB_CUSTOMER_ITEM_DEAUTH where CUSTOMER_NBR_STND = 634001 group by FACILITYID ;
 */
+
+--select for Amazon catalog
+SELECT   VENDOR_CODE,
+         CATALOG_EFFECTIVE_DATE_TIME,
+         ASIN,
+         UNIT_UPC,
+         CASE_UPC,
+         GTIN,
+         VENDOR_SKU,
+         ITEM_NAME,
+         BRAND,
+         MANUFACTURER,
+         SUPPLIER_NAME,
+         AVAILABILITY_STATUS,
+         ITEM_COST_PRICE,
+         CASE_PACK_QUANTITY,
+         CASE_PACK_COST_PRICE,
+         TEMP_TYPE,
+         RET_UNIT_SIZE,
+         RET_UNIT_DESC,
+         EXPIRATION_TYPE,
+         SHELF_LIFE,
+         MERCH_DEPT_DESC,
+         MERCH_GRP_DESC,
+         MERCH_CAT_DESC,
+         MERCH_CLASS_DESC
+FROM     CRMADMIN.V_AMZ_CATALOG_FEED
+WHERE    (BILLING_STATUS_BACKSCREEN not in ('P', 'Z', 'I')
+     AND not(BILLING_STATUS_BACKSCREEN = 'D'
+        AND NATAG_MAINT_DATE < current date - 30 days))
+AND      ITEM_TYPE_CD not in ('I')
+AND      CORP_AUTH_FLG = 'Y'
+AND      ITEM_AUTH_FLG = 'Y'
+AND      PRIVATE_BRAND_AUTH_FLG = 'Y'
+;
+
+-------------------------------------------
+--amazon zero shipped
+-------------------------------------------
+SELECT   shd.PURCHASE_ORDER_NUM as shipment_id,
+         char(shd.INVOICE_NBR) as original_invoice_id,
+         c.CUST_STORE_NO as amazon_destination,
+         shd.BILLING_DATE,
+         d.WEEK_ENDING_DATE,
+         asin.FUTURE_USE as amazon_asin,
+         shd.FACILITYID,
+         c.CUSTOMER_NBR_STND,
+         shd.ITEM_DEPT,
+         shd.ORDER_TYPE,
+         shd.ITEM_NBR_HS,
+         i.ITEM_DESCRIP,
+         shd.STORE_PACK,
+         shd.QTY_ORDERED,
+         shd.QTY_ADJUSTED,
+         shd.QTY_SCRATCHED,
+         shd.QTY_SOLD - shd.QTY_SCRATCHED as qty_shipped,
+         shd.OUT_REASON_CODE
+FROM     CRMADMIN.T_WHSE_SALES_HISTORY_DTL shd 
+         inner join CRMADMIN.V_WED d on shd.BILLING_DATE = d.LOOKUP_DATE 
+         inner join CRMADMIN.T_WHSE_CUST c on shd.FACILITYID = c.FACILITYID and shd.CUSTOMER_NO_FULL = c.CUSTOMER_NO_FULL 
+         inner join CRMADMIN.T_WHSE_CUST_GRP cg on c.FACILITYID = cg.FACILITYID and c.CUSTOMER_NBR_STND = cg.CUSTOMER_NBR_STND and CUSTOMER_GRP_TYPE = '75' AND current date >= cg.START_DATE AND (current date <= cg.END_DATE OR cg.END_DATE is null) 
+         inner join CRMADMIN.T_WHSE_ITEM i on shd.FACILITYID = i.FACILITYID and shd.ITEM_NBR_HS = i.ITEM_NBR_HS 
+         left outer join ETLADMIN.T_TEMP_UPC asin on i.UPC_UNIT_CD = asin.UPC_UNIT
+WHERE    d.WEEK_ENDING_DATE between current date - 7 days and current date
+AND      shd.QTY_SOLD - shd.QTY_SCRATCHED = 0
+AND      shd.ORDER_TYPE not in ('CR')
+;
+
+--orders dropped in OMS
+SELECT   od.FACILITYID,
+         od.ORIGIN_CDE,
+         od.ITEM_NBR_HS,
+         od.CUSTOMER_NBR_STND,
+         c.NAME,
+         od.ORDER_TYPE,
+         od.SHIP_DATE,
+         od.QTY,
+         od.ORDER_STATUS,
+         od.ORDER_STATUS_HS,
+         od.INVOICE_NBR,
+         od.UPLOAD_TO_BILL,
+         od.OMS_SERVER_TYPE,
+         od.ORIGIN_APP,
+         od.ORIGIN_CODE,
+         od.SUPPLIER_PRICE_SOURCE,
+         od.ITEM_NBR_REQUESTED,
+         od.ITEM_NBR_HS_REQUESTED,
+         od.FACILITYID_REQUESTED
+FROM     CRMADMIN.T_WHSE_ORDER_DTL od 
+         inner join CRMADMIN.T_WHSE_CUST c on od.FACILITYID = c.FACILITYID and od.CUSTOMER_NO_FULL = c.CUSTOMER_NO_FULL 
+         inner join CRMADMIN.T_WHSE_CUST_GRP cg on c.FACILITYID = cg.FACILITYID and c.CUSTOMER_NBR_STND = cg.CUSTOMER_NBR_STND and CUSTOMER_GRP_TYPE = '75' AND current date >= cg.START_DATE AND (current date <= cg.END_DATE OR cg.END_DATE is null)
+WHERE    od.ORDER_RECVD_DTE between '2018-06-10' and current date
+;
+
+--outs in billing
+SELECT   shd.PURCHASE_ORDER_NUM as shipment_id,
+         char(shd.INVOICE_NBR) as original_invoice_id,
+         c.CUST_STORE_NO as amazon_destination,
+         shd.BILLING_DATE,
+         d.WEEK_ENDING_DATE,
+         asin.FUTURE_USE as amazon_asin,
+         shd.FACILITYID,
+         c.CUSTOMER_NBR_STND,
+         shd.ITEM_DEPT,
+         shd.ORDER_TYPE,
+         shd.ITEM_NBR_HS,
+         i.ITEM_DESCRIP,
+         shd.STORE_PACK,
+         shd.QTY_ORDERED,
+         shd.QTY_ADJUSTED,
+         shd.QTY_SCRATCHED,
+         shd.QTY_SOLD - shd.QTY_SCRATCHED as qty_shipped,
+         shd.OUT_REASON_CODE, oc.OUT_CODE_DESCRIPTION
+FROM     CRMADMIN.T_WHSE_SALES_HISTORY_DTL shd 
+         inner join CRMADMIN.V_WED d on shd.BILLING_DATE = d.LOOKUP_DATE 
+         inner join CRMADMIN.T_WHSE_CUST c on shd.FACILITYID = c.FACILITYID and shd.CUSTOMER_NO_FULL = c.CUSTOMER_NO_FULL 
+         inner join CRMADMIN.T_WHSE_CUST_GRP cg on c.FACILITYID = cg.FACILITYID and c.CUSTOMER_NBR_STND = cg.CUSTOMER_NBR_STND and CUSTOMER_GRP_TYPE = '75' AND current date >= cg.START_DATE AND (current date <= cg.END_DATE OR cg.END_DATE is null) 
+         left outer join CRMADMIN.T_WHSE_ITEM i on shd.FACILITYID = i.FACILITYID and shd.ITEM_NBR_HS = i.ITEM_NBR_HS 
+         left outer join ETLADMIN.T_TEMP_UPC asin on i.UPC_UNIT_CD = asin.UPC_UNIT
+         left outer join CRMADMIN.T_WHSE_OUT_CODE oc on oc.OUT_CODE = shd.OUT_REASON_CODE
+WHERE    d.WEEK_ENDING_DATE between current date - 7 days and current date
+AND      shd.QTY_SOLD - shd.QTY_SCRATCHED = 0
+AND      shd.ORDER_TYPE not in ('CR')
+and shd.NO_CHRGE_ITM_CDE <> '*'
+;
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+--archive
+
+SELECT   case cic.FACILITYID 
+              when '054' then '040' 
+              else cic.FACILITYID 
+         end FACILITYID,
+         c.CUSTOMER_NBR_STND,
+         case cic.FACILITYID 
+              when '054' then 'F3SPB' 
+              when '040' then 'F3SPB' 
+              when '058' then 'F3SPA' 
+              when '015' then 'F3SPC' 
+              else cic.FACILITYID 
+         end vendor_code,
+         current timestamp catalog_effective_date_time,
+         asin.FUTURE_USE asin,
+         i.UPC_UNIT_CD unit_upc,
+         i.UPC_CASE_CD case_upc,
+         i.GTIN,
+         i.ITEM_NBR_HS vendor_sku,
+         trim(i.BRAND) || ' ' || trim(i.RETAIL_ITEM_DESC) || ' ' || trim(i.ITEM_SIZE) || ' ' || trim(i.ITEM_SIZE_UOM) item_name,
+         i.BRAND brand,
+         v.MASTER_VENDOR_DESC manufacturer,
+         v.VENDOR_NAME supplier_Name,
+         case 
+              when i.BILLING_STATUS_BACKSCREEN in ('A', 'W') then case 
+                                                                       when i.AVAILABILITY_DATE > current date then 'TEMP_OUT_OF_STOCK' 
+                                                                       when i.RE_AVAILABLE_DATE > current date then 'TEMP_OUT_OF_STOCK' 
+                                                                       else 'AVAILABLE' 
+                                                                  end 
+              else 'PERM_OUT_OF_STOCK' 
+         end availability_status, ---------------------------------------------------------------------------------------------------validate (status = I)
+         cic.BURDENED_COST_CASE_AMT / i.PACK_CASE item_cost_price,
+         i.PACK_CASE case_Pack_Quantity,
+         cic.UNBURDENED_COST_CASE_AMT case_Pack_Cost_Price,
+         case i.WAREHOUSE_CODE 
+              when '01' then 'Chilled' 
+              when '02' then 'Chilled' 
+              when '08' then 'Chilled' 
+              when '07' then 'Frozen' 
+              else 'Ambient' 
+         end temp_type,
+         i.RET_UNIT_SIZE,
+         i.RET_UNIT_DESC,
+         (case i.CODE_DATE_FLAG when 'Y' then 'Shelf Life' else 'Does Not Expire' end) expiration_type,
+         (case i.CODE_DATE_FLAG when 'Y' then i.SHELF_LIFE else 365 end) shelf_life,
+         i.MERCH_DEPT_DESC,
+         i.MERCH_GRP_DESC,
+         i.MERCH_CAT_DESC,
+         i.MERCH_CLASS_DESC,
+         cic.BURDENED_COST_CASE_AMT case_Pack_Cost_burdened,
+         i.BILLING_STATUS_BACKSCREEN,
+         i.NATAG_MAINT_DATE,
+         i.AVAILABILITY_DATE,
+         i.RE_AVAILABLE_DATE
+FROM     CRMADMIN.T_WHSE_ITEM i 
+         inner join CRMADMIN.T_WHSE_VENDOR v on i.FACILITYID = v.FACILITYID and i.VENDOR_NBR = v.VENDOR_NBR 
+         inner join CRMADMIN.V_WEB_CUSTOMER_FAC c on i.FACILITYID = c.FACILITYID 
+         inner join CRMADMIN.T_WHSE_CUST_DEPT_MDM cmd on i.FACILITYID = cmd.FACILITYID and i.MERCH_DEPT = cmd.MDSE_DEPT_CD and cmd.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND AND cmd.ACTIVE = 'Y' 
+         inner join CRMADMIN.V_WEB_CUSTOMER_ITEM_COST cic on i.FACILITYID = cic.FACILITYID and i.ITEM_NBR_HS = cic.ITEM_NBR_HS and c.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and cic.MASTER_ITEM_FLG = 'Y' and cic.START_DATE <= current date + 7 days and (cic.END_DATE >= current date + 7 days or cic.END_DATE is null) 
+         left outer join CRMADMIN.V_WEB_CUSTOMER_PRVT_BRAND vwcpb on i.FACILITYID = vwcpb.FACILITYID and i.PRIVATE_LABEL_KEY = vwcpb.PRIV_BRAND_KEY and vwcpb.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND 
+         left outer join CRMADMIN.V_WEB_CUSTOMER_ITEM_DEAUTH cid on i.FACILITYID = cid.FACILITYID and cid.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and i.ITEM_NBR_HS = cid.ITEM_NBR_HS 
+         left outer join ETLADMIN.T_TEMP_UPC asin on i.UPC_UNIT_CD = asin.UPC_UNIT
+WHERE    (cid.ITEM_AUTH_CD is null
+     OR  cid.ITEM_AUTH_CD = 'Y')
+AND      (i.PRIVATE_LABEL_KEY = vwcpb.PRIV_BRAND_KEY
+     OR  i.PRIVATE_LABEL_KEY is null)
+AND      (i.BILLING_STATUS_BACKSCREEN not in ('P', 'Z', 'I')
+     AND not(i.BILLING_STATUS_BACKSCREEN = 'D'
+        AND i.NATAG_MAINT_DATE < current date - 30 days))
+AND      i.ITEM_TYPE_CD not in ('I')
+AND      case i.CORP_RES when lpad(trim(cic.CORP_SWAT),3,'0') then 'Y' when '000' then 'Y' else 'N' end = 'Y'
+AND      i.FACILITYID in ('015', '054', '040')
+AND      c.CUSTOMER_NBR_STND = 634001
+----------------------------------------------------------------------------------------------------SUPPLIES?
+;

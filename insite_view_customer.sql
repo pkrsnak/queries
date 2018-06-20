@@ -120,7 +120,7 @@ grant select on CRMADMIN.V_WEB_CORPORATION to user WEB;
 ----------------------------------------------------------------------------------------------------
 create or replace view CRMADMIN.V_WEB_CUSTOMER
 as
-SELECT   Distinct corp.CORP_CODE,
+SELECT   Distinct corp.CORP_CODE, 
          cust.TERRITORY_NO,
          cust.CUSTOMER_NO_FULL,
          cust.CUSTOMER_NBR_STND,
@@ -241,6 +241,7 @@ grant select on CRMADMIN.V_WEB_CUSTOMER to user SIUSER;
 create or replace view CRMADMIN.V_WEB_CUSTOMER_FAC
 as
 SELECT   corp.CORP_CODE,
+         cust.CUST_CORPORATION CORP_SWAT,
          cust.FACILITYID,
          cust.HOME_BRANCH,
          cust.TERRITORY_NO,
@@ -372,7 +373,6 @@ FROM     CRMADMIN.T_WHSE_CUST cust
          inner join CRMADMIN.T_WHSE_CORPORATION_MDM corp on corp.CUSTOMER_NBR_STND = cust.CUSTOMER_NBR_STND AND corp.ACTIVE = 'Y' 
          inner join CRMADMIN.V_WEB_FACILITY dx on cust.FACILITYID = dx.FACILITYID
 WHERE    cust.CONTRACT_END_DATE > current date - 30 days
-AND      corp.ACTIVE = 'Y'
 AND      cust.MDM_CUST_STATUS_CD not in (3, 9)
 AND      cust.TERRITORY_NO not in (29, 39, 59)
 AND      cust.CUST_CLASS_CD not in (14)

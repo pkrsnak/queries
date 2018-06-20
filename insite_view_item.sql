@@ -393,11 +393,12 @@ grant select on CRMADMIN.V_WEB_ITEM_CORE_SUPP_GR to user WEB;
 CREATE OR REPLACE VIEW CRMADMIN.V_WEB_CUSTOMER_ITEM_COST
 as
 SELECT   case cic.REC_ACTIVE_FLG 
-     when 'N' then 'D' 
-     else 'C' 
-end REC_TYPE,
+              when 'N' then 'D' 
+              else 'C' 
+         end REC_TYPE,
          cic.FACILITYID,
-         cic.CUSTOMER_NBR_STND,
+         cic.CUSTOMER_NBR_STND, 
+         vwcf.CORP_SWAT,
          cic.UPC_UNIT,
          cic.ITEM_NBR_HS,
          cic.MASTER_ITEM_FLG,
@@ -466,6 +467,7 @@ as
 SELECT   case cic.REC_ACTIVE_FLG when 'N' then 'D' else 'C' end REC_TYPE,
          cic.FACILITYID,
          cic.CUSTOMER_NBR_STND,
+         vwcf.CORP_SWAT,
          cic.UPC_UNIT,
          cic.ITEM_NBR_HS,
          cic.MASTER_ITEM_FLG,

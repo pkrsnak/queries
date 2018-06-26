@@ -1,7 +1,7 @@
 --.25 credit report
 create or replace view CRMADMIN.V_AMZ_ASIN_FEE_PRIOR_WEEK
 as
-SELECT   '654664655' as po_id,
+SELECT   '2D-01274170' as po_id,
          '' as invoice_id,
          shd.PURCHASE_ORDER_NUM as shipment_id,
          char(shd.INVOICE_NBR) as original_invoice_id,
@@ -544,7 +544,7 @@ SELECT   case cic.FACILITYID
          i.ITEM_TYPE_CD,
          case when cid.ITEM_AUTH_CD is null then 'Y' else case when cid.ITEM_AUTH_CD = 'Y' then 'Y' else 'N' end end ITEM_AUTH_FLG,
          case when i.PRIVATE_LABEL_KEY = vwcpb.PRIV_BRAND_KEY then 'Y' else case when i.PRIVATE_LABEL_KEY is null then 'Y' else 'N' end end PRIVATE_BRAND_AUTH_FLG
-FROM     TABLE( SELECT A.FACILITYID, A.CUSTOMER_NBR_STND, A.CORP_SWAT, A.ITEM_NBR_HS, START_DATE, END_DATE_REAL, BURDENED_COST_CASE_AMT, UNBURDENED_COST_CASE_AMT,
+FROM     TABLE( SELECT A.FACILITYID, A.CUSTOMER_NBR_STND, A.BURDENED_COST_FLG, A.CORP_SWAT, A.ITEM_NBR_HS, START_DATE, END_DATE_REAL, BURDENED_COST_CASE_AMT, UNBURDENED_COST_CASE_AMT,
                        BURDENED_COST_CASE_NET_AMT, UNBURDENED_COST_CASE_NET_AMT, OI_ALLOWANCE_START_DATE, OI_ALLOWANCE_END_DATE, OI_ALLOWANCE_AMT,
                        PA_ALLOWANCE_START_DATE, PA_ALLOWANCE_END_DATE, PA_ALLOWANCE_AMT
                   FROM CRMADMIN.V_WEB_CUSTOMER_ITEM_COST A 
@@ -556,17 +556,15 @@ FROM     TABLE( SELECT A.FACILITYID, A.CUSTOMER_NBR_STND, A.CORP_SWAT, A.ITEM_NB
          inner join CRMADMIN.T_WHSE_VENDOR v on i.FACILITYID = v.FACILITYID and i.VENDOR_NBR = v.VENDOR_NBR 
          inner join CRMADMIN.V_WEB_CUSTOMER_MDSE_DEPT cmd on i.FACILITYID = cmd.FACILITYID and cmd.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and i.MERCH_DEPT = cmd.MDSE_DEPT_CD 
          left outer join CRMADMIN.V_WEB_CUSTOMER_PRVT_BRAND vwcpb on i.FACILITYID = vwcpb.FACILITYID and vwcpb.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and i.PRIVATE_LABEL_KEY = vwcpb.PRIV_BRAND_KEY 
-         left outer join table( SELECT   FACILITYID, CUSTOMER_NBR_STND , ITEM_NBR_HS , ITEM_AUTH_CD FROM CRMADMIN.T_WHSE_ITEM_AUTH
-where (EXP_DATE is null or EXP_DATE >= current date) and ITEM_ACTIVE_FLG = 'Y' and ITEM_AUTH_CD <> 'Y') cid on i.FACILITYID = cid.FACILITYID and cid.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and i.ITEM_NBR_HS = cid.ITEM_NBR_HS
---         left outer join CRMADMIN.T_WHSE_ITEM_AUTH cid on i.FACILITYID = cid.FACILITYID and cid.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and i.ITEM_NBR_HS = cid.ITEM_NBR_HS and (cid.EXP_DATE is null or cid.EXP_DATE >= current date) and cid.ITEM_ACTIVE_FLG = 'Y' and cid.ITEM_AUTH_CD <> 'Y'
+         left outer join CRMADMIN.T_WHSE_ITEM_AUTH cid on cic.FACILITYID = cid.FACILITYID and cid.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and cic.ITEM_NBR_HS = cid.ITEM_NBR_HS and (cid.EXP_DATE is null or cid.EXP_DATE >= current date) and cid.ITEM_ACTIVE_FLG = 'Y' and cid.ITEM_AUTH_CD <> 'Y'
          left outer join ETLADMIN.T_TEMP_UPC asin on i.UPC_UNIT_CD = asin.UPC_UNIT
-WHERE      (i.BILLING_STATUS_BACKSCREEN not in ('P', 'Z', 'I')
+WHERE    cic.FACILITYID in ('015', '040', '054')
+AND      cic.CUSTOMER_NBR_STND = 634001
+AND      (i.BILLING_STATUS_BACKSCREEN not in ('P', 'Z', 'I')
      AND not(i.BILLING_STATUS_BACKSCREEN = 'D'
         AND i.NATAG_MAINT_DATE < current date - 30 days))
 AND      i.ITEM_TYPE_CD not in ('I')
-AND      case i.CORP_RES when lpad(trim(cic.CORP_SWAT),3,'0') then 'Y' when '000' then 'Y' else 'N' end = 'Y'
-AND      cic.FACILITYID in ('015', '054', '040')
-AND      cic.CUSTOMER_NBR_STND = 634001
+AND      case i.CORP_RES when lpad(trim(cic.CORP_SWAT),3,'0') then 'Y' when '000' then 'Y' else 'N' end = 'Y'   
 ;
 
 grant select on CRMADMIN.V_AMZ_CATALOG_FEED to user CRMEXPLN;
@@ -834,6 +832,33 @@ and shd.NO_CHRGE_ITM_CDE <> '*'
 ;
 
 
+--unmarked items
+SELECT   i.FACILITYID,
+         i.ITEM_NBR_HS,
+         i.UPC_UNIT_CD,
+         i.ITEM_DESCRIP,
+         i.ITEM_SIZE,
+         i.ITEM_SIZE_UOM,
+         i.PACK_CASE,
+         i.ITEM_RES28 AMAZON_SHARED,
+         i.PURCH_STATUS,
+         i.BILLING_STATUS_BACKSCREEN
+FROM     ETLADMIN.T_TEMP_UPC tu 
+         inner join CRMADMIN.T_WHSE_ITEM i on i.UPC_UNIT_CD = tu.UPC_UNIT
+WHERE    i.FACILITYID in ('040', '054', '015')
+and i.item_res28 not in ('A', 'C')
+;
+
+--forecast extract
+SELECT   RUN_DATE,
+         FC_ID,
+         UPC,
+         PARENT_ASIN,
+         FORECAST_OVERRIDE_FLG,
+         FORECAST_WEEK,
+         decrypt_char( FORECAST_AMT, 'Test Phrase') forecast_amt
+FROM     ETLE.T_WHSE_AMAZON_FORECAST
+
 --------------------------------------------------------------------------------------------------------------------------------------------
 --archive
 
@@ -911,3 +936,4 @@ AND      i.FACILITYID in ('015', '054', '040')
 AND      c.CUSTOMER_NBR_STND = 634001
 ----------------------------------------------------------------------------------------------------SUPPLIES?
 ;
+

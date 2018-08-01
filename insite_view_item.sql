@@ -1100,4 +1100,58 @@ grant select on CRMADMIN.V_WEB_DC_AREA to user ETLX;
 grant select,update,insert,delete on CRMADMIN.V_WEB_DC_AREA to user ETL with grant option;
 grant select on CRMADMIN.V_WEB_DC_AREA to user WEB;
 
+----------------------------------------------------------------------------------------------------
+-- Create View CRMADMIN.V_WEB_CUSTOMER_ITEM_AD_BOOKING 
+----------------------------------------------------------------------------------------------------
+CREATE OR REPLACE VIEW CRMADMIN.V_WEB_CUSTOMER_ITEM_AD_BOOKING as 
+SELECT   obh.FACILITYID,
+         obh.CUST_GROUP_NUM,
+         obh.AD_BOOKING_CNTL_NUM,
+         obh.AD_DESC,
+--         obh.AD_BOOKING_BOOTH_ID,
+         obh.AD_ORD_RETURN_DATE,
+         obh.AD_SHIP_START_DATE,
+         obh.AD_SHIP_END_DATE,
+         obh.VENDOR_NBR,
+         v.VENDOR_NAME,
+--         obh.ITEM_NBR,
+         obh.ITEM_NBR_HS,
+         i.ITEM_DESCRIP,
+         i.PACK_CASE,
+         i.ITEM_SIZE,
+         i.ITEM_SIZE_UOM,
+         i.UPC_UNIT,
+         i.UPC_CASE,
+         obh.ORDER_TYPE,
+--         obh.RECORD_ID,
+         obh.BUYER_NBR,
+         obh.QTY_ORDERED,
+         obh.AD_HOLD_QTY,
+         obh.AD_BOOKING_AMT,
+         obh.AD_ALLOW_AMT,
+         obh.AD_RELEASE_CD,
+         obh.ENCUMBERANCE_FLG,
+         obh.AD_FEATURE_CD,
+         obh.SUBSTITUTION_FLG,
+         obh.PROMO_CNTL_NBR,
+         obh.PAGE_NUM,
+         obh.BASE_SELL_PRICE1,
+         obh.BASE_SELL_PRICE2,
+         obh.BASE_SELL_PRICE3,
+         obh.AD_BOOKING_INCENTIVE,
+         obh.AD_REG_ALLOWANCE,
+         obh.MLTRY_CNTRL_ID,
+         obh.CUST_ITEM_NUM,
+         obh.CUST_BILL_NUM
+FROM     CRMADMIN.T_WHSE_ORDER_BOOK_HDR obh 
+         left outer join CRMADMIN.T_WHSE_ITEM i on obh.FACILITYID = i.FACILITYID and obh.ITEM_NBR_HS = i.ITEM_NBR_HS 
+         left outer join CRMADMIN.T_WHSE_VENDOR v on obh.FACILITYID = v.FACILITYID and obh.VENDOR_NBR = v.VENDOR_NBR
+WHERE    obh.AD_ORD_RETURN_DATE >= current date
+AND      ACTIVE_FLG = 'Y'
+;
 
+grant select on CRMADMIN.V_WEB_CUSTOMER_ITEM_AD_BOOKING to user CRMEXPLN;
+grant control on CRMADMIN.V_WEB_CUSTOMER_ITEM_AD_BOOKING to user ETL;
+grant select on CRMADMIN.V_WEB_CUSTOMER_ITEM_AD_BOOKING to user ETLX;
+grant select,update,insert,delete on CRMADMIN.V_WEB_CUSTOMER_ITEM_AD_BOOKING to user ETL with grant option;
+grant select on CRMADMIN.V_WEB_CUSTOMER_ITEM_AD_BOOKING to user WEB;

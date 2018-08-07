@@ -1155,3 +1155,30 @@ grant control on CRMADMIN.V_WEB_CUSTOMER_ITEM_AD_BOOKING to user ETL;
 grant select on CRMADMIN.V_WEB_CUSTOMER_ITEM_AD_BOOKING to user ETLX;
 grant select,update,insert,delete on CRMADMIN.V_WEB_CUSTOMER_ITEM_AD_BOOKING to user ETL with grant option;
 grant select on CRMADMIN.V_WEB_CUSTOMER_ITEM_AD_BOOKING to user WEB;
+
+----------------------------------------------------------------------------------------------------
+-- Create View CRMADMIN.V_WEB_CUSTOMER_ITEM_AD_BOOKING 
+----------------------------------------------------------------------------------------------------
+CREATE OR REPLACE VIEW CRMADMIN.V_WEB_ITEM_PO_HEADER 
+as
+SELECT   FACILITYID,
+         PO_NBR,
+         DATE_ORDERED,
+         BUYER_NBR,
+         VENDOR_NBR,
+         AP_VENDOR_NBR,
+         DATE_ARRIVAL,
+         DATE_APPOINTMENT,
+         FLAG_PREPAID,
+         FLAG_BACKHAUL,
+         FLAG_FREIGHT_BILL,
+         FLAG_PREPAY_AND_ADD,
+         STATUS
+FROM     CRMADMIN.T_WHSE_PO_HDR
+;
+
+grant select on CRMADMIN.V_WEB_ITEM_PO_HEADER to user CRMEXPLN;
+grant control on CRMADMIN.V_WEB_ITEM_PO_HEADER to user ETL;
+grant select on CRMADMIN.V_WEB_ITEM_PO_HEADER to user ETLX;
+grant select,update,insert,delete on CRMADMIN.V_WEB_ITEM_PO_HEADER to user ETL with grant option;
+grant select on CRMADMIN.V_WEB_ITEM_PO_HEADER to user WEB;

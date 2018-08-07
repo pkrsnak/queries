@@ -1,30 +1,3 @@
-SELECT   FACILITYID,
-         INVOICE_NBR,
-         BILLING_DATE,
-         CUSTOMER_NO_FULL, WHOL_SALES_CD,
-         ITEM_NBR_HS,
-         ITEM_DESCRIPTION,
-         QTY_ORDERED,
-         QTY_ADJUSTED,
-         QTY_SOLD,
-         QTY_SUBBED,
-         QTY_SCRATCHED,
-         FINAL_SELL_AMT,
-         MRKUP_DLLRS_PER_SHIP_UNT,
-         ITEM_DEPT,
-         ITEM_DEPT_HS
-FROM     CRMADMIN.T_WHSE_SALES_HISTORY_DTL
-WHERE    FACILITYID = '003'
-and ITEM_NBR_HS = '0099908'
-and TERRITORY_NO in (21, 27, 31)
---AND      INVOICE_NBR = 70208
---AND      BILLING_DATE = '2018-06-15'
-AND      BILLING_DATE between '2018-06-17' and '2018-07-14'
-and ITEM_DESCRIPTION = 'ICE CREAM MARKUP'
-;
-
-
-
 SELECT   sales_hist.facilityid,
          sales_hist.invoice_nbr,
          sales_hist.billing_date,
@@ -57,7 +30,7 @@ SELECT   sales_hist.facilityid,
          sales_hist.vendor_nbr,
          case sales_hist.platform_type 
               when 'LEGACY' then sales_hist.leakage_amt 
-              else LEAKER_AMT_CALC 
+              else sales_hist.leaker_amt_calc 
          end leakage_amt,
          sales_hist.freight_amt as freight_amt,
          sales_hist.booking_nbr,
@@ -83,10 +56,10 @@ SELECT   sales_hist.facilityid,
          sales_hist.prvt_lbl_flg,
          sales_hist.random_wgt_flg,
          division.region,
-         0 qty_shipped,
-         0 qty_for_extension,
-         0 net_price_amt,
-         FINAL_SELL_AMT as mrkup,
+         sales_hist.qty_sold - sales_hist.qty_scratched qty_shipped,
+         sales_hist.qty_sold - sales_hist.qty_scratched qty_for_extension,
+         ( sales_hist.final_sell_amt - (case when sales_hist.admin_alloc_flg = 'Y' Then 0 else sales_hist.lbl_case_chrge end) - sales_hist.price_adjustment - sales_hist.city_excise_tax - sales_hist.other_excise_tax_01 - sales_hist.other_excise_tax_02 - sales_hist.other_excise_tax_03 - sales_hist.county_excise_tax - sales_hist.state_excise_tax + case sales_hist.platform_type when 'LEGACY' then sales_hist.leakage_amt else sales_hist.leaker_amt_calc end + sales_hist.item_lvl_mrkup_amt_02 - case sales_hist.platform_type when 'LEGACY' then freight_amt + mrkup_dllrs_per_ship_unt else case when sales_hist.mrkup_spread_flg in ('1', '2') then sales_hist.mrkup_dllrs_per_ship_unt else 0 end - case when sales_hist.mrkup_spread_flg in ('2') then sales_hist.freight_amt else 0 end end) net_price_amt,
+         sales_hist.mrkup_dllrs_per_ship_unt as mrkup,
          case 
               when srp_units = 0 then 1 
               when srp_units = null then 1 
@@ -95,14 +68,12 @@ SELECT   sales_hist.facilityid,
          sales_hist.platform_type,
          sales_hist.credit_reason_cde
 FROM     crmadmin.v_whse_sales_history_dtl sales_hist 
-         inner join CRMADMIN.V_WHSE_LAWSON_ACCT_TO_SPLIT_GL_WSC_TN lawson_acct on (sales_hist.whol_sales_cd = lawson_acct.whol_sales_cd and sales_hist.territory_no = lawson_acct.territory_no and sales_hist.facilityid = lawson_acct.facilityid) 
+         inner join CRMADMIN.V_WHSE_LAWSON_ACCT_TO_WSC_TN lawson_acct on (sales_hist.whol_sales_cd = lawson_acct.whol_sales_cd and sales_hist.territory_no = lawson_acct.territory_no and sales_hist.facilityid = lawson_acct.facilityid) 
          inner join crmadmin.t_whse_div_xref division on division.swat_id = sales_hist.facilityid
 WHERE    lawson_acct.business_segment = '2'
-AND      lawson_acct.SPLIT_GL_ACCOUNT in ('70230', '70240')
-AND      (record_id = '6'
-     OR  (no_chrge_itm_cde = '*'
-        AND order_source = 'I'
-        AND sales_hist.item_description = 'ICE CREAM MARKUP') )
-AND      usds_flg = 'D'
---AND      billing_date between #FromDate# and #ToDate#
-AND      billing_date between '2018-06-17' and '2018-07-14'
+AND      lawson_acct.lawson_account in ('50000','50002','50005','50007','50040','50047','53010','54500')
+AND      record_id NOT IN ('2', '3', '4',' 5', '6', '7', '8')
+AND      sales_hist.no_chrge_itm_cde not in ('*')
+AND      usds_flg = 'U'
+AND      sales_hist.FACILITYID = '071'
+AND      billing_date between '2017-12-31' and '2018-01-27';

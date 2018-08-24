@@ -52,3 +52,5 @@ delete from CRMADMIN.T_WHSE_SALES_HST_DC where TRANSACTION_DATE between '2018-01
 and PLATFORM_TYPE = 'SWAT' ;
 
 commit;
+
+

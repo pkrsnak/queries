@@ -1,3 +1,23 @@
+create or replace view CRMADMIN.V_AMZ_ASIN
+as
+SELECT   ROOT_ITEM_NBR,
+         LV_ITEM_NBR,
+         LU_CODE
+FROM     CRMADMIN.T_MDM_ITEM_LU_CODE
+WHERE    LU_CODE_TYPE_ID = 901
+AND      STATUS_DWH = 'A'
+AND      current date between LU_CODE_STARTDATE and LU_CODE_ENDDATE
+;
+
+grant select on CRMADMIN.V_AMZ_ASIN to user CRMEXPLN;
+grant control on CRMADMIN.V_AMZ_ASIN to user ETL;
+grant select on CRMADMIN.V_AMZ_ASIN to user ETLX;
+grant select,update,insert,delete on CRMADMIN.V_AMZ_ASIN to user ETL with grant option;
+grant select on CRMADMIN.V_AMZ_ASIN to user WEB;
+grant select on CRMADMIN.V_AMZ_ASIN to user SIUSER;
+
+
+
 --.25 credit report
 create or replace view CRMADMIN.V_AMZ_ASIN_FEE_PRIOR_WEEK
 as
@@ -23,7 +43,7 @@ FROM     CRMADMIN.T_WHSE_SALES_HISTORY_DTL shd
          inner join CRMADMIN.T_WHSE_CUST c on shd.FACILITYID = c.FACILITYID and shd.CUSTOMER_NO_FULL = c.CUSTOMER_NO_FULL 
          inner join CRMADMIN.T_WHSE_CUST_GRP cg on c.FACILITYID = cg.FACILITYID and c.CUSTOMER_NBR_STND = cg.CUSTOMER_NBR_STND and CUSTOMER_GRP_TYPE = '75' AND current date >= cg.START_DATE AND (current date <= cg.END_DATE OR cg.END_DATE is null)
          inner join CRMADMIN.T_WHSE_ITEM i on shd.FACILITYID = i.FACILITYID and shd.ITEM_NBR_HS = i.ITEM_NBR_HS 
-         left outer join ETLADMIN.T_TEMP_UPC asin on i.UPC_UNIT_CD = asin.UPC_UNIT
+         left outer join CRMADMIN.V_AMZ_ASIN asin on i.UPC_UNIT_CD = asin.UPC_UNIT
 WHERE    d.WEEK_ENDING_DATE between current date - 7 days and current date
 AND      shd.QTY_SOLD - shd.QTY_SCRATCHED <> 0
 AND      shd.ORDER_TYPE not in ('CR')
@@ -123,7 +143,7 @@ SELECT   case i.FACILITYID when '054' then 'F3SPB' when '040' then 'F3SPB' when 
          dx.FACILITYID_UPSTREAM
 FROM     CRMADMIN.T_WHSE_ITEM i 
          inner join CRMADMIN.T_WHSE_DIV_XREF dx on i.FACILITYID = dx.SWAT_ID
-         left outer join ETLADMIN.T_TEMP_UPC tu on i.UPC_UNIT_CD = tu.UPC_UNIT 
+         left outer join CRMADMIN.V_AMZ_ASIN tu on i.UPC_UNIT_CD = tu.UPC_UNIT 
          left outer join (SELECT FACILITYID, ITEM_NBR_HS, CDE_DT, max(date(RECEIPT_DTIM)) receipt_dt, sum(PROD_QTY) PROD_QTY FROM CRMADMIN.T_WHSE_EXE_INV_DTL where STATUS not in ('D') GROUP BY FACILITYID, ITEM_NBR_HS, CDE_DT) eid on eid.FACILITYID = i.FACILITYID and eid.ITEM_NBR_HS = i.ITEM_NBR_HS 
          left outer join (select FACILITYID, ITEM_NBR, sum(PROMO_QTY) POQ_QTY from CRMADMIN.V_WHSE_DEAL where PROMO_QTY > 0 and DATE_DEAL_ARRIVE between current date and current date + 28 days group by FACILITYID, ITEM_NBR) poq on i.BICEPS_DC = poq.FACILITYID and i.ITEM_NBR = poq.ITEM_NBR
 WHERE    i.ITEM_RES28 in ('A', 'C')
@@ -191,7 +211,7 @@ FROM     CRMADMIN.T_WHSE_ITEM i
          inner join (SELECT dx.FACILITYID_UPSTREAM, count(*) TOTAL_STORES FROM CRMADMIN.T_WHSE_CUST_GRP cg inner join CRMADMIN.T_WHSE_DIV_XREF dx on cg.FACILITYID = dx.SWAT_ID inner join CRMADMIN.T_WHSE_CUST c on cg.FACILITYID = c.FACILITYID and cg.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and c.STATUS_CD not in ('P', 'D', 'Z') and c.CUSTOMER_BILLABLE_FLAG = 'Y' WHERE cg.CUSTOMER_GRP_TYPE = '75' AND cg.FACILITYID not in ('054') AND current date > cg.START_DATE AND (current date < cg.END_DATE OR cg.END_DATE is null) GROUP BY dx.FACILITYID_UPSTREAM) ts on dx.FACILITYID_UPSTREAM = ts.FACILITYID_UPSTREAM
          inner join (SELECT dx.SWAT_ID FACILITYID, count(*) DC_STORES FROM CRMADMIN.T_WHSE_CUST_GRP cg inner join CRMADMIN.T_WHSE_DIV_XREF dx on cg.FACILITYID = dx.SWAT_ID inner join CRMADMIN.T_WHSE_CUST c on cg.FACILITYID = c.FACILITYID and cg.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and c.STATUS_CD not in ('P', 'D', 'Z') and c.CUSTOMER_BILLABLE_FLAG = 'Y' WHERE cg.CUSTOMER_GRP_TYPE = '75' AND cg.FACILITYID not in ('054') AND current date > cg.START_DATE AND (current date < cg.END_DATE OR cg.END_DATE is null) GROUP BY dx.SWAT_ID) ds on i.FACILITYID = ds.FACILITYID
          inner join (SELECT vi.FACILITYID, vi.ITEM_NBR_HS, count(*) num_relationships FROM CRMADMIN.T_WHSE_ITEM i inner join CRMADMIN.T_WHSE_ITEM_PARENTCHILD ipc on i.FACILITYID = ipc.FACILITYID_CHILD and i.ITEM_NBR_HS = ipc.ITEM_NBR_HS_CHILD inner join CRMADMIN.T_WHSE_ITEM vi on ipc.FACILITYID_PARENT = vi.FACILITYID and ipc.ITEM_NBR_HS_PARENT = vi.ITEM_NBR_HS inner join (SELECT dx.SWAT_ID FACILITYID, count(*) DC_STORES FROM CRMADMIN.T_WHSE_CUST_GRP cg inner join CRMADMIN.T_WHSE_DIV_XREF dx on cg.FACILITYID = dx.SWAT_ID inner join CRMADMIN.T_WHSE_CUST c on cg.FACILITYID = c.FACILITYID and cg.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and c.STATUS_CD not in ('P', 'D', 'Z') and c.CUSTOMER_BILLABLE_FLAG = 'Y' WHERE cg.CUSTOMER_GRP_TYPE = '75' AND cg.FACILITYID not in ('054') AND current date > cg.START_DATE AND (current date < cg.END_DATE OR cg.END_DATE is null) GROUP BY dx.SWAT_ID) ds on i.FACILITYID = ds.FACILITYID WHERE i.ITEM_RES28 in ('A', 'C') GROUP BY vi.FACILITYID, vi.ITEM_NBR_HS) ir on dx.FACILITYID_UPSTREAM = ir.FACILITYID and vi.ITEM_NBR_HS = ir.ITEM_NBR_HS
-         left outer join ETLADMIN.T_TEMP_UPC tu on i.UPC_UNIT_CD = tu.UPC_UNIT 
+         left outer join CRMADMIN.V_AMZ_ASIN tu on i.UPC_UNIT_CD = tu.UPC_UNIT 
          left outer join (SELECT FACILITYID, ITEM_NBR_HS, CDE_DT, max(date(RECEIPT_DTIM)) receipt_dt, sum(PROD_QTY) PROD_QTY FROM CRMADMIN.T_WHSE_EXE_INV_DTL where STATUS not in ('D') GROUP BY FACILITYID, ITEM_NBR_HS, CDE_DT) eid on eid.FACILITYID = vi.FACILITYID and eid.ITEM_NBR_HS = vi.ITEM_NBR_HS 
          left outer join (select FACILITYID, ITEM_NBR, sum(PROMO_QTY) POQ_QTY from CRMADMIN.V_WHSE_DEAL where PROMO_QTY > 0 and DATE_DEAL_ARRIVE between current date and current date + 28 days group by FACILITYID, ITEM_NBR) poq on vi.BICEPS_DC = poq.FACILITYID and vi.ITEM_NBR = poq.ITEM_NBR
 WHERE    i.ITEM_RES28 in ('A', 'C')
@@ -307,7 +327,7 @@ SELECT   i.FACILITYID,
 FROM     CRMADMIN.T_WHSE_PO_HDR poh 
          inner join CRMADMIN.T_WHSE_PO_DTL pod on poh.VENDOR_FAC = pod.ITEM_FAC and poh.PO_NBR = pod.PO_NBR and poh.DATE_ORDERED = pod.DATE_ORDERED 
          inner join CRMADMIN.T_WHSE_ITEM i on pod.ITEM_FAC = i.BICEPS_DC and pod.ITEM_NBR = i.ITEM_NBR 
-         left outer join ETLADMIN.T_TEMP_UPC asin on i.UPC_UNIT_CD = asin.UPC_UNIT
+         left outer join CRMADMIN.V_AMZ_ASIN asin on i.UPC_UNIT_CD = asin.UPC_UNIT
 WHERE    poh.STATUS in ('A', 'P')
 AND      i.ITEM_RES28 in ('A', 'C')
 AND      i.FACILITYID in (select distinct FACILITYID from CRMADMIN.T_WHSE_CUST_GRP WHERE CUSTOMER_GRP_TYPE = '75')
@@ -381,7 +401,7 @@ FROM     CRMADMIN.T_WHSE_ITEM i
          inner join (SELECT dx.FACILITYID_UPSTREAM, count(*) TOTAL_STORES FROM CRMADMIN.T_WHSE_CUST_GRP cg inner join CRMADMIN.T_WHSE_DIV_XREF dx on cg.FACILITYID = dx.SWAT_ID inner join CRMADMIN.T_WHSE_CUST c on cg.FACILITYID = c.FACILITYID and cg.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and c.STATUS_CD not in ('P', 'D', 'Z') and c.CUSTOMER_BILLABLE_FLAG = 'Y' WHERE cg.CUSTOMER_GRP_TYPE = '75' AND cg.FACILITYID not in ('054') AND current date > cg.START_DATE AND (current date < cg.END_DATE OR cg.END_DATE is null) GROUP BY dx.FACILITYID_UPSTREAM) ts on dx.FACILITYID_UPSTREAM = ts.FACILITYID_UPSTREAM
          inner join (SELECT dx.SWAT_ID FACILITYID, count(*) DC_STORES FROM CRMADMIN.T_WHSE_CUST_GRP cg inner join CRMADMIN.T_WHSE_DIV_XREF dx on cg.FACILITYID = dx.SWAT_ID inner join CRMADMIN.T_WHSE_CUST c on cg.FACILITYID = c.FACILITYID and cg.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and c.STATUS_CD not in ('P', 'D', 'Z') and c.CUSTOMER_BILLABLE_FLAG = 'Y' WHERE cg.CUSTOMER_GRP_TYPE = '75' AND cg.FACILITYID not in ('054') AND current date > cg.START_DATE AND (current date < cg.END_DATE OR cg.END_DATE is null) GROUP BY dx.SWAT_ID) ds on i.FACILITYID = ds.FACILITYID
          inner join (SELECT vi.FACILITYID, vi.ITEM_NBR_HS, count(*) num_relationships FROM CRMADMIN.T_WHSE_ITEM i inner join CRMADMIN.T_WHSE_ITEM_PARENTCHILD ipc on i.FACILITYID = ipc.FACILITYID_CHILD and i.ITEM_NBR_HS = ipc.ITEM_NBR_HS_CHILD inner join CRMADMIN.T_WHSE_ITEM vi on ipc.FACILITYID_PARENT = vi.FACILITYID and ipc.ITEM_NBR_HS_PARENT = vi.ITEM_NBR_HS inner join (SELECT dx.SWAT_ID FACILITYID, count(*) DC_STORES FROM CRMADMIN.T_WHSE_CUST_GRP cg inner join CRMADMIN.T_WHSE_DIV_XREF dx on cg.FACILITYID = dx.SWAT_ID inner join CRMADMIN.T_WHSE_CUST c on cg.FACILITYID = c.FACILITYID and cg.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and c.STATUS_CD not in ('P', 'D', 'Z') and c.CUSTOMER_BILLABLE_FLAG = 'Y' WHERE cg.CUSTOMER_GRP_TYPE = '75' AND cg.FACILITYID not in ('054') AND current date > cg.START_DATE AND (current date < cg.END_DATE OR cg.END_DATE is null) GROUP BY dx.SWAT_ID) ds on i.FACILITYID = ds.FACILITYID WHERE i.ITEM_RES28 in ('A', 'C') GROUP BY vi.FACILITYID, vi.ITEM_NBR_HS) ir on dx.FACILITYID_UPSTREAM = ir.FACILITYID and vi.ITEM_NBR_HS = ir.ITEM_NBR_HS
-         left outer join ETLADMIN.T_TEMP_UPC asin on i.UPC_UNIT_CD = asin.UPC_UNIT
+         left outer join CRMADMIN.V_AMZ_ASIN asin on i.UPC_UNIT_CD = asin.UPC_UNIT
 WHERE    poh.STATUS in ('A', 'P')
 AND      i.ITEM_RES28 in ('A', 'C')
 AND      i.FACILITYID in (select distinct FACILITYID from CRMADMIN.T_WHSE_CUST_GRP WHERE CUSTOMER_GRP_TYPE = '75')
@@ -557,7 +577,7 @@ FROM     TABLE( SELECT A.FACILITYID, A.CUSTOMER_NBR_STND, A.BURDENED_COST_FLG, A
          inner join CRMADMIN.V_WEB_CUSTOMER_MDSE_DEPT cmd on i.FACILITYID = cmd.FACILITYID and cmd.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and i.MERCH_DEPT = cmd.MDSE_DEPT_CD 
          left outer join CRMADMIN.V_WEB_CUSTOMER_PRVT_BRAND vwcpb on i.FACILITYID = vwcpb.FACILITYID and vwcpb.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and i.PRIVATE_LABEL_KEY = vwcpb.PRIV_BRAND_KEY 
          left outer join CRMADMIN.T_WHSE_ITEM_AUTH cid on cic.FACILITYID = cid.FACILITYID and cid.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and cic.ITEM_NBR_HS = cid.ITEM_NBR_HS and (cid.EXP_DATE is null or cid.EXP_DATE >= current date) and cid.ITEM_ACTIVE_FLG = 'Y' and cid.ITEM_AUTH_CD <> 'Y'
-         left outer join ETLADMIN.T_TEMP_UPC asin on i.UPC_UNIT_CD = asin.UPC_UNIT
+         left outer join CRMADMIN.V_AMZ_ASIN asin on i.UPC_UNIT_CD = asin.UPC_UNIT
 WHERE    cic.FACILITYID in ('015', '040', '054')
 AND      cic.CUSTOMER_NBR_STND = 634001
 AND      (i.BILLING_STATUS_BACKSCREEN not in ('P', 'Z', 'I')
@@ -767,7 +787,7 @@ FROM     CRMADMIN.T_WHSE_SALES_HISTORY_DTL shd
          inner join CRMADMIN.T_WHSE_CUST c on shd.FACILITYID = c.FACILITYID and shd.CUSTOMER_NO_FULL = c.CUSTOMER_NO_FULL 
          inner join CRMADMIN.T_WHSE_CUST_GRP cg on c.FACILITYID = cg.FACILITYID and c.CUSTOMER_NBR_STND = cg.CUSTOMER_NBR_STND and CUSTOMER_GRP_TYPE = '75' AND current date >= cg.START_DATE AND (current date <= cg.END_DATE OR cg.END_DATE is null) 
          inner join CRMADMIN.T_WHSE_ITEM i on shd.FACILITYID = i.FACILITYID and shd.ITEM_NBR_HS = i.ITEM_NBR_HS 
-         left outer join ETLADMIN.T_TEMP_UPC asin on i.UPC_UNIT_CD = asin.UPC_UNIT
+         left outer join CRMADMIN.V_AMZ_ASIN asin on i.UPC_UNIT_CD = asin.UPC_UNIT
 WHERE    d.WEEK_ENDING_DATE between current date - 7 days and current date
 AND      shd.QTY_SOLD - shd.QTY_SCRATCHED = 0
 AND      shd.ORDER_TYPE not in ('CR')
@@ -823,7 +843,7 @@ FROM     CRMADMIN.T_WHSE_SALES_HISTORY_DTL shd
          inner join CRMADMIN.T_WHSE_CUST c on shd.FACILITYID = c.FACILITYID and shd.CUSTOMER_NO_FULL = c.CUSTOMER_NO_FULL 
          inner join CRMADMIN.T_WHSE_CUST_GRP cg on c.FACILITYID = cg.FACILITYID and c.CUSTOMER_NBR_STND = cg.CUSTOMER_NBR_STND and CUSTOMER_GRP_TYPE = '75' AND current date >= cg.START_DATE AND (current date <= cg.END_DATE OR cg.END_DATE is null) 
          left outer join CRMADMIN.T_WHSE_ITEM i on shd.FACILITYID = i.FACILITYID and shd.ITEM_NBR_HS = i.ITEM_NBR_HS 
-         left outer join ETLADMIN.T_TEMP_UPC asin on i.UPC_UNIT_CD = asin.UPC_UNIT
+         left outer join CRMADMIN.V_AMZ_ASIN asin on i.UPC_UNIT_CD = asin.UPC_UNIT
          left outer join CRMADMIN.T_WHSE_OUT_CODE oc on oc.OUT_CODE = shd.OUT_REASON_CODE
 WHERE    d.WEEK_ENDING_DATE between current date - 7 days and current date
 AND      shd.QTY_SOLD - shd.QTY_SCRATCHED = 0
@@ -843,7 +863,7 @@ SELECT   i.FACILITYID,
          i.ITEM_RES28 AMAZON_SHARED,
          i.PURCH_STATUS,
          i.BILLING_STATUS_BACKSCREEN
-FROM     ETLADMIN.T_TEMP_UPC tu 
+FROM     CRMADMIN.V_AMZ_ASIN tu 
          inner join CRMADMIN.T_WHSE_ITEM i on i.UPC_UNIT_CD = tu.UPC_UNIT
 WHERE    i.FACILITYID in ('040', '054', '015')
 and i.item_res28 not in ('A', 'C')
@@ -922,7 +942,7 @@ FROM     CRMADMIN.T_WHSE_ITEM i
          inner join CRMADMIN.V_WEB_CUSTOMER_ITEM_COST cic on i.FACILITYID = cic.FACILITYID and i.ITEM_NBR_HS = cic.ITEM_NBR_HS and c.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and cic.MASTER_ITEM_FLG = 'Y' and cic.START_DATE <= current date + 7 days and (cic.END_DATE >= current date + 7 days or cic.END_DATE is null) 
          left outer join CRMADMIN.V_WEB_CUSTOMER_PRVT_BRAND vwcpb on i.FACILITYID = vwcpb.FACILITYID and i.PRIVATE_LABEL_KEY = vwcpb.PRIV_BRAND_KEY and vwcpb.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND 
          left outer join CRMADMIN.V_WEB_CUSTOMER_ITEM_DEAUTH cid on i.FACILITYID = cid.FACILITYID and cid.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and i.ITEM_NBR_HS = cid.ITEM_NBR_HS 
-         left outer join ETLADMIN.T_TEMP_UPC asin on i.UPC_UNIT_CD = asin.UPC_UNIT
+         left outer join CRMADMIN.V_AMZ_ASIN asin on i.UPC_UNIT_CD = asin.UPC_UNIT
 WHERE    (cid.ITEM_AUTH_CD is null
      OR  cid.ITEM_AUTH_CD = 'Y')
 AND      (i.PRIVATE_LABEL_KEY = vwcpb.PRIV_BRAND_KEY

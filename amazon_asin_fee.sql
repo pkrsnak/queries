@@ -19,7 +19,7 @@ grant select on CRMADMIN.V_AMZ_ASIN to user SIUSER;
 
 
 --.25 credit report
-create or replace view CRMADMIN.V_AMZ_ASIN_FEE_PRIOR_WEEK
+create or replace view CRMADMIN.V_AMZ_ASIN_FEE_PRIOR_WEEK_TEST
 as
 SELECT   '2D-01274170' as po_id,
          '' as invoice_id,
@@ -28,7 +28,7 @@ SELECT   '2D-01274170' as po_id,
          c.CUST_STORE_NO as amazon_destination,
          shd.BILLING_DATE as service_date,
          d.WEEK_ENDING_DATE as billing_period,
-         asin.FUTURE_USE as amazon_asin,
+         asin.LU_CODE as amazon_asin,
          (shd.QTY_SOLD - shd.QTY_SCRATCHED) * shd.STORE_PACK as units_shipped,
          ((shd.QTY_SOLD - shd.QTY_SCRATCHED) * shd.STORE_PACK) *.25 as amazon_fee,
          shd.FACILITYID,
@@ -43,7 +43,7 @@ FROM     CRMADMIN.T_WHSE_SALES_HISTORY_DTL shd
          inner join CRMADMIN.T_WHSE_CUST c on shd.FACILITYID = c.FACILITYID and shd.CUSTOMER_NO_FULL = c.CUSTOMER_NO_FULL 
          inner join CRMADMIN.T_WHSE_CUST_GRP cg on c.FACILITYID = cg.FACILITYID and c.CUSTOMER_NBR_STND = cg.CUSTOMER_NBR_STND and CUSTOMER_GRP_TYPE = '75' AND current date >= cg.START_DATE AND (current date <= cg.END_DATE OR cg.END_DATE is null)
          inner join CRMADMIN.T_WHSE_ITEM i on shd.FACILITYID = i.FACILITYID and shd.ITEM_NBR_HS = i.ITEM_NBR_HS 
-         left outer join CRMADMIN.V_AMZ_ASIN asin on i.UPC_UNIT_CD = asin.UPC_UNIT
+         left outer join CRMADMIN.V_AMZ_ASIN asin on i.ROOT_ITEM_NBR = asin.ROOT_ITEM_NBR and i.LV_ITEM_NBR = asin.LV_ITEM_NBR 
 WHERE    d.WEEK_ENDING_DATE between current date - 7 days and current date
 AND      shd.QTY_SOLD - shd.QTY_SCRATCHED <> 0
 AND      shd.ORDER_TYPE not in ('CR')
@@ -96,11 +96,11 @@ order by sum(qty_shipped) desc
 ;*/
 
 --inventory feed - downstream
-create or replace view CRMADMIN.V_AMZ_INVENTORY_FEED_DS
+create or replace view CRMADMIN.V_AMZ_INVENTORY_FEED_DS_TEST
 as
 SELECT   case i.FACILITYID when '054' then 'F3SPB' when '040' then 'F3SPB' when '058' then 'F3SPA' when '015' then 'F3SPC' else i.FACILITYID end facilityid,
          current timestamp INVENTORY_EFFECTIVE_DATETIME,
-         tu.FUTURE_USE ASIN,
+         tu.LU_CODE ASIN,
          i.UPC_UNIT_CD,
          'EA' available_qty_uom,
          case i.ITEM_RES28 
@@ -143,7 +143,7 @@ SELECT   case i.FACILITYID when '054' then 'F3SPB' when '040' then 'F3SPB' when 
          dx.FACILITYID_UPSTREAM
 FROM     CRMADMIN.T_WHSE_ITEM i 
          inner join CRMADMIN.T_WHSE_DIV_XREF dx on i.FACILITYID = dx.SWAT_ID
-         left outer join CRMADMIN.V_AMZ_ASIN tu on i.UPC_UNIT_CD = tu.UPC_UNIT 
+         left outer join CRMADMIN.V_AMZ_ASIN tu on i.ROOT_ITEM_NBR = tu.ROOT_ITEM_NBR and i.LV_ITEM_NBR = tu.LV_ITEM_NBR
          left outer join (SELECT FACILITYID, ITEM_NBR_HS, CDE_DT, max(date(RECEIPT_DTIM)) receipt_dt, sum(PROD_QTY) PROD_QTY FROM CRMADMIN.T_WHSE_EXE_INV_DTL where STATUS not in ('D') GROUP BY FACILITYID, ITEM_NBR_HS, CDE_DT) eid on eid.FACILITYID = i.FACILITYID and eid.ITEM_NBR_HS = i.ITEM_NBR_HS 
          left outer join (select FACILITYID, ITEM_NBR, sum(PROMO_QTY) POQ_QTY from CRMADMIN.V_WHSE_DEAL where PROMO_QTY > 0 and DATE_DEAL_ARRIVE between current date and current date + 28 days group by FACILITYID, ITEM_NBR) poq on i.BICEPS_DC = poq.FACILITYID and i.ITEM_NBR = poq.ITEM_NBR
 WHERE    i.ITEM_RES28 in ('A', 'C')
@@ -160,11 +160,11 @@ grant select on CRMADMIN.V_AMZ_INVENTORY_FEED_DS to user WEB;
 grant select on CRMADMIN.V_AMZ_INVENTORY_FEED_DS to user SIUSER;
 
 --inventory feed UPSTREAM
-create or replace view CRMADMIN.V_AMZ_INVENTORY_FEED_US
+create or replace view CRMADMIN.V_AMZ_INVENTORY_FEED_US_TEST
 as
 SELECT   case i.FACILITYID when '054' then 'F3SPB' when '040' then 'F3SPB' when '058' then 'F3SPA' when '015' then 'F3SPC' else i.FACILITYID end facilityid,
          current timestamp INVENTORY_EFFECTIVE_DATETIME,
-         tu.FUTURE_USE ASIN,
+         tu.LU_CODE ASIN,
          i.UPC_UNIT_CD,
          'EA' available_qty_uom,
          integer(round((case vi.ITEM_RES28 
@@ -211,7 +211,7 @@ FROM     CRMADMIN.T_WHSE_ITEM i
          inner join (SELECT dx.FACILITYID_UPSTREAM, count(*) TOTAL_STORES FROM CRMADMIN.T_WHSE_CUST_GRP cg inner join CRMADMIN.T_WHSE_DIV_XREF dx on cg.FACILITYID = dx.SWAT_ID inner join CRMADMIN.T_WHSE_CUST c on cg.FACILITYID = c.FACILITYID and cg.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and c.STATUS_CD not in ('P', 'D', 'Z') and c.CUSTOMER_BILLABLE_FLAG = 'Y' WHERE cg.CUSTOMER_GRP_TYPE = '75' AND cg.FACILITYID not in ('054') AND current date > cg.START_DATE AND (current date < cg.END_DATE OR cg.END_DATE is null) GROUP BY dx.FACILITYID_UPSTREAM) ts on dx.FACILITYID_UPSTREAM = ts.FACILITYID_UPSTREAM
          inner join (SELECT dx.SWAT_ID FACILITYID, count(*) DC_STORES FROM CRMADMIN.T_WHSE_CUST_GRP cg inner join CRMADMIN.T_WHSE_DIV_XREF dx on cg.FACILITYID = dx.SWAT_ID inner join CRMADMIN.T_WHSE_CUST c on cg.FACILITYID = c.FACILITYID and cg.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and c.STATUS_CD not in ('P', 'D', 'Z') and c.CUSTOMER_BILLABLE_FLAG = 'Y' WHERE cg.CUSTOMER_GRP_TYPE = '75' AND cg.FACILITYID not in ('054') AND current date > cg.START_DATE AND (current date < cg.END_DATE OR cg.END_DATE is null) GROUP BY dx.SWAT_ID) ds on i.FACILITYID = ds.FACILITYID
          inner join (SELECT vi.FACILITYID, vi.ITEM_NBR_HS, count(*) num_relationships FROM CRMADMIN.T_WHSE_ITEM i inner join CRMADMIN.T_WHSE_ITEM_PARENTCHILD ipc on i.FACILITYID = ipc.FACILITYID_CHILD and i.ITEM_NBR_HS = ipc.ITEM_NBR_HS_CHILD inner join CRMADMIN.T_WHSE_ITEM vi on ipc.FACILITYID_PARENT = vi.FACILITYID and ipc.ITEM_NBR_HS_PARENT = vi.ITEM_NBR_HS inner join (SELECT dx.SWAT_ID FACILITYID, count(*) DC_STORES FROM CRMADMIN.T_WHSE_CUST_GRP cg inner join CRMADMIN.T_WHSE_DIV_XREF dx on cg.FACILITYID = dx.SWAT_ID inner join CRMADMIN.T_WHSE_CUST c on cg.FACILITYID = c.FACILITYID and cg.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and c.STATUS_CD not in ('P', 'D', 'Z') and c.CUSTOMER_BILLABLE_FLAG = 'Y' WHERE cg.CUSTOMER_GRP_TYPE = '75' AND cg.FACILITYID not in ('054') AND current date > cg.START_DATE AND (current date < cg.END_DATE OR cg.END_DATE is null) GROUP BY dx.SWAT_ID) ds on i.FACILITYID = ds.FACILITYID WHERE i.ITEM_RES28 in ('A', 'C') GROUP BY vi.FACILITYID, vi.ITEM_NBR_HS) ir on dx.FACILITYID_UPSTREAM = ir.FACILITYID and vi.ITEM_NBR_HS = ir.ITEM_NBR_HS
-         left outer join CRMADMIN.V_AMZ_ASIN tu on i.UPC_UNIT_CD = tu.UPC_UNIT 
+         left outer join CRMADMIN.V_AMZ_ASIN tu on i.ROOT_ITEM_NBR = tu.ROOT_ITEM_NBR and i.LV_ITEM_NBR = tu.LV_ITEM_NBR 
          left outer join (SELECT FACILITYID, ITEM_NBR_HS, CDE_DT, max(date(RECEIPT_DTIM)) receipt_dt, sum(PROD_QTY) PROD_QTY FROM CRMADMIN.T_WHSE_EXE_INV_DTL where STATUS not in ('D') GROUP BY FACILITYID, ITEM_NBR_HS, CDE_DT) eid on eid.FACILITYID = vi.FACILITYID and eid.ITEM_NBR_HS = vi.ITEM_NBR_HS 
          left outer join (select FACILITYID, ITEM_NBR, sum(PROMO_QTY) POQ_QTY from CRMADMIN.V_WHSE_DEAL where PROMO_QTY > 0 and DATE_DEAL_ARRIVE between current date and current date + 28 days group by FACILITYID, ITEM_NBR) poq on vi.BICEPS_DC = poq.FACILITYID and vi.ITEM_NBR = poq.ITEM_NBR
 WHERE    i.ITEM_RES28 in ('A', 'C')
@@ -228,7 +228,7 @@ grant select on CRMADMIN.V_AMZ_INVENTORY_FEED_US to user WEB;
 grant select on CRMADMIN.V_AMZ_INVENTORY_FEED_US to user SIUSER;
 
 --consolidated 
-create or replace view CRMADMIN.V_AMZ_INVENTORY_FEED
+create or replace view CRMADMIN.V_AMZ_INVENTORY_FEED_TEST
 as
 SELECT   FACILITYID,
          INVENTORY_EFFECTIVE_DATETIME,
@@ -241,7 +241,7 @@ SELECT   FACILITYID,
          AMZ_SPECIFIC_UPC,
          SHRINK_DATE_TIME,
          EXPIRATION_DATE_TIME, FACILITYID_HOME, FACILITYID_STOCK, ITEM_DEPT, ITEM_NBR_HS_HOME, ITEM_NBR_HS_STOCK, ITEM_DESCRIP, PACK_CASE, INVENTORY_TOTAL, SN_UNITS_AVAIL, SN_CASES_AVAIL, RESERVE_COMMITTED, RESERVE_UNCOMMITTED, STORAGE_COMMITTED, STORAGE_UNCOMMITTED, FORECAST, IN_PROCESS_REGULAR, POQ_QUANTITY, SHELF_LIFE, DISTRESS_DAYS, CODE_DATE_FLAG
-FROM     CRMADMIN.V_AMZ_INVENTORY_FEED_DS
+FROM     CRMADMIN.V_AMZ_INVENTORY_FEED_DS_TEST
 union all 
 SELECT   FACILITYID,
          INVENTORY_EFFECTIVE_DATETIME,
@@ -254,7 +254,7 @@ SELECT   FACILITYID,
          AMZ_SPECIFIC_UPC,
          SHRINK_DATE_TIME,
          EXPIRATION_DATE_TIME, FACILITYID_HOME, FACILITYID_STOCK, ITEM_DEPT, ITEM_NBR_HS_HOME, ITEM_NBR_HS_STOCK, ITEM_DESCRIP, PACK_CASE, INVENTORY_TOTAL, SN_UNITS_AVAIL, SN_CASES_AVAIL, RESERVE_COMMITTED, RESERVE_UNCOMMITTED, STORAGE_COMMITTED, STORAGE_UNCOMMITTED, FORECAST, IN_PROCESS_REGULAR, POQ_QUANTITY, SHELF_LIFE, DISTRESS_DAYS, CODE_DATE_FLAG
-FROM     CRMADMIN.V_AMZ_INVENTORY_FEED_US
+FROM     CRMADMIN.V_AMZ_INVENTORY_FEED_US_TEST
 ;
 grant select on CRMADMIN.V_AMZ_INVENTORY_FEED to user CRMEXPLN;
 grant control on CRMADMIN.V_AMZ_INVENTORY_FEED to user ETL;
@@ -282,7 +282,7 @@ FROM     CRMADMIN.V_AMZ_INVENTORY_FEED
 */
 
 --inbound po feed - DS
-create or replace view CRMADMIN.V_AMZ_OPEN_PO_FEED_DS
+create or replace view CRMADMIN.V_AMZ_OPEN_PO_FEED_DS_TEST
 as
 SELECT   i.FACILITYID,
          case i.FACILITYID 
@@ -295,7 +295,7 @@ SELECT   i.FACILITYID,
          current timestamp open_po_effective_date_time,
          poh.PO_NBR open_PO_Number,
          poh.VENDOR_NAME supplier_Name,
-         asin.FUTURE_USE asin,
+         asin.LU_CODE asin,
          i.UPC_UNIT_CD upc,
          i.ITEM_NBR_HS vendor_Sku,
          decimal(round((pod.LIST_COST / pod.PACK), 2),9, 3) item_Cost_Price,
@@ -327,7 +327,7 @@ SELECT   i.FACILITYID,
 FROM     CRMADMIN.T_WHSE_PO_HDR poh 
          inner join CRMADMIN.T_WHSE_PO_DTL pod on poh.VENDOR_FAC = pod.ITEM_FAC and poh.PO_NBR = pod.PO_NBR and poh.DATE_ORDERED = pod.DATE_ORDERED 
          inner join CRMADMIN.T_WHSE_ITEM i on pod.ITEM_FAC = i.BICEPS_DC and pod.ITEM_NBR = i.ITEM_NBR 
-         left outer join CRMADMIN.V_AMZ_ASIN asin on i.UPC_UNIT_CD = asin.UPC_UNIT
+         left outer join CRMADMIN.V_AMZ_ASIN asin on i.ROOT_ITEM_NBR = asin.ROOT_ITEM_NBR and i.LV_ITEM_NBR = asin.LV_ITEM_NBR
 WHERE    poh.STATUS in ('A', 'P')
 AND      i.ITEM_RES28 in ('A', 'C')
 AND      i.FACILITYID in (select distinct FACILITYID from CRMADMIN.T_WHSE_CUST_GRP WHERE CUSTOMER_GRP_TYPE = '75')
@@ -344,7 +344,7 @@ grant select on CRMADMIN.V_AMZ_OPEN_PO_FEED_DS to user WEB;
 grant select on CRMADMIN.V_AMZ_OPEN_PO_FEED_DS to user SIUSER;
 
 --inbound po feed - US
-create or replace view CRMADMIN.V_AMZ_OPEN_PO_FEED_US
+create or replace view CRMADMIN.V_AMZ_OPEN_PO_FEED_US_TEST
 as
 SELECT   i.FACILITYID,
          case i.FACILITYID 
@@ -357,7 +357,7 @@ SELECT   i.FACILITYID,
          current timestamp open_po_effective_date_time,
          poh.PO_NBR open_PO_Number,
          poh.VENDOR_NAME supplier_Name,
-         asin.FUTURE_USE asin,
+         asin.LU_CODE asin,
          i.UPC_UNIT_CD upc,
          i.ITEM_NBR_HS vendor_Sku,
          decimal(round((pod.LIST_COST / pod.PACK), 2),9, 3) item_Cost_Price,
@@ -401,7 +401,7 @@ FROM     CRMADMIN.T_WHSE_ITEM i
          inner join (SELECT dx.FACILITYID_UPSTREAM, count(*) TOTAL_STORES FROM CRMADMIN.T_WHSE_CUST_GRP cg inner join CRMADMIN.T_WHSE_DIV_XREF dx on cg.FACILITYID = dx.SWAT_ID inner join CRMADMIN.T_WHSE_CUST c on cg.FACILITYID = c.FACILITYID and cg.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and c.STATUS_CD not in ('P', 'D', 'Z') and c.CUSTOMER_BILLABLE_FLAG = 'Y' WHERE cg.CUSTOMER_GRP_TYPE = '75' AND cg.FACILITYID not in ('054') AND current date > cg.START_DATE AND (current date < cg.END_DATE OR cg.END_DATE is null) GROUP BY dx.FACILITYID_UPSTREAM) ts on dx.FACILITYID_UPSTREAM = ts.FACILITYID_UPSTREAM
          inner join (SELECT dx.SWAT_ID FACILITYID, count(*) DC_STORES FROM CRMADMIN.T_WHSE_CUST_GRP cg inner join CRMADMIN.T_WHSE_DIV_XREF dx on cg.FACILITYID = dx.SWAT_ID inner join CRMADMIN.T_WHSE_CUST c on cg.FACILITYID = c.FACILITYID and cg.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and c.STATUS_CD not in ('P', 'D', 'Z') and c.CUSTOMER_BILLABLE_FLAG = 'Y' WHERE cg.CUSTOMER_GRP_TYPE = '75' AND cg.FACILITYID not in ('054') AND current date > cg.START_DATE AND (current date < cg.END_DATE OR cg.END_DATE is null) GROUP BY dx.SWAT_ID) ds on i.FACILITYID = ds.FACILITYID
          inner join (SELECT vi.FACILITYID, vi.ITEM_NBR_HS, count(*) num_relationships FROM CRMADMIN.T_WHSE_ITEM i inner join CRMADMIN.T_WHSE_ITEM_PARENTCHILD ipc on i.FACILITYID = ipc.FACILITYID_CHILD and i.ITEM_NBR_HS = ipc.ITEM_NBR_HS_CHILD inner join CRMADMIN.T_WHSE_ITEM vi on ipc.FACILITYID_PARENT = vi.FACILITYID and ipc.ITEM_NBR_HS_PARENT = vi.ITEM_NBR_HS inner join (SELECT dx.SWAT_ID FACILITYID, count(*) DC_STORES FROM CRMADMIN.T_WHSE_CUST_GRP cg inner join CRMADMIN.T_WHSE_DIV_XREF dx on cg.FACILITYID = dx.SWAT_ID inner join CRMADMIN.T_WHSE_CUST c on cg.FACILITYID = c.FACILITYID and cg.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and c.STATUS_CD not in ('P', 'D', 'Z') and c.CUSTOMER_BILLABLE_FLAG = 'Y' WHERE cg.CUSTOMER_GRP_TYPE = '75' AND cg.FACILITYID not in ('054') AND current date > cg.START_DATE AND (current date < cg.END_DATE OR cg.END_DATE is null) GROUP BY dx.SWAT_ID) ds on i.FACILITYID = ds.FACILITYID WHERE i.ITEM_RES28 in ('A', 'C') GROUP BY vi.FACILITYID, vi.ITEM_NBR_HS) ir on dx.FACILITYID_UPSTREAM = ir.FACILITYID and vi.ITEM_NBR_HS = ir.ITEM_NBR_HS
-         left outer join CRMADMIN.V_AMZ_ASIN asin on i.UPC_UNIT_CD = asin.UPC_UNIT
+         left outer join CRMADMIN.V_AMZ_ASIN asin on i.ROOT_ITEM_NBR = asin.ROOT_ITEM_NBR and i.LV_ITEM_NBR = asin.LV_ITEM_NBR
 WHERE    poh.STATUS in ('A', 'P')
 AND      i.ITEM_RES28 in ('A', 'C')
 AND      i.FACILITYID in (select distinct FACILITYID from CRMADMIN.T_WHSE_CUST_GRP WHERE CUSTOMER_GRP_TYPE = '75')
@@ -418,7 +418,7 @@ grant select on CRMADMIN.V_AMZ_OPEN_PO_FEED_US to user WEB;
 grant select on CRMADMIN.V_AMZ_OPEN_PO_FEED_US to user SIUSER;
 
 --inbound po feed - CONSOLIDATED
-create or replace view CRMADMIN.V_AMZ_OPEN_PO_FEED
+create or replace view CRMADMIN.V_AMZ_OPEN_PO_FEED_TEST
 as
 SELECT   VENDOR_CODE,
          OPEN_PO_EFFECTIVE_DATE_TIME,
@@ -441,7 +441,7 @@ SELECT   VENDOR_CODE,
          REQUIRED_DELIVERY_DATE_TIME,
          ITEM_DELIVERY_DATE_TIME,
          ITEM_AVAILABLE_DATE_TIME
-FROM     CRMADMIN.V_AMZ_OPEN_PO_FEED_DS
+FROM     CRMADMIN.V_AMZ_OPEN_PO_FEED_DS_TEST
 union all
 SELECT   VENDOR_CODE,
          OPEN_PO_EFFECTIVE_DATE_TIME,
@@ -464,7 +464,7 @@ SELECT   VENDOR_CODE,
          REQUIRED_DELIVERY_DATE_TIME,
          ITEM_DELIVERY_DATE_TIME,
          ITEM_AVAILABLE_DATE_TIME
-FROM     CRMADMIN.V_AMZ_OPEN_PO_FEED_US
+FROM     CRMADMIN.V_AMZ_OPEN_PO_FEED_US_TEST
 ;
 
 grant select on CRMADMIN.V_AMZ_OPEN_PO_FEED to user CRMEXPLN;
@@ -504,7 +504,7 @@ where    INBOUND_QUANTITY_FOR_AMZ > 0
 */
 
 --catalog feed
-create or replace view CRMADMIN.V_AMZ_CATALOG_FEED
+create or replace view CRMADMIN.V_AMZ_CATALOG_FEED_TEST
 as
 SELECT   case cic.FACILITYID 
               when '054' then '040' 
@@ -519,7 +519,7 @@ SELECT   case cic.FACILITYID
               else cic.FACILITYID 
          end vendor_code,
          current timestamp catalog_effective_date_time,
-         asin.FUTURE_USE asin,
+         asin.LU_CODE asin,
          i.UPC_UNIT_CD unit_upc,
          i.UPC_CASE_CD case_upc,
          i.GTIN,
@@ -577,7 +577,7 @@ FROM     TABLE( SELECT A.FACILITYID, A.CUSTOMER_NBR_STND, A.BURDENED_COST_FLG, A
          inner join CRMADMIN.V_WEB_CUSTOMER_MDSE_DEPT cmd on i.FACILITYID = cmd.FACILITYID and cmd.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and i.MERCH_DEPT = cmd.MDSE_DEPT_CD 
          left outer join CRMADMIN.V_WEB_CUSTOMER_PRVT_BRAND vwcpb on i.FACILITYID = vwcpb.FACILITYID and vwcpb.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and i.PRIVATE_LABEL_KEY = vwcpb.PRIV_BRAND_KEY 
          left outer join CRMADMIN.T_WHSE_ITEM_AUTH cid on cic.FACILITYID = cid.FACILITYID and cid.CUSTOMER_NBR_STND = cic.CUSTOMER_NBR_STND and cic.ITEM_NBR_HS = cid.ITEM_NBR_HS and (cid.EXP_DATE is null or cid.EXP_DATE >= current date) and cid.ITEM_ACTIVE_FLG = 'Y' and cid.ITEM_AUTH_CD <> 'Y'
-         left outer join CRMADMIN.V_AMZ_ASIN asin on i.UPC_UNIT_CD = asin.UPC_UNIT
+         left outer join CRMADMIN.V_AMZ_ASIN asin on i.ROOT_ITEM_NBR = asin.ROOT_ITEM_NBR and i.LV_ITEM_NBR = asin.LV_ITEM_NBR
 WHERE    cic.FACILITYID in ('015', '040', '054')
 AND      cic.CUSTOMER_NBR_STND = 634001
 AND      (i.BILLING_STATUS_BACKSCREEN not in ('P', 'Z', 'I')

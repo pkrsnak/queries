@@ -180,6 +180,8 @@ SELECT   i.FACILITYID,
          fc.ITEM_CATEGORY_NAME,
          trim(case when trim(i.ROOT_DESC) = '' then i.ITEM_DESCRIP else i.ROOT_DESC end) ROOT_DESC,
          i.ROOT_ITEM_NBR,
+         i.LV_ITEM_NBR,
+         i.LV_DESC,
          case 
               when i.FULFILL_FACILITYID is null then '000' 
               else lpad(i.FULFILL_FACILITYID, 3, '0') 

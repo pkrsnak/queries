@@ -1,3 +1,56 @@
+--affected invoices?
+SELECT   FACILITYID,
+         INVOICE_NBR,
+         BILLING_DATE,
+         CUSTOMER_NBR_STND,
+         sum(qty_shipped) tot_qty_shipped,
+         sum(line_item_mkup) tot_line_item_mkup,
+         sum(invoice_markup) tot_invoice_markup,
+         sum(sales) tot_sales
+from (
+
+SELECT   FACILITYID,
+         INVOICE_NBR,
+         BILLING_DATE,
+         CUSTOMER_NBR_STND,
+         sum(QTY_SOLD - QTY_SCRATCHED) qty_shipped,
+         sum((QTY_SOLD - QTY_SCRATCHED) * MRKUP_DLLRS_PER_SHIP_UNT) line_item_mkup,
+         0 invoice_markup,
+         sum((QTY_SOLD - QTY_SCRATCHED) * FINAL_SELL_AMT) sales
+FROM     CRMADMIN.V_WHSE_SALES_HISTORY_DTL
+WHERE    BILLING_DATE between '2017-08-20' and current date
+--AND      TERRITORY_NO in (21, 27, 31)
+AND      FACILITYID = '008'
+AND      ITEM_DEPT = '035'
+AND      NO_CHRGE_ITM_CDE <> '*'
+GROUP BY FACILITYID, INVOICE_NBR, BILLING_DATE, CUSTOMER_NBR_STND
+union all
+SELECT   FACILITYID,
+         INVOICE_NBR,
+         BILLING_DATE,
+         CUSTOMER_NBR_STND,
+         0 qty_shipped,
+         0 line_item_mkup,
+         FINAL_SELL_AMT invoice_markup,
+         0 sales
+FROM     crmadmin.v_whse_sales_history_dtl
+WHERE    BILLING_DATE between '2017-08-20' and current date
+--AND      TERRITORY_NO in (21, 27, 31)
+AND      FACILITYID = '008'
+AND      (no_chrge_itm_cde = '*'
+     AND order_source = 'I'
+     AND item_description = 'ICE CREAM MARKUP')
+)
+
+group by FACILITYID,
+         INVOICE_NBR,
+         BILLING_DATE,
+         CUSTOMER_NBR_STND
+having sum(line_item_mkup) <> sum(invoice_markup)
+;
+
+
+
 SELECT   FACILITYID,
          INVOICE_NBR,
          BILLING_DATE,

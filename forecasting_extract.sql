@@ -289,7 +289,7 @@ SELECT   bd.FACILITYID,
          bd.PROCESS_TIMESTAMP,
          bd.RPA_DESC1,
          bd.RPA_DESC2,
-         bd.RPA_FLG
+         bd.RPA_FLG, i.MERCH_CLASS, i.MERCH_GRP
 FROM     CRMADMIN.T_BICEPS_DEAL_2015 bd 
          inner join CRMADMIN.T_WHSE_ITEM i on bd.FACILITYID = i.FACILITYID and bd.ITEM_NBR = i.ITEM_NBR_HS
 WHERE    i.FACILITYID in ('001', '040')
@@ -298,7 +298,8 @@ WHERE    i.FACILITYID in ('001', '040')
 --AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('0315', '0545', '0557', '0341')
 --     AND FACILITYID in ('001', '040'))
 --AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('0502', '0503', '0668', '0669', '0670', '0671', '0672', '0673', '0693', '0694', '0695', '1414', '1853', '1933', '0060', '0061', '0062', '0191', '0192', '0293', '0294', '0295', '0296', '0297', '0299', '0300', '0301', '0302', '0303', '0304', '0305')
-AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('0638', '0639')
+--AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('0638', '0639')
+AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('1414','1853','0191','0192','1933','0293','0294','0295','0296','0297','0299','0300','0301','0302','0303','0304','0305','0315','0338','0340','0341','0502','0503','0508','0512','0545','0547','0557','0563','0060','0061','0617','0062','0635','0636','0638','0639','0665','0668','0669','0670','0671','0672','0673','0693','0694','0695') 
      AND FACILITYID in ('001', '040'))
 AND      (bd.DATE_START between '2015-01-04' and '2016-01-02'
      OR  bd.DATE_END between '2015-01-04' AND '2016-01-02')
@@ -409,7 +410,7 @@ SELECT   bd.FACILITYID,
          bd.PROCESS_TIMESTAMP,
          bd.RPA_DESC1,
          bd.RPA_DESC2,
-         bd.RPA_FLG
+         bd.RPA_FLG, i.MERCH_CLASS, i.MERCH_GRP
 FROM     CRMADMIN.T_BICEPS_DEAL_2016 bd 
          inner join CRMADMIN.T_WHSE_ITEM i on bd.FACILITYID = i.FACILITYID and bd.ITEM_NBR = i.ITEM_NBR_HS
 WHERE    i.FACILITYID in ('001', '040')
@@ -418,7 +419,8 @@ WHERE    i.FACILITYID in ('001', '040')
 --AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('0315', '0545', '0557', '0341')
 --     AND FACILITYID in ('001', '040'))
 --AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('0502', '0503', '0668', '0669', '0670', '0671', '0672', '0673', '0693', '0694', '0695', '1414', '1853', '1933', '0060', '0061', '0062', '0191', '0192', '0293', '0294', '0295', '0296', '0297', '0299', '0300', '0301', '0302', '0303', '0304', '0305')
-AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('0638', '0639')
+--AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('0638', '0639')
+AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('1414','1853','0191','0192','1933','0293','0294','0295','0296','0297','0299','0300','0301','0302','0303','0304','0305','0315','0338','0340','0341','0502','0503','0508','0512','0545','0547','0557','0563','0060','0061','0617','0062','0635','0636','0638','0639','0665','0668','0669','0670','0671','0672','0673','0693','0694','0695') 
      AND FACILITYID in ('001', '040'))
 AND      (bd.DATE_START between '2016-01-03' and '2016-12-31'
      OR  bd.DATE_END between '2016-01-03' and '2016-12-31')
@@ -529,7 +531,7 @@ SELECT   bd.FACILITYID,
          bd.PROCESS_TIMESTAMP,
          bd.RPA_DESC1,
          bd.RPA_DESC2,
-         bd.RPA_FLG
+         bd.RPA_FLG, i.MERCH_CLASS, i.MERCH_GRP
 FROM     CRMADMIN.T_BICEPS_DEAL_2017 bd 
          inner join CRMADMIN.T_WHSE_ITEM i on bd.FACILITYID = i.FACILITYID and bd.ITEM_NBR = i.ITEM_NBR_HS
 WHERE    i.FACILITYID in ('001', '040')
@@ -538,7 +540,8 @@ WHERE    i.FACILITYID in ('001', '040')
 --AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('0315', '0545', '0557', '0341')
 --     AND FACILITYID in ('001', '040'))
 --AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('0502', '0503', '0668', '0669', '0670', '0671', '0672', '0673', '0693', '0694', '0695', '1414', '1853', '1933', '0060', '0061', '0062', '0191', '0192', '0293', '0294', '0295', '0296', '0297', '0299', '0300', '0301', '0302', '0303', '0304', '0305')
-AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('0638', '0639')
+--AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('0638', '0639')
+AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('1414','1853','0191','0192','1933','0293','0294','0295','0296','0297','0299','0300','0301','0302','0303','0304','0305','0315','0338','0340','0341','0502','0503','0508','0512','0545','0547','0557','0563','0060','0061','0617','0062','0635','0636','0638','0639','0665','0668','0669','0670','0671','0672','0673','0693','0694','0695') 
      AND FACILITYID in ('001', '040'))
 AND      (bd.DATE_START between '2017-01-01' and '2017-12-30'
      OR  bd.DATE_END between '2017-01-01' and '2017-12-30')
@@ -657,10 +660,11 @@ WHERE    i.FACILITYID in ('001', '040')
 --AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('0315', '0545', '0557', '0341')
 --     AND FACILITYID in ('001', '040'))
 --AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('0502', '0503', '0668', '0669', '0670', '0671', '0672', '0673', '0693', '0694', '0695', '1414', '1853', '1933', '0060', '0061', '0062', '0191', '0192', '0293', '0294', '0295', '0296', '0297', '0299', '0300', '0301', '0302', '0303', '0304', '0305')
-AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('0638', '0639')
-     AND FACILITYID in ('001', '040'))
-AND      (bd.DATE_START between '2017-12-31' and '2018-03-10'
-     OR  bd.DATE_END between '2017-12-31' and '2018-03-31')
+--AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('0638', '0639')
+AND      i.MERCH_CLASS in (select distinct MERCH_CLASS from CRMADMIN.V_WEB_ITEM_CORE where MERCH_GRP in ('1414','1853','0191','0192','1933','0293','0294','0295','0296','0297','0299','0300','0301','0302','0303','0304','0305','0315','0338','0340','0341','0502','0503','0508','0512','0545','0547','0557','0563','0060','0061','0617','0062','0635','0636','0638','0639','0665','0668','0669','0670','0671','0672','0673','0693','0694','0695') 
+     AND FACILITYID in ('001')) --, '040'))
+AND      (bd.DATE_START between '2017-12-31' and current date
+     OR  bd.DATE_END between '2017-12-31' and current date)
 ;
 --gr promos
 SELECT   '001' FACILITY_ID,
@@ -736,3 +740,43 @@ where (EFFECTIVE_DATE between '2015-01-04' and '2016-01-02'
 ;
 PROMOTION_EVENT
 PROMO_PRICE
+
+;
+
+
+SELECT   c.campaignid,
+         c.campaignname,
+         c.campaignshortdesc,
+         c.campaignlongdesc,
+         c.campaigndatefrom,
+         c.campaigndateto,
+         e.eventid,
+         e.eventtypeid,
+         et.eventtypename,
+         et.eventzonelistid,
+         et.zonesetid,
+         et.vehicleclassid,
+         et.eventtag,
+         e.noteid,
+         e.eventzonelistid,
+         e.zoneid,
+         e.eventstatusid,
+         e.eventname,
+         e.createdate,
+         e.createdby,
+         e.status,
+         e.shortdesc,
+         e.eventdesc,
+         e.startdate,
+         e.finishdate,
+         e.salestart,
+         e.saleend,
+         e.zonesetid,
+         e.color,
+         e.eventcode
+FROM     whmgr.events e 
+         inner join whmgr.eventtype et on e.eventtypeid = et.eventtypeid 
+         inner join whmgr.campaignevents ce on e.eventid = ce.eventid 
+         inner join whmgr.campaign c on ce.campaignid = c.campaignid
+WHERE    e.eventid = 14879
+;

@@ -1,7 +1,41 @@
+Select * from CRMADMIN.T_WHSE_SALES_HISTORY_DTL where FACILITYID = '058' and BILLING_DATE = '2018-10-16' and INVOICE_NBR = 2251231;
+
+
+SELECT origin_id,  shipped_qty,
+         ext_fuel_chrge_amt --,
+--         (ext_fuel_chrge_amt / ext_movement_wt)  as actual_fuel
+FROM     whmgr.dc_sales_hst
+WHERE    facility_id = '058'
+AND      transaction_date = '10-16-2018'
+AND      invoice_nbr = 2251231
+--AND      shipped_qty <> 0
+;
+
+select facility_id, customer_nbr, invoice_nbr, sum(qty_shipped) ship_qty, sum(line_item_fuel) fuel_line_item, sum(bottom_invoice_fuel) fuel_bottom_invoice
+from (
+SELECT facility_id, customer_nbr, invoice_nbr, transaction_date, sum(shipped_qty) qty_shipped, sum(ext_fuel_chrge_amt) line_item_fuel, 0 bottom_invoice_fuel
+FROM     whmgr.dc_sales_hst
+WHERE    facility_id = 58
+AND      transaction_date = '10-16-2018'
+--AND      invoice_nbr = 2251231
+and order_type_cd <> 'CRM-FUEL'
+group by facility_id, customer_nbr, invoice_nbr, transaction_date
+union all
+SELECT facility_id, customer_nbr, invoice_nbr, transaction_date, shipped_qty qty_shipped, 0 line_item_fuel, ext_fuel_chrge_amt bottom_invoice_fuel
+FROM     whmgr.dc_sales_hst
+WHERE    facility_id = 58
+AND      transaction_date = '10-16-2018'
+--AND      invoice_nbr = 2251231
+and origin_id = 'CRM-FUEL'
+and ext_fuel_chrge_amt <> 0
+)
+
+group by facility_id, customer_nbr, invoice_nbr
+
 --affected invoices?
 SELECT   FACILITYID,
          INVOICE_NBR,
-         BILLING_DATE,
+         BILLING_DATE, COMPANY_YEAR_ID, COMPANY_PERIOD_ID,
          CUSTOMER_NBR_STND,
          sum(qty_shipped) tot_qty_shipped,
          sum(line_item_mkup) tot_line_item_mkup,
@@ -9,42 +43,46 @@ SELECT   FACILITYID,
          sum(sales) tot_sales
 from (
 
-SELECT   FACILITYID,
-         INVOICE_NBR,
-         BILLING_DATE,
-         CUSTOMER_NBR_STND,
-         sum(QTY_SOLD - QTY_SCRATCHED) qty_shipped,
-         sum((QTY_SOLD - QTY_SCRATCHED) * MRKUP_DLLRS_PER_SHIP_UNT) line_item_mkup,
+SELECT   shd.FACILITYID,
+         shd.INVOICE_NBR,
+         shd.BILLING_DATE, d.COMPANY_YEAR_ID, d.COMPANY_PERIOD_ID,
+         shd.CUSTOMER_NBR_STND,
+         sum(shd.QTY_SOLD - shd.QTY_SCRATCHED) qty_shipped,
+         sum((shd.QTY_SOLD - shd.QTY_SCRATCHED) * shd.MRKUP_DLLRS_PER_SHIP_UNT) line_item_mkup,
          0 invoice_markup,
-         sum((QTY_SOLD - QTY_SCRATCHED) * FINAL_SELL_AMT) sales
-FROM     CRMADMIN.V_WHSE_SALES_HISTORY_DTL
-WHERE    BILLING_DATE between '2017-08-20' and current date
+         sum((shd.QTY_SOLD - shd.QTY_SCRATCHED) * shd.FINAL_SELL_AMT) sales
+FROM     CRMADMIN.V_WHSE_SALES_HISTORY_DTL shd 
+         inner join CRMADMIN.V_DATE d on shd.BILLING_DATE = d.DATE_KEY
+WHERE    shd.BILLING_DATE between '2017-08-20' and current date
 --AND      TERRITORY_NO in (21, 27, 31)
-AND      FACILITYID = '008'
-AND      ITEM_DEPT = '035'
-AND      NO_CHRGE_ITM_CDE <> '*'
-GROUP BY FACILITYID, INVOICE_NBR, BILLING_DATE, CUSTOMER_NBR_STND
+AND      shd.FACILITYID in ('003', '005', '008', '015', '040', '058', '061')
+AND      shd.ITEM_DEPT = '035'
+AND      shd.NO_CHRGE_ITM_CDE <> '*'
+AND      shd.PLATFORM_TYPE = 'SWAT'
+GROUP BY shd.FACILITYID, shd.INVOICE_NBR, shd.BILLING_DATE, d.COMPANY_YEAR_ID, d.COMPANY_PERIOD_ID, shd.CUSTOMER_NBR_STND
 union all
-SELECT   FACILITYID,
-         INVOICE_NBR,
-         BILLING_DATE,
-         CUSTOMER_NBR_STND,
+SELECT   shd.FACILITYID,
+         shd.INVOICE_NBR,
+         shd.BILLING_DATE, d.COMPANY_YEAR_ID, d.COMPANY_PERIOD_ID,
+         shd.CUSTOMER_NBR_STND,
          0 qty_shipped,
          0 line_item_mkup,
-         FINAL_SELL_AMT invoice_markup,
+         shd.FINAL_SELL_AMT invoice_markup,
          0 sales
-FROM     crmadmin.v_whse_sales_history_dtl
-WHERE    BILLING_DATE between '2017-08-20' and current date
+FROM     crmadmin.v_whse_sales_history_dtl shd
+         inner join CRMADMIN.V_DATE d on shd.BILLING_DATE = d.DATE_KEY
+WHERE    shd.BILLING_DATE between '2017-08-20' and current date
 --AND      TERRITORY_NO in (21, 27, 31)
-AND      FACILITYID = '008'
-AND      (no_chrge_itm_cde = '*'
-     AND order_source = 'I'
-     AND item_description = 'ICE CREAM MARKUP')
+AND      shd.FACILITYID in ('003', '005', '008', '015', '040', '058', '061')
+AND      shd.PLATFORM_TYPE = 'SWAT'
+AND      (shd.no_chrge_itm_cde = '*'
+     AND shd.order_source = 'I'
+     AND shd.item_description = 'ICE CREAM MARKUP')
 )
 
 group by FACILITYID,
          INVOICE_NBR,
-         BILLING_DATE,
+         BILLING_DATE, COMPANY_YEAR_ID, COMPANY_PERIOD_ID,
          CUSTOMER_NBR_STND
 having sum(line_item_mkup) <> sum(invoice_markup)
 ;

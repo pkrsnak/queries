@@ -230,7 +230,8 @@ SELECT   i.FACILITYID,
                              end 
                    end 
          end 
-		 end as ELIGIBILITY_RULES_FLG
+		 end as ELIGIBILITY_RULES_FLG,
+         i.FIRST_RECEIVED_DATE
 FROM     CRMADMIN.T_WHSE_ITEM i 
          inner join CRMADMIN.V_WEB_FACILITY dx on i.FACILITYID = dx.FACILITYID 
          inner join CRMADMIN.T_WHSE_DEPT wd on i.ITEM_DEPT_OVERRIDE = wd.DEPT_CODE 
@@ -325,7 +326,9 @@ SELECT   sc.FACILITYID,
          i.SHIP_UNIT_CD,
          i.SHIP_CASE_CNT,
          i.PRINT_SHELF_LBL_FLAG,
-         sc.SHIP_ITEM_NBR_HS,
+         sc.SHIP_ITEM_NBR_HS, 
+         sc.SHIP_UPC_UNIT,
+         sc.SHIP_PK,
          vwic.RTL_PRICE_DEPT,
          vwic.BILLING_STATUS_FILTER,
          vwic.INSITE_DISPLAY_FLG,

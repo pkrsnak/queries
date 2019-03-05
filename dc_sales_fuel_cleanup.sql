@@ -129,12 +129,14 @@ where ORIGIN_ID = 'CRM-ADMN'
 and TRANSACTION_DATE between '2018-05-03' and '2018-06-30'
 ;
 
-
+--validate start
 SELECT   FACILITYID, sum(EXT_FUEL_CHRGE_AMT) fuel , sum(EXT_LBL_CASE_CHRGE) admin
 FROM     CRMADMIN.T_WHSE_SALES_HST_DC
-WHERE    TRANSACTION_DATE between '2018-05-03' and '2018-06-30'
+WHERE    (facilityid = '005' and TRANSACTION_DATE between '2018-05-13' and '2018-06-30')
+   OR    (facilityid <> '005' and TRANSACTION_DATE between '2018-05-03' and '2018-06-30')
 group by FACILITYID 
 ;
+
 
 SELECT   ORIGIN_ID, count(*)
 FROM     CRMADMIN.T_WHSE_SALES_HST_DC
@@ -144,6 +146,7 @@ and ORIGIN_ID = 'CRM-SI'
 group by ORIGIN_ID
 ;
 
+--update CRM for Minot
 update   CRMADMIN.T_WHSE_SALES_HST_DC set EXT_LBL_CASE_CHRGE = 0
 WHERE    TRANSACTION_DATE between '2018-05-13' and '2018-06-30'
 and FACILITYID = '005' and EXT_LBL_CASE_CHRGE <> 0 
@@ -151,7 +154,14 @@ and ORIGIN_ID = 'CRM-SI'
 ;
 commit;
 
---Select count(*) from whmgr.sb_dc_sales_hst
+--validate datawhse02 for Minot
+Select count(*) from whmgr.sb_dc_sales_hst
+WHERE transaction_date between '05-13-2018' and '06-30-2018'
+and facility_id = 5 and ext_admin_fee_amt <> 0 
+and origin_id = 'CRM-SI'
+;
+
+--update datawhse02 for Minot
 update   whmgr.sb_dc_sales_hst set ext_admin_fee_amt = 0
 WHERE transaction_date between '05-13-2018' and '06-30-2018'
 and facility_id = 5 and ext_admin_fee_amt <> 0 
@@ -159,7 +169,7 @@ and origin_id = 'CRM-SI'
 ;
 commit;
 
-
+--validate CRM for non-Minot
 SELECT   ORIGIN_ID, count(*)
 FROM     CRMADMIN.T_WHSE_SALES_HST_DC
 WHERE    TRANSACTION_DATE between '2018-05-03' and '2018-06-30'
@@ -168,8 +178,7 @@ and ORIGIN_ID = 'CRM-SI'
 group by ORIGIN_ID
 ;
 
-
-
+--update CRM for non-Minot
 update   CRMADMIN.T_WHSE_SALES_HST_DC set EXT_LBL_CASE_CHRGE = 0
 WHERE    TRANSACTION_DATE between '2018-05-03' and '2018-06-30'
 and FACILITYID in ('003', '008', '040', '054') and EXT_LBL_CASE_CHRGE <> 0 
@@ -177,7 +186,14 @@ and ORIGIN_ID = 'CRM-SI'
 ;
 commit;
 
---Select count(*) from whmgr.sb_dc_sales_hst
+--validate datawhse02 for non-Minot
+Select count(*) from whmgr.sb_dc_sales_hst
+WHERE transaction_date between '05-03-2018' and '06-30-2018'
+and facility_id in (3, 8, 40, 54) and ext_admin_fee_amt <> 0 
+and origin_id = 'CRM-SI'
+;
+
+--update datawhse02 for non-Minot
 update   whmgr.sb_dc_sales_hst set ext_admin_fee_amt = 0
 WHERE transaction_date between '05-03-2018' and '06-30-2018'
 and facility_id in (3, 8, 40, 54) and ext_admin_fee_amt <> 0 
@@ -193,10 +209,13 @@ and FACILITYID in ('003', '008', '040', '054') and EXT_LBL_CASE_CHRGE <> 0
 and ORIGIN_ID = 'CRM-NSI'
 ;
 
-
+--validate $ for datawhse02
 Select facility_id, sum(ext_fuel_chrge_amt) fuel, sum(ext_admin_fee_amt) admin
+--from whmgr.dc_sales_hst
 from whmgr.sb_dc_sales_hst
-where transaction_date  between '05-03-2018' and '06-30-2018'
+WHERE    (facility_id = '005' and TRANSACTION_DATE between '05-13-2018' and '06-30-2018')
+   OR    (facility_id <> '005' and TRANSACTION_DATE between '05-03-2018' and '06-30-2018')
+--where transaction_date  between '05-03-2018' and '06-30-2018'
 group by facility_id
 ;
 

@@ -101,7 +101,7 @@ SELECT   i.FACILITYID,
          i.ITEM_HAS_BEEN_UPDATED,
          i.PRIMARY_ITEM_FLAG,
          case value(i.COMMODITY_XREF, 0) 
-              when 0 then i.WAREHOUSE_CODE / 10 
+              when 0 then i.WAREHOUSE_CODE 
               else i.COMMODITY_XREF 
          end COMMODITY_XREF,
          i.INVENTORY_STATUS_CD,

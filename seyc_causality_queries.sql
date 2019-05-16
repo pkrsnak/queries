@@ -57,7 +57,7 @@ ORDER BY
 
 
 SELECT
-                E.EVENT_KEY,
+                E.EVENT_KEY, E.AD_EFF_DATE, E.AD_FEATURE_CD, E.EVENT_DESC, E.AD_THEME_CD, E.EMPHASIS_LVL_CD, E.EVENT_TYPE_CD, 
                 RTRIM(E.CREATE_USER_ID) AS CREATE_USER_ID,
                 EI.UPC_CD AS ITEM_UPC_CD,
                 RTRIM(EI.ORD_ITEM_CODE) AS ORD_ITEM_CODE,
@@ -166,7 +166,7 @@ AND
                 ((EI.SRC_OFFER_KEY IS NULL OR EI.SRC_OFFER_KEY = 0) AND
                 OI.OFFER_KEY IS NULL)) 
 --and e.event_key = 497332
-and e.AD_EFF_DATE = '2019-03-10'
+and e.AD_EFF_DATE = '2019-04-07'
 
 ORDER BY 
                 OI.OFFER_KEY,

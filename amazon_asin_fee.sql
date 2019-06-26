@@ -538,7 +538,7 @@ SELECT   case cic.FACILITYID
          end availability_status,
          cic.BURDENED_COST_CASE_AMT / i.PACK_CASE item_cost_price,
          i.PACK_CASE case_Pack_Quantity,
-         cic.UNBURDENED_COST_CASE_AMT case_Pack_Cost_Price,
+         cic.BURDENED_COST_CASE_AMT case_Pack_Cost_Price,
          case i.WAREHOUSE_CODE 
               when '01' then 'Chilled' 
               when '02' then 'Chilled' 

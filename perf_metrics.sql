@@ -57,7 +57,7 @@ FROM     CRMADMIN.T_WHSE_LAYER_HISTORY lh
          inner join CRMADMIN.T_WHSE_ITEM i on lh.FACILITYID = i.FACILITYID and lh.ITEM_NBR_HS = i.ITEM_NBR_HS
 --         inner join ETLADMIN.V_MDM_MDSE_HIERARCHY mh on i.MERCH_CLASS = mh.MDSE_CLS_CODE
 WHERE    lh.LAYER_FILE_DTE = '2018-06-16'
---WHERE    lh.LAYER_FILE_DTE = '2018-06-16'
+--WHERE    lh.LAYER_FILE_DTE = '2019-06-14'
 AND      (lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) <> 0
 --AND      i.MERCH_CLASS is not null
 GROUP BY lh.LAYER_FILE_DTE, lh.FACILITYID, lh.STOCK_FAC, i.ITEM_DEPT
@@ -282,22 +282,23 @@ GROUP BY lh.LAYER_FILE_DTE, lh.FACILITYID, lh.STOCK_FAC, i.MERCH_DEPT, i.ITEM_NB
 ---------------------------------
 
 
-SELECT   'ods' type,
+SELECT   'ods' type, lh.LAYER_FILE_DTE,
          int(lh.FACILITYID) facility, 
---         int(lh.ITEM_NBR_HS) item,
-         int(lh.ITEM_DEPT) dept,
+         int(lh.ITEM_NBR_HS) item, i.ITEM_DESCRIP,
+         int(lh.ITEM_DEPT) dept, d.DEPT_DESCRIPTION,
 --i.RAND_WGT_CD,
 --         lh.STORE_PACK,
 --         lh.SIZE,
-         '' description,
 --         avg(case when lh.CORRECT_NET_COST <> 0 then lh.CORRECT_NET_COST else lh.NET_COST_PER_CASE end) layer_cost,
          sum((lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY)) on_hand,
          sum((lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) * ((case when lh.CORRECT_NET_COST <> 0 then lh.CORRECT_NET_COST else lh.NET_COST_PER_CASE end) * (case when i.RAND_WGT_CD ='R' then i.SHIPPING_CASE_WEIGHT else 1 end))) inventory_value
 FROM     CRMADMIN.T_WHSE_LAYER_HISTORY lh 
          inner join CRMADMIN.T_WHSE_ITEM i on lh.FACILITYID = i.FACILITYID and lh.ITEM_NBR_HS = i.ITEM_NBR_HS 
+         inner join CRMADMIN.T_WHSE_DEPT d on i.ITEM_DEPT = d.DEPT_CODE
 --         inner join ETLADMIN.V_MDM_MDSE_HIERARCHY mh on i.MERCH_CLASS = mh.MDSE_CLS_CODE
-WHERE    lh.LAYER_FILE_DTE = '2019-06-14'
+WHERE    lh.LAYER_FILE_DTE in ('2019-06-14', '2019-06-15')
 AND      lh.FACILITYID = '015'
-GROUP BY lh.FACILITYID, lh.ITEM_DEPT --, i.RAND_WGT_CD
---, lh.ITEM_NBR_HS
+and (lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) <> 0 
+GROUP BY lh.LAYER_FILE_DTE, lh.FACILITYID, lh.ITEM_DEPT --, i.RAND_WGT_CD
+, lh.ITEM_NBR_HS, i.ITEM_DESCRIP, d.DEPT_DESCRIPTION
 --, lh.STORE_PACK, lh.SIZE

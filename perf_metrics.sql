@@ -3,65 +3,83 @@
 ---------------------------------------
 
 --CRM
-SELECT   'inventory p3' factor,
+SELECT   d.FISCAL_PERIOD,
          lh.LAYER_FILE_DTE,
          int(lh.FACILITYID) facility,
          int(lh.STOCK_FAC) stock_facility,
 --         int(i.MERCH_DEPT) dept,
          int(i.ITEM_DEPT) dept,
+         '' dept_name,
          int(i.ITEM_NBR_HS) item,
          sum((lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) * ((case when lh.CORRECT_NET_COST <> 0 then lh.CORRECT_NET_COST else lh.NET_COST_PER_CASE end) * (case when i.RAND_WGT_CD ='R' then i.AVERAGE_WEIGHT else 1 end))) inventory_value
 FROM     CRMADMIN.T_WHSE_LAYER_HISTORY lh 
-         inner join CRMADMIN.T_WHSE_ITEM i on lh.FACILITYID = i.FACILITYID and lh.ITEM_NBR_HS = i.ITEM_NBR_HS
+         inner join CRMADMIN.T_WHSE_ITEM i on lh.FACILITYID = i.FACILITYID and lh.ITEM_NBR_HS = i.ITEM_NBR_HS 
+         inner join (SELECT (COMPANY_YEAR_ID *100) + COMPANY_PERIOD_ID FISCAL_PERIOD, min(DATE_KEY) PERIOD_START_DATE, max(DATE_KEY) PERIOD_END_DATE FROM CRMADMIN.T_DATE GROUP BY COMPANY_YEAR_ID, COMPANY_PERIOD_ID HAVING (current date - 112 days between min(DATE_KEY) and max(DATE_KEY) or current date - 476 days between min(DATE_KEY) and max(DATE_KEY))) d on lh.LAYER_FILE_DTE = d.PERIOD_END_DATE 
 --         inner join ETLADMIN.V_MDM_MDSE_HIERARCHY mh on i.MERCH_CLASS = mh.MDSE_CLS_CODE
---WHERE    lh.LAYER_FILE_DTE = '2018-04-21'
-WHERE    lh.LAYER_FILE_DTE = '2018-04-21'
-AND      (lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) <> 0
---AND      i.MERCH_CLASS is not null
---GROUP BY lh.LAYER_FILE_DTE, lh.FACILITYID, lh.STOCK_FAC, i.MERCH_DEPT
-GROUP BY lh.LAYER_FILE_DTE, lh.FACILITYID, lh.STOCK_FAC, i.ITEM_DEPT
-, i.ITEM_NBR_HS
+WHERE    (lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) <> 0
+--AND      i.SHIP_UNIT_CD = 'CS' and i.PURCH_STATUS = 'A'
+GROUP BY d.FISCAL_PERIOD, lh.LAYER_FILE_DTE, lh.FACILITYID, lh.STOCK_FAC
+         , i.ITEM_DEPT, i.ITEM_NBR_HS
 
 union all
 
-SELECT   'inventory p2' factor,
+SELECT   d.FISCAL_PERIOD,
          lh.LAYER_FILE_DTE,
          int(lh.FACILITYID) facility,
          int(lh.STOCK_FAC) stock_facility,
 --         int(i.MERCH_DEPT) dept,
          int(i.ITEM_DEPT) dept,
+         '' dept_name,
          int(i.ITEM_NBR_HS) item,
          sum((lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) * ((case when lh.CORRECT_NET_COST <> 0 then lh.CORRECT_NET_COST else lh.NET_COST_PER_CASE end) * (case when i.RAND_WGT_CD ='R' then i.AVERAGE_WEIGHT else 1 end))) inventory_value
-FROM     CRMADMIN.T_WHSE_LAYER_HISTORY lh
-         inner join CRMADMIN.T_WHSE_ITEM i on lh.FACILITYID = i.FACILITYID and lh.ITEM_NBR_HS = i.ITEM_NBR_HS
+FROM     CRMADMIN.T_WHSE_LAYER_HISTORY lh 
+         inner join CRMADMIN.T_WHSE_ITEM i on lh.FACILITYID = i.FACILITYID and lh.ITEM_NBR_HS = i.ITEM_NBR_HS 
+         inner join (SELECT (COMPANY_YEAR_ID *100) + COMPANY_PERIOD_ID FISCAL_PERIOD, min(DATE_KEY) PERIOD_START_DATE, max(DATE_KEY) PERIOD_END_DATE FROM CRMADMIN.T_DATE GROUP BY COMPANY_YEAR_ID, COMPANY_PERIOD_ID HAVING (current date - 84 days between min(DATE_KEY) and max(DATE_KEY) or current date - 448 days between min(DATE_KEY) and max(DATE_KEY))) d on lh.LAYER_FILE_DTE = d.PERIOD_END_DATE 
 --         inner join ETLADMIN.V_MDM_MDSE_HIERARCHY mh on i.MERCH_CLASS = mh.MDSE_CLS_CODE
---WHERE    lh.LAYER_FILE_DTE = '2018-05-19'
-WHERE    lh.LAYER_FILE_DTE = '2018-05-19'
-AND      (lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) <> 0
---AND      i.MERCH_CLASS is not null
---GROUP BY lh.LAYER_FILE_DTE, lh.FACILITYID, lh.STOCK_FAC, i.MERCH_DEPT
-GROUP BY lh.LAYER_FILE_DTE, lh.FACILITYID, lh.STOCK_FAC, i.ITEM_DEPT
-, i.ITEM_NBR_HS
+WHERE    (lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) <> 0
+--AND      i.SHIP_UNIT_CD = 'CS' and i.PURCH_STATUS = 'A'
+GROUP BY d.FISCAL_PERIOD, lh.LAYER_FILE_DTE, lh.FACILITYID, lh.STOCK_FAC
+         , i.ITEM_DEPT, i.ITEM_NBR_HS
 
 union all
 
-SELECT   'inventory p1' factor,
+SELECT   d.FISCAL_PERIOD,
          lh.LAYER_FILE_DTE,
          int(lh.FACILITYID) facility,
          int(lh.STOCK_FAC) stock_facility,
 --         int(i.MERCH_DEPT) dept,
          int(i.ITEM_DEPT) dept,
+         '' dept_name,
          int(i.ITEM_NBR_HS) item,
          sum((lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) * ((case when lh.CORRECT_NET_COST <> 0 then lh.CORRECT_NET_COST else lh.NET_COST_PER_CASE end) * (case when i.RAND_WGT_CD ='R' then i.AVERAGE_WEIGHT else 1 end))) inventory_value
-FROM     CRMADMIN.T_WHSE_LAYER_HISTORY lh
-         inner join CRMADMIN.T_WHSE_ITEM i on lh.FACILITYID = i.FACILITYID and lh.ITEM_NBR_HS = i.ITEM_NBR_HS
+FROM     CRMADMIN.T_WHSE_LAYER_HISTORY lh 
+         inner join CRMADMIN.T_WHSE_ITEM i on lh.FACILITYID = i.FACILITYID and lh.ITEM_NBR_HS = i.ITEM_NBR_HS 
+         inner join (SELECT (COMPANY_YEAR_ID *100) + COMPANY_PERIOD_ID FISCAL_PERIOD, min(DATE_KEY) PERIOD_START_DATE, max(DATE_KEY) PERIOD_END_DATE FROM CRMADMIN.T_DATE GROUP BY COMPANY_YEAR_ID, COMPANY_PERIOD_ID HAVING (current date - 56 days between min(DATE_KEY) and max(DATE_KEY) or current date - 420 days between min(DATE_KEY) and max(DATE_KEY))) d on lh.LAYER_FILE_DTE = d.PERIOD_END_DATE 
 --         inner join ETLADMIN.V_MDM_MDSE_HIERARCHY mh on i.MERCH_CLASS = mh.MDSE_CLS_CODE
-WHERE    lh.LAYER_FILE_DTE = '2018-06-16'
---WHERE    lh.LAYER_FILE_DTE = '2019-06-14'
-AND      (lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) <> 0
---AND      i.MERCH_CLASS is not null
-GROUP BY lh.LAYER_FILE_DTE, lh.FACILITYID, lh.STOCK_FAC, i.ITEM_DEPT
-, i.ITEM_NBR_HS
+WHERE    (lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) <> 0
+--AND      i.SHIP_UNIT_CD = 'CS' and i.PURCH_STATUS = 'A'
+GROUP BY d.FISCAL_PERIOD, lh.LAYER_FILE_DTE, lh.FACILITYID, lh.STOCK_FAC 
+         , i.ITEM_DEPT, i.ITEM_NBR_HS
+
+union all
+
+SELECT   d.FISCAL_PERIOD,
+         lh.LAYER_FILE_DTE,
+         int(lh.FACILITYID) facility,
+         int(lh.STOCK_FAC) stock_facility,
+--         int(i.MERCH_DEPT) dept,
+         int(i.ITEM_DEPT) dept,
+         '' dept_name,
+         int(i.ITEM_NBR_HS) item,
+         sum((lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) * ((case when lh.CORRECT_NET_COST <> 0 then lh.CORRECT_NET_COST else lh.NET_COST_PER_CASE end) * (case when i.RAND_WGT_CD ='R' then i.AVERAGE_WEIGHT else 1 end))) inventory_value
+FROM     CRMADMIN.T_WHSE_LAYER_HISTORY lh 
+         inner join CRMADMIN.T_WHSE_ITEM i on lh.FACILITYID = i.FACILITYID and lh.ITEM_NBR_HS = i.ITEM_NBR_HS 
+         inner join (SELECT (COMPANY_YEAR_ID *100) + COMPANY_PERIOD_ID FISCAL_PERIOD, min(DATE_KEY) PERIOD_START_DATE, max(DATE_KEY) PERIOD_END_DATE FROM CRMADMIN.T_DATE GROUP BY COMPANY_YEAR_ID, COMPANY_PERIOD_ID HAVING (current date - 28 days between min(DATE_KEY) and max(DATE_KEY) or current date - 392 days between min(DATE_KEY) and max(DATE_KEY))) d on lh.LAYER_FILE_DTE = d.PERIOD_END_DATE 
+--         inner join ETLADMIN.V_MDM_MDSE_HIERARCHY mh on i.MERCH_CLASS = mh.MDSE_CLS_CODE
+WHERE    (lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) <> 0
+--AND      i.SHIP_UNIT_CD = 'CS' and i.PURCH_STATUS = 'A'
+GROUP BY d.FISCAL_PERIOD, lh.LAYER_FILE_DTE, lh.FACILITYID, lh.STOCK_FAC 
+         , i.ITEM_DEPT, i.ITEM_NBR_HS
 ;
 
 --netezza fd
@@ -78,12 +96,84 @@ FROM     wh_owner.dc_sales_hst dsh
 --         inner join WH_OWNER.MDSE_GROUP mgrp on mctg.MDSE_GRP_KEY = mgrp.MDSE_GRP_KEY
 --         inner join wh_owner.DEPARTMENT md on mgrp.DEPT_KEY = md.DEPT_KEY
 --WHERE    dsh.transaction_date between '03-25-2018' and '06-16-2018'
-WHERE    dsh.transaction_date between '03-24-2019' and '06-15-2019'
+WHERE    dsh.transaction_date between '04-21-2019' and '07-13-2019'
 AND      dsh.facility_id in (1,2,3,8,15,16,40,54,58,61,66,67,71)
 --AND      dsh.ORDER_TYPE_CD <> ('CR')
 GROUP BY 1, 3, 4, 5
 HAVING   sum(dsh.ext_case_cost_amt) <> 0
 ;
+
+--netezza
+SELECT   'COGS-CY' factor,
+         max(sh.TRANSACTION_DATE) file_date,
+         lpad(i.FACILITY_ID, 3, '0') || lpad(i.ITEM_NBR, 7, '0') MATCH_KEY,
+         i.FACILITY_ID,
+         i.SHIP_FACILITY_ID,
+         sh.WHOLESALE_DEPT_ID dept,
+         i.ITEM_NBR,
+         count(distinct fw.FISCAL_WEEK_ID) num_weeks,
+         sum(sh.TOTAL_SALES_AMT) sales,
+         sum(sh.EXT_CASE_COST_AMT) case_cost,
+--         sum(sh.EXT_CASH_DISC_AMT) cash_discount,
+--         sum(sh.EXT_REFLECT_AMT) oi,
+         sum(sh.EXT_PROMO_ALLW_AMT) pa,
+--         sum(sh.EXT_NET_COST_AMT) net_cost,
+         sum((sh.TOTAL_SALES_AMT + sh.EXT_PROMO_ALLW_AMT) - sh.EXT_CASE_COST_AMT) gm,
+         sum(sh.EXT_PROFIT_AMT) profit
+FROM     WH_OWNER.DC_ITEM i 
+         inner join WH_OWNER.DC_SALES_HST sh on i.FACILITY_ID = sh.FACILITY_ID and i.ITEM_NBR = sh.ITEM_NBR
+         inner join wh_owner.FISCAL_WEEK fw on sh.TRANSACTION_DATE between fw.START_DT and fw.END_DT
+--         inner join wh_owner.MDSE_CLASS mcl on sh.MDSE_CLASS_KEY = mcl.MDSE_CLASS_KEY
+--         inner join wh_owner.MDSE_CATEGORY mctg on mcl.MDSE_CATGY_KEY = mctg.MDSE_CATGY_KEY
+--         inner join WH_OWNER.MDSE_GROUP mgrp on mctg.MDSE_GRP_KEY = mgrp.MDSE_GRP_KEY
+--         inner join wh_owner.DEPARTMENT md on mgrp.DEPT_KEY = md.DEPT_KEY
+--WHERE    sh.TRANSACTION_DATE between '06-17-2018' and '06-15-2019'
+WHERE    sh.transaction_date between '07-15-2018' and '07-13-2019'
+AND      i.FACILITY_ID not in (1, 80, 90)
+AND      sh.ORDER_TYPE_CD <> 'CR'
+--AND      i.PURCH_STATUS_CD = 'A'
+--AND      i.SHIP_UNIT_CD = ('CS')
+--AND      sh.EXT_CASE_COST_AMT <> 0
+AND      i.ITEM_NBR > 0
+GROUP BY i.FACILITY_ID, i.SHIP_FACILITY_ID, sh.WHOLESALE_DEPT_ID, i.ITEM_NBR 
+
+union all
+
+SELECT   'COGS-PY' factor,
+         max(sh.TRANSACTION_DATE) file_date,
+         lpad(i.FACILITY_ID, 3, '0') || lpad(i.ITEM_NBR, 7, '0') MATCH_KEY,
+         i.FACILITY_ID,
+         i.SHIP_FACILITY_ID,
+         sh.WHOLESALE_DEPT_ID dept,
+         i.ITEM_NBR,
+         count(distinct fw.FISCAL_WEEK_ID) num_weeks,
+         sum(sh.TOTAL_SALES_AMT) sales,
+         sum(sh.EXT_CASE_COST_AMT) case_cost,
+--         sum(sh.EXT_CASH_DISC_AMT) cash_discount,
+--         sum(sh.EXT_REFLECT_AMT) oi,
+         sum(sh.EXT_PROMO_ALLW_AMT) pa,
+--         sum(sh.EXT_NET_COST_AMT) net_cost,
+         sum((sh.TOTAL_SALES_AMT + sh.EXT_PROMO_ALLW_AMT) - sh.EXT_CASE_COST_AMT) gm,
+         sum(sh.EXT_PROFIT_AMT) profit
+FROM     WH_OWNER.DC_ITEM i 
+         inner join WH_OWNER.DC_SALES_HST sh on i.FACILITY_ID = sh.FACILITY_ID and i.ITEM_NBR = sh.ITEM_NBR
+         inner join wh_owner.FISCAL_WEEK fw on sh.TRANSACTION_DATE between fw.START_DT and fw.END_DT
+--         inner join wh_owner.MDSE_CLASS mcl on sh.MDSE_CLASS_KEY = mcl.MDSE_CLASS_KEY
+--         inner join wh_owner.MDSE_CATEGORY mctg on mcl.MDSE_CATGY_KEY = mctg.MDSE_CATGY_KEY
+--         inner join WH_OWNER.MDSE_GROUP mgrp on mctg.MDSE_GRP_KEY = mgrp.MDSE_GRP_KEY
+--         inner join wh_owner.DEPARTMENT md on mgrp.DEPT_KEY = md.DEPT_KEY
+--WHERE    sh.TRANSACTION_DATE between '06-17-2018' and '06-15-2019'
+WHERE    sh.transaction_date between '07-18-2017' and '07-14-2018'
+AND      i.FACILITY_ID not in (1, 80, 90)
+AND      sh.ORDER_TYPE_CD <> 'CR'
+--AND      i.PURCH_STATUS_CD = 'A'
+--AND      i.SHIP_UNIT_CD = ('CS')
+--AND      sh.EXT_CASE_COST_AMT <> 0
+AND      i.ITEM_NBR > 0
+GROUP BY i.FACILITY_ID, i.SHIP_FACILITY_ID, sh.WHOLESALE_DEPT_ID, i.ITEM_NBR 
+
+;
+
 
 --netezza caito
 SELECT   'cog_sold' factor,
@@ -161,7 +251,7 @@ SELECT   i.FACILITYID,
          i.PURCH_STATUS,
          i.BILLING_STATUS_BACKSCREEN,
          i.CASES_PER_WEEK,
-         i.CASES_PER_WEEK_DESEASONED,
+         i.CASES_PER_WEEK_DESEASONED, lc.PO_RECEIPT_DTE, 
          sum(lc.INVENTORY_TURN) turn_inventory,
          sum((lc.INVENTORY_TURN) * ((case when (lc.CORRECT_NET_COST <> 0) then lc.CORRECT_NET_COST else lc.NET_COST_PER_CASE end) * (case when i.RAND_WGT_CD = 'R' then i.AVERAGE_WEIGHT else 1 end ))) turn_inventory_value,
          sum(lc.INVENTORY_TURN / nullif(i.CASES_PER_WEEK, 0)) turn_inventory_woh,
@@ -180,23 +270,27 @@ FROM     CRMADMIN.T_WHSE_ITEM i
 GROUP BY i.FACILITYID, i.WAREHOUSE_CODE, wc.WAREHOUSE_CODE_DESC, 
          i.ITEM_NBR_HS, i.ITEM_DESCRIP, i.ITEM_TYPE_CD, i.PURCH_STATUS, 
          i.BILLING_STATUS_BACKSCREEN, i.CASES_PER_WEEK, 
-         i.CASES_PER_WEEK_DESEASONED
+         i.CASES_PER_WEEK_DESEASONED, lc.PO_RECEIPT_DTE
+having sum(lc.INVENTORY_TURN + lc.INVENTORY_PROMOTION + lc.INVENTORY_FWD_BUY) <> 0
 ;
 
 ---------------------------------------
 --gmroi
 ---------------------------------------
 --parent/child
-SELECT   FACILITYID_CHILD,
-         ITEM_NBR_HS_CHILD,
+SELECT   FACILITYID_CHILD || ITEM_NBR_HS_CHILD MATCH_KEY,
          FACILITYID_PARENT,
          ITEM_NBR_HS_PARENT
 FROM     CRMADMIN.T_WHSE_ITEM_PARENTCHILD
+order by FACILITYID_CHILD || ITEM_NBR_HS_CHILD
 ;
+
+--get inventory from turns above
 
 --netezza
 SELECT   'GM' factor,
          max(sh.TRANSACTION_DATE) file_date,
+         lpad(i.FACILITY_ID, 3, '0') || lpad(i.ITEM_NBR, 7, '0') MATCH_KEY,
          i.FACILITY_ID,
          i.SHIP_FACILITY_ID,
          sh.WHOLESALE_DEPT_ID dept,
@@ -208,7 +302,8 @@ SELECT   'GM' factor,
 --         sum(sh.EXT_REFLECT_AMT) oi,
          sum(sh.EXT_PROMO_ALLW_AMT) pa,
 --         sum(sh.EXT_NET_COST_AMT) net_cost,
-         sum((sh.TOTAL_SALES_AMT + sh.EXT_PROMO_ALLW_AMT) - sh.EXT_CASE_COST_AMT) gm
+         sum((sh.TOTAL_SALES_AMT + sh.EXT_PROMO_ALLW_AMT) - sh.EXT_CASE_COST_AMT) gm,
+         sum(sh.EXT_PROFIT_AMT) profit
 FROM     WH_OWNER.DC_ITEM i 
          inner join WH_OWNER.DC_SALES_HST sh on i.FACILITY_ID = sh.FACILITY_ID and i.ITEM_NBR = sh.ITEM_NBR
          inner join wh_owner.FISCAL_WEEK fw on sh.TRANSACTION_DATE between fw.START_DT and fw.END_DT
@@ -216,67 +311,18 @@ FROM     WH_OWNER.DC_ITEM i
 --         inner join wh_owner.MDSE_CATEGORY mctg on mcl.MDSE_CATGY_KEY = mctg.MDSE_CATGY_KEY
 --         inner join WH_OWNER.MDSE_GROUP mgrp on mctg.MDSE_GRP_KEY = mgrp.MDSE_GRP_KEY
 --         inner join wh_owner.DEPARTMENT md on mgrp.DEPT_KEY = md.DEPT_KEY
-WHERE    sh.TRANSACTION_DATE between '06-17-2018' and '06-15-2019'
-AND      i.FACILITY_ID <> 1 
+--WHERE    sh.TRANSACTION_DATE between '06-17-2018' and '06-15-2019'
+WHERE    sh.transaction_date between '07-15-2018' and '07-13-2019'
+AND      i.FACILITY_ID not in (1, 80, 90)
 AND      sh.ORDER_TYPE_CD <> 'CR'
-AND      sh.EXT_CASE_COST_AMT <> 0
+--AND      i.PURCH_STATUS_CD = 'A'
+--AND      i.SHIP_UNIT_CD = ('CS')
+--AND      sh.EXT_CASE_COST_AMT <> 0
 AND      i.ITEM_NBR > 0
 GROUP BY i.FACILITY_ID, i.SHIP_FACILITY_ID, sh.WHOLESALE_DEPT_ID, i.ITEM_NBR 
 ;
 
-
---CRM
-SELECT   '3p inventory' factor,
-         lh.LAYER_FILE_DTE,
-         int(lh.FACILITYID) facility,
-         int(lh.STOCK_FAC) stock_facility,
-         int(i.MERCH_DEPT) dept,
-         int(i.ITEM_NBR_HS) item,
-         sum((lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) * ((case when lh.CORRECT_NET_COST <> 0 then lh.CORRECT_NET_COST else lh.NET_COST_PER_CASE end) * (case when i.RAND_WGT_CD ='R' then i.AVERAGE_WEIGHT else 1 end))) inventory_value
-FROM     CRMADMIN.T_WHSE_LAYER_HISTORY lh 
-         inner join CRMADMIN.T_WHSE_ITEM i on lh.FACILITYID = i.FACILITYID and lh.ITEM_NBR_HS = i.ITEM_NBR_HS
-         inner join ETLADMIN.V_MDM_MDSE_HIERARCHY mh on i.MERCH_CLASS = mh.MDSE_CLS_CODE
-WHERE    lh.LAYER_FILE_DTE = '2019-04-20'
-AND      (lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) <> 0
-AND      i.MERCH_CLASS is not null
-GROUP BY lh.LAYER_FILE_DTE, lh.FACILITYID, lh.STOCK_FAC, i.MERCH_DEPT, i.ITEM_NBR_HS
-
-union all
-
-SELECT   '2p inventory' factor,
-         lh.LAYER_FILE_DTE,
-         int(lh.FACILITYID) facility,
-         int(lh.STOCK_FAC) stock_facility,
-         int(i.MERCH_DEPT) dept,
-         int(i.ITEM_NBR_HS) item,
-         sum((lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) * ((case when lh.CORRECT_NET_COST <> 0 then lh.CORRECT_NET_COST else lh.NET_COST_PER_CASE end) * (case when i.RAND_WGT_CD ='R' then i.AVERAGE_WEIGHT else 1 end))) inventory_value
-FROM     CRMADMIN.T_WHSE_LAYER_HISTORY lh
-         inner join CRMADMIN.T_WHSE_ITEM i on lh.FACILITYID = i.FACILITYID and lh.ITEM_NBR_HS = i.ITEM_NBR_HS
-         inner join ETLADMIN.V_MDM_MDSE_HIERARCHY mh on i.MERCH_CLASS = mh.MDSE_CLS_CODE
-WHERE    lh.LAYER_FILE_DTE = '2019-05-18'
-AND      (lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) <> 0
-AND      i.MERCH_CLASS is not null
-GROUP BY lh.LAYER_FILE_DTE, lh.FACILITYID, lh.STOCK_FAC, i.MERCH_DEPT, i.ITEM_NBR_HS
-
-union all
-
-SELECT   '1p inventory' factor,
-         lh.LAYER_FILE_DTE,
-         int(lh.FACILITYID) facility,
-         int(lh.STOCK_FAC) stock_facility,
-         int(i.MERCH_DEPT) dept,
-         int(i.ITEM_NBR_HS) item,
-         sum((lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) * ((case when lh.CORRECT_NET_COST <> 0 then lh.CORRECT_NET_COST else lh.NET_COST_PER_CASE end) * (case when i.RAND_WGT_CD ='R' then i.AVERAGE_WEIGHT else 1 end))) inventory_value
-FROM     CRMADMIN.T_WHSE_LAYER_HISTORY lh
-         inner join CRMADMIN.T_WHSE_ITEM i on lh.FACILITYID = i.FACILITYID and lh.ITEM_NBR_HS = i.ITEM_NBR_HS
-         inner join ETLADMIN.V_MDM_MDSE_HIERARCHY mh on i.MERCH_CLASS = mh.MDSE_CLS_CODE
-WHERE    lh.LAYER_FILE_DTE = '06-15-2019'
-AND      (lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) <> 0
-AND      i.MERCH_CLASS is not null
-GROUP BY lh.LAYER_FILE_DTE, lh.FACILITYID, lh.STOCK_FAC, i.MERCH_DEPT, i.ITEM_NBR_HS
-;
-
-
+select i.SHIP_UNIT_CD, i.FACILITY_ID, count(*) from wh_owner.DC_ITEM i where i.PURCH_STATUS_CD = 'A' group by i.SHIP_UNIT_CD, i.FACILITY_ID;
 ---------------------------------
 --inventory value tie-out
 ---------------------------------

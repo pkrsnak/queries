@@ -1,6 +1,18 @@
 ---------------------------------------
 --inventory turns
 ---------------------------------------
+SELECT   FACTOR,
+         FACILITY,
+         STOCK_FACILITY,
+         DEPT,
+         DEPT_NAME,
+         ITEM,
+         SHIP_UNIT_CD,
+         PURCH_STATUS,
+         AVG_4P_INV
+FROM     KPIADMIN.V_KPI_AVG_INVENTORY_4P
+;
+
 
 --CRM
 
@@ -401,32 +413,33 @@ HAVING   sum(lc.INVENTORY_TURN + lc.INVENTORY_PROMOTION + lc.INVENTORY_FWD_BUY) 
 --gmroi
 ---------------------------------------
 --parent/child
-SELECT   FACILITYID_CHILD || ITEM_NBR_HS_CHILD MATCH_KEY,
-         FACILITYID_PARENT,
-         ITEM_NBR_HS_PARENT
-FROM     CRMADMIN.T_WHSE_ITEM_PARENTCHILD
-order by FACILITYID_CHILD || ITEM_NBR_HS_CHILD
+SELECT   ip.FACILITYID_CHILD || ip.ITEM_NBR_HS_CHILD MATCH_KEY,
+         ip.FACILITYID_PARENT,
+         ip.ITEM_NBR_HS_PARENT,
+         i.PURCH_STATUS
+FROM     CRMADMIN.T_WHSE_ITEM_PARENTCHILD ip 
+         inner join CRMADMIN.T_WHSE_ITEM i on ip.FACILITYID_PARENT = i.FACILITYID and ip.ITEM_NBR_HS_PARENT = i.ITEM_NBR_HS
+ORDER BY ip.FACILITYID_CHILD || ip.ITEM_NBR_HS_CHILD
 ;
 
 --get inventory from turns above (only open stock and purchasing active
 
 --netezza
-SELECT   'GM' factor,
+SELECT   'GM_CY' factor,
          max(sh.TRANSACTION_DATE) file_date,
          lpad(i.FACILITY_ID, 3, '0') || lpad(i.ITEM_NBR, 7, '0') MATCH_KEY,
          i.FACILITY_ID,
          i.SHIP_FACILITY_ID,
          sh.WHOLESALE_DEPT_ID dept,
-         i.ITEM_NBR,
+         i.ITEM_NBR, i.PURCH_STATUS_CD, i.SHIP_UNIT_CD,
          count(distinct fw.FISCAL_WEEK_ID) num_weeks,
-         sum(sh.TOTAL_SALES_AMT) sales,
-         sum(sh.EXT_CASE_COST_AMT) case_cost,
---         sum(sh.EXT_CASH_DISC_AMT) cash_discount,
---         sum(sh.EXT_REFLECT_AMT) oi,
-         sum(sh.EXT_PROMO_ALLW_AMT) pa,
---         sum(sh.EXT_NET_COST_AMT) net_cost,
-         sum((sh.TOTAL_SALES_AMT + sh.EXT_PROMO_ALLW_AMT) - sh.EXT_CASE_COST_AMT) gm,
-         sum(sh.EXT_PROFIT_AMT) profit
+         sum(sh.TOTAL_SALES_AMT) ext_sales,
+         sum(sh.EXT_CASE_COST_AMT) ext_case_cost,
+         sum(sh.EXT_CUST_FEE_AMT) ext_cust_fee,
+         sum(sh.EXT_CASH_DISC_AMT) ext_cash_discount,
+         sum(sh.EXT_PROMO_ALLW_AMT) ext_pa,
+         sum(sh.EXT_PROFIT_AMT) ext_profit,
+         sum(sh.EXT_PROFIT_AMT + sh.EXT_CUST_FEE_AMT) gm
 FROM     WH_OWNER.DC_ITEM i 
          inner join WH_OWNER.DC_SALES_HST sh on i.FACILITY_ID = sh.FACILITY_ID and i.ITEM_NBR = sh.ITEM_NBR
          inner join wh_owner.FISCAL_WEEK fw on sh.TRANSACTION_DATE between fw.START_DT and fw.END_DT
@@ -442,7 +455,7 @@ AND      sh.ORDER_TYPE_CD <> 'CR'
 --AND      i.SHIP_UNIT_CD = ('CS')
 --AND      sh.EXT_CASE_COST_AMT <> 0
 AND      i.ITEM_NBR > 0
-GROUP BY i.FACILITY_ID, i.SHIP_FACILITY_ID, sh.WHOLESALE_DEPT_ID, i.ITEM_NBR 
+GROUP BY i.FACILITY_ID, i.SHIP_FACILITY_ID, sh.WHOLESALE_DEPT_ID, i.ITEM_NBR, i.PURCH_STATUS_CD, i.SHIP_UNIT_CD 
 ;
 
 select i.SHIP_UNIT_CD, i.FACILITY_ID, count(*) from wh_owner.DC_ITEM i where i.PURCH_STATUS_CD = 'A' group by i.SHIP_UNIT_CD, i.FACILITY_ID;
@@ -471,3 +484,25 @@ and (lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) <> 0
 GROUP BY lh.LAYER_FILE_DTE, lh.FACILITYID, lh.ITEM_DEPT --, i.RAND_WGT_CD
 , lh.ITEM_NBR_HS, i.ITEM_DESCRIP, d.DEPT_DESCRIPTION
 --, lh.STORE_PACK, lh.SIZE
+;
+
+
+---------------------------------
+--shelf life / distress days
+---------------------------------
+
+SELECT   i.FACILITYID,
+         i.ITEM_DEPT,
+         d.DEPT_DESCRIPTION,
+         i.ITEM_NBR_HS,
+         i.ITEM_DESCRIP,
+         i.ITEM_SIZE,
+         i.ITEM_SIZE_UOM,
+         i.PACK_CASE,
+         i.SHELF_LIFE,
+         i.DISTRESS_DAYS,
+         i.PURCH_STATUS,
+         i.BILLING_STATUS_BACKSCREEN
+FROM     CRMADMIN.T_WHSE_ITEM i 
+         inner join CRMADMIN.T_WHSE_DEPT d on d.DEPT_CODE = i.ITEM_DEPT
+WHERE    i.PURCH_STATUS not in ('D', 'Z')

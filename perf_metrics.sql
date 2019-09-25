@@ -253,7 +253,7 @@ FROM     WH_OWNER.DC_ITEM i
 --         inner join WH_OWNER.MDSE_GROUP mgrp on mctg.MDSE_GRP_KEY = mgrp.MDSE_GRP_KEY
 --         inner join wh_owner.DEPARTMENT md on mgrp.DEPT_KEY = md.DEPT_KEY
 --WHERE    sh.TRANSACTION_DATE between '06-17-2018' and '06-15-2019'
-WHERE    sh.transaction_date between '07-15-2018' and '07-13-2019'
+WHERE    sh.transaction_date between '09-02-2018' and '09-07-2019'
 AND      i.FACILITY_ID not in (1, 80, 90)
 AND      sh.ORDER_TYPE_CD <> 'CR'
 --AND      i.PURCH_STATUS_CD = 'A'
@@ -288,7 +288,7 @@ FROM     WH_OWNER.DC_ITEM i
 --         inner join WH_OWNER.MDSE_GROUP mgrp on mctg.MDSE_GRP_KEY = mgrp.MDSE_GRP_KEY
 --         inner join wh_owner.DEPARTMENT md on mgrp.DEPT_KEY = md.DEPT_KEY
 --WHERE    sh.TRANSACTION_DATE between '06-17-2018' and '06-15-2019'
-WHERE    sh.transaction_date between '07-18-2017' and '07-14-2018'
+WHERE    sh.transaction_date between '09-10-2017' and '09-01-2018'
 AND      i.FACILITY_ID not in (1, 80, 90)
 AND      sh.ORDER_TYPE_CD <> 'CR'
 --AND      i.PURCH_STATUS_CD = 'A'
@@ -300,7 +300,7 @@ GROUP BY i.FACILITY_ID, i.SHIP_FACILITY_ID, sh.WHOLESALE_DEPT_ID, i.ITEM_NBR
 
 
 --netezza caito
-SELECT   'cog_sold' factor,
+SELECT   'cog_sold_py' factor,
          max(dsh.INVOICE_DT) max_date,
 --         dsh.ship_facility_id,
          dsh.facility_id,
@@ -314,11 +314,35 @@ FROM     wh_owner.caito_sales_hst dsh
 --         inner join wh_owner.DEPARTMENT md on mgrp.DEPT_KEY = md.DEPT_KEY
 --WHERE    dsh.transaction_date between '03-25-2018' and '06-16-2018'
 --WHERE    dsh.INVOICE_DT between '03-24-2019' and '06-15-2019'
-WHERE    dsh.INVOICE_DT between '03-25-2018' and '06-16-2018'
+WHERE    dsh.INVOICE_DT between '07-16-2017' and '07-14-2018'
 --AND      dsh.facility_id in (1,2,3,8,15,16,40,54,58,61,66,67,71)
 --AND      dsh.ORDER_TYPE_CD <> ('CR')
 GROUP BY 1, 3 --, 4, 5
 HAVING   sum(dsh.ext_cost_amt) <> 0
+
+union all
+
+SELECT   'cog_sold_cy' factor,
+         max(dsh.INVOICE_DT) max_date,
+--         dsh.ship_facility_id,
+         dsh.facility_id,
+--         dsh.WHOLESALE_DEPT_ID,
+         sum(dsh.EXT_COST_AMT) cog_over_time
+FROM     wh_owner.caito_sales_hst dsh 
+--         inner join wh_owner.DC_ITEM i on dsh.FACILITY_ID = i.FACILITY_ID and dsh.ITEM_NBR = i.ITEM_NBR
+--         inner join wh_owner.MDSE_CLASS mcl on i.MDSE_CLASS_KEY = mcl.MDSE_CLASS_KEY
+--         inner join wh_owner.MDSE_CATEGORY mctg on mcl.MDSE_CATGY_KEY = mctg.MDSE_CATGY_KEY
+--         inner join WH_OWNER.MDSE_GROUP mgrp on mctg.MDSE_GRP_KEY = mgrp.MDSE_GRP_KEY
+--         inner join wh_owner.DEPARTMENT md on mgrp.DEPT_KEY = md.DEPT_KEY
+--WHERE    dsh.transaction_date between '03-25-2018' and '06-16-2018'
+--WHERE    dsh.INVOICE_DT between '03-24-2019' and '06-15-2019'
+WHERE    dsh.INVOICE_DT between '07-15-2018' and '07-13-2019'
+--AND      dsh.facility_id in (1,2,3,8,15,16,40,54,58,61,66,67,71)
+--AND      dsh.ORDER_TYPE_CD <> ('CR')
+GROUP BY 1, 3 --, 4, 5
+HAVING   sum(dsh.ext_cost_amt) <> 0
+
+
 ;
 
 ---------------------------------------
@@ -416,7 +440,8 @@ HAVING   sum(lc.INVENTORY_TURN + lc.INVENTORY_PROMOTION + lc.INVENTORY_FWD_BUY) 
 SELECT   ip.FACILITYID_CHILD || ip.ITEM_NBR_HS_CHILD MATCH_KEY,
          ip.FACILITYID_PARENT,
          ip.ITEM_NBR_HS_PARENT,
-         i.PURCH_STATUS
+         i.PURCH_STATUS, 
+         i.SHIP_UNIT_CD
 FROM     CRMADMIN.T_WHSE_ITEM_PARENTCHILD ip 
          inner join CRMADMIN.T_WHSE_ITEM i on ip.FACILITYID_PARENT = i.FACILITYID and ip.ITEM_NBR_HS_PARENT = i.ITEM_NBR_HS
 ORDER BY ip.FACILITYID_CHILD || ip.ITEM_NBR_HS_CHILD
@@ -424,7 +449,7 @@ ORDER BY ip.FACILITYID_CHILD || ip.ITEM_NBR_HS_CHILD
 
 --get inventory from turns above (only open stock and purchasing active
 
---netezza
+--netezza gm
 SELECT   'GM_CY' factor,
          max(sh.TRANSACTION_DATE) file_date,
          lpad(i.FACILITY_ID, 3, '0') || lpad(i.ITEM_NBR, 7, '0') MATCH_KEY,
@@ -439,7 +464,8 @@ SELECT   'GM_CY' factor,
          sum(sh.EXT_CASH_DISC_AMT) ext_cash_discount,
          sum(sh.EXT_PROMO_ALLW_AMT) ext_pa,
          sum(sh.EXT_PROFIT_AMT) ext_profit,
-         sum(sh.EXT_PROFIT_AMT + sh.EXT_CUST_FEE_AMT) gm
+         sum(sh.EXT_PROFIT_AMT + sh.EXT_CUST_FEE_AMT) gm,
+         sum(sh.SHIPPED_QTY) qty_shipped
 FROM     WH_OWNER.DC_ITEM i 
          inner join WH_OWNER.DC_SALES_HST sh on i.FACILITY_ID = sh.FACILITY_ID and i.ITEM_NBR = sh.ITEM_NBR
          inner join wh_owner.FISCAL_WEEK fw on sh.TRANSACTION_DATE between fw.START_DT and fw.END_DT
@@ -448,7 +474,42 @@ FROM     WH_OWNER.DC_ITEM i
 --         inner join WH_OWNER.MDSE_GROUP mgrp on mctg.MDSE_GRP_KEY = mgrp.MDSE_GRP_KEY
 --         inner join wh_owner.DEPARTMENT md on mgrp.DEPT_KEY = md.DEPT_KEY
 --WHERE    sh.TRANSACTION_DATE between '06-17-2018' and '06-15-2019'
-WHERE    sh.transaction_date between '07-15-2018' and '07-13-2019'
+WHERE    sh.transaction_date between '09-02-2018' and '09-07-2019'
+AND      i.FACILITY_ID not in (1, 80, 90)
+AND      sh.ORDER_TYPE_CD <> 'CR'
+--AND      i.PURCH_STATUS_CD = 'A'
+--AND      i.SHIP_UNIT_CD = ('CS')
+--AND      sh.EXT_CASE_COST_AMT <> 0
+AND      i.ITEM_NBR > 0
+GROUP BY i.FACILITY_ID, i.SHIP_FACILITY_ID, sh.WHOLESALE_DEPT_ID, i.ITEM_NBR, i.PURCH_STATUS_CD, i.SHIP_UNIT_CD 
+
+union all
+
+SELECT   'GM_PY' factor,
+         max(sh.TRANSACTION_DATE) file_date,
+         lpad(i.FACILITY_ID, 3, '0') || lpad(i.ITEM_NBR, 7, '0') MATCH_KEY,
+         i.FACILITY_ID,
+         i.SHIP_FACILITY_ID,
+         sh.WHOLESALE_DEPT_ID dept,
+         i.ITEM_NBR, i.PURCH_STATUS_CD, i.SHIP_UNIT_CD,
+         count(distinct fw.FISCAL_WEEK_ID) num_weeks,
+         sum(sh.TOTAL_SALES_AMT) ext_sales,
+         sum(sh.EXT_CASE_COST_AMT) ext_case_cost,
+         sum(sh.EXT_CUST_FEE_AMT) ext_cust_fee,
+         sum(sh.EXT_CASH_DISC_AMT) ext_cash_discount,
+         sum(sh.EXT_PROMO_ALLW_AMT) ext_pa,
+         sum(sh.EXT_PROFIT_AMT) ext_profit,
+         sum(sh.EXT_PROFIT_AMT + sh.EXT_CUST_FEE_AMT) gm,
+         sum(sh.SHIPPED_QTY) qty_shipped
+FROM     WH_OWNER.DC_ITEM i 
+         inner join WH_OWNER.DC_SALES_HST sh on i.FACILITY_ID = sh.FACILITY_ID and i.ITEM_NBR = sh.ITEM_NBR
+         inner join wh_owner.FISCAL_WEEK fw on sh.TRANSACTION_DATE between fw.START_DT and fw.END_DT
+--         inner join wh_owner.MDSE_CLASS mcl on sh.MDSE_CLASS_KEY = mcl.MDSE_CLASS_KEY
+--         inner join wh_owner.MDSE_CATEGORY mctg on mcl.MDSE_CATGY_KEY = mctg.MDSE_CATGY_KEY
+--         inner join WH_OWNER.MDSE_GROUP mgrp on mctg.MDSE_GRP_KEY = mgrp.MDSE_GRP_KEY
+--         inner join wh_owner.DEPARTMENT md on mgrp.DEPT_KEY = md.DEPT_KEY
+--WHERE    sh.TRANSACTION_DATE between '06-17-2018' and '06-15-2019'
+WHERE    sh.transaction_date between '09-10-2017' and '09-01-2018'
 AND      i.FACILITY_ID not in (1, 80, 90)
 AND      sh.ORDER_TYPE_CD <> 'CR'
 --AND      i.PURCH_STATUS_CD = 'A'

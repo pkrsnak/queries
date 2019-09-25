@@ -1,33 +1,22 @@
 SELECT   v.ap_vendor_nbr,
          apo_main.VENDOR_NBR,
-         apo_main.FACILITY_ID FACILITY_ID,
-         max(v.VENDOR_NAME) VENDOR_NAME,
-         apo_main.SHIP_TO_FAC_ID SHIP_TO_FAC_ID,
-         max(df.FACILITY_NAME) FACILITY_NAME,
-         v.BUYER_ID BUYER_ID,
-         max(db.BUYER_NAME) BUYER_NAME,
-         fdm.FISCAL_WEEK_ID FISCAL_WEEK_ID,
-         max('Week Ending ' || to_char(fwm.end_dt, 'mm/dd/yyyy')) WeekEnding,
-         apo_main.COMPLIANCE_FLG COMPLIANCE_FLG,
-         comp_fail_count.PO_NBR PO_NBR,
-         comp_fail_count.LOAD_TMSP LOAD_TMSP,
-         comp_fail_count.SENDER_ID SENDER_ID,
-         comp_fail_count.SHIPMENT_ID SHIPMENT_ID,
-         comp_fail_count.REASON_CD REASON_CD,
-         max(acr.REASON_DESC) REASON_DESC,
-         aplt.HIER_LVL_CD PARENT_HIER_LVL_CD,
-         apck.HIER_LVL_CD HIER_LVL_CD,
-         max(apck.EXPIRATION_DATE) EXPIRATION_DATE,
-         apck.EXPIRATION_FLG EXPIRATION_FLG,
-         apck.CASE_UPC_NBR CASE_UPC_NBR,
-         apck.FACILITY_ID FACILITY_ID1,
-         max(di.ORDERABLE_ITEM_DSC) ROOT_ITEM_DESC,
-         max(di.SHELF_LIFE_QTY) SHELF_LIFE_QTY,
-         apo_main.SHIPMENT_ID SHIPMENT_ID2,
-         apo_main.SENDER_ID SENDER_ID2,
-         apo_main.LOAD_TMSP LOAD_TMSP2,
+         v.VENDOR_NAME,
+         apo_main.FACILITY_ID,
+         df.FACILITY_NAME,
+         apo_main.SHIP_TO_FAC_ID,
+         comp_fail_count.PO_NBR,
          max(asp.SCHD_DELIVERY_DATE) SCHD_DELIVERY_DATE,
-         comp_fail_count.SALES_DT SALES_DT,
+         v.BUYER_ID,
+         db.BUYER_NAME,
+         apck.CASE_UPC_NBR,
+         max(di.ORDERABLE_ITEM_DSC) ROOT_ITEM_DESC,
+         apo_main.COMPLIANCE_FLG,
+         comp_fail_count.REASON_CD,
+         acr.REASON_DESC,
+         max(apck.EXPIRATION_DATE) EXPIRATION_DATE,
+         apck.EXPIRATION_FLG,
+         max(di.SHELF_LIFE_QTY) SHELF_LIFE_QTY,
+         comp_fail_count.LOAD_TMSP,
          max(comp_fail_count.num_records) num_recs
 FROM     (SELECT   comp_fail.SALES_DT SALES_DT,
 			         comp_fail.PO_NBR PO_NBR,
@@ -56,19 +45,19 @@ FROM     (SELECT   comp_fail.SALES_DT SALES_DT,
          join DC_VENDOR v on (apo_main.FACILITY_ID = v.FACILITY_ID and apo_main.VENDOR_NBR = v.VENDOR_NBR) 
          join fiscal_day fdm on (comp_fail_count.SALES_DT = fdm.SALES_DT) 
          join ASN_COMPLNC_REASON acr on (comp_fail_count.REASON_CD = acr.REASON_CD) 
-         join DC_ITEM di on (apck.CASE_UPC_NBR = di.CASE_UPC_NBR and apck.FACILITY_ID = di.FACILITY_ID) 
+         left outer join DC_ITEM di on (apck.CASE_UPC_NBR = di.CASE_UPC_NBR and apck.FACILITY_ID = di.FACILITY_ID) 
          join fiscal_week fwm on (fdm.FISCAL_WEEK_ID = fwm.FISCAL_WEEK_ID) 
          join ASN_SHIPMENT asp on (apo_main.LOAD_TMSP = asp.LOAD_TMSP and apo_main.SENDER_ID = asp.SENDER_ID and apo_main.SHIPMENT_ID = asp.SHIPMENT_ID) 
          join DC_FACILITY df on (apo_main.SHIP_TO_FAC_ID = df.FACILITY_ID) 
-         join DC_BUYER db on (v.BUYER_ID = db.BUYER_ID and di.BUYER_ID = db.BUYER_ID)
-WHERE   -- v.ap_vendor_nbr = 100932 
-      comp_fail_count.PO_NBR = 50691
-GROUP BY v.ap_vendor_nbr, apo_main.VENDOR_NBR, apo_main.FACILITY_ID, 
-         apo_main.SHIP_TO_FAC_ID, v.BUYER_ID, fdm.FISCAL_WEEK_ID, 
-         apo_main.COMPLIANCE_FLG, comp_fail_count.PO_NBR, 
-         comp_fail_count.LOAD_TMSP, comp_fail_count.SENDER_ID, 
-         comp_fail_count.SHIPMENT_ID, comp_fail_count.REASON_CD, 
-         aplt.SENDER_ID, aplt.LOAD_TMSP, aplt.SHIPMENT_ID, aplt.HIER_LVL_CD, 
-         apck.HIER_LVL_CD, apck.EXPIRATION_FLG, apck.CASE_UPC_NBR, 
-         apck.FACILITY_ID, apo_main.SHIPMENT_ID, apo_main.SENDER_ID, 
-         apo_main.LOAD_TMSP, comp_fail_count.SALES_DT;
+         left outer join DC_BUYER db on (v.BUYER_ID = db.BUYER_ID and v.BUYER_ID = db.BUYER_ID)
+WHERE    v.ap_vendor_nbr = 100932
+AND      comp_fail_count.PO_NBR = 50691
+GROUP BY v.ap_vendor_nbr, apo_main.VENDOR_NBR, v.VENDOR_NAME, 
+         apo_main.FACILITY_ID, df.FACILITY_NAME, apo_main.SHIP_TO_FAC_ID, 
+         v.BUYER_ID, db.BUYER_NAME, apo_main.COMPLIANCE_FLG, 
+         comp_fail_count.PO_NBR, comp_fail_count.LOAD_TMSP, 
+         comp_fail_count.SENDER_ID, comp_fail_count.SHIPMENT_ID, 
+         comp_fail_count.REASON_CD, acr.REASON_DESC, aplt.SENDER_ID, 
+         aplt.LOAD_TMSP, aplt.SHIPMENT_ID, apck.EXPIRATION_FLG, 
+         apck.CASE_UPC_NBR, apck.FACILITY_ID
+;

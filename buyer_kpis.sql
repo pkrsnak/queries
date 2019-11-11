@@ -1,5 +1,25 @@
 --------------------------------------------------Food Distribution-------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------
+--testing extract
+
+SELECT   kd.SCORECARD_TYPE,
+         kd.ENTERPRISE_ID,
+         kd.KPI_TYPE,
+         kd.DATA_GRANULARITY,
+         kd.TIME_GRANULARITY,
+         kd.KPI_DATE,
+         kd.KPI_KEY_VALUE,
+         b.LAST_NAME,
+         b.FIRST_NAME,
+         kd.KPI_DATA_VALUE
+FROM     KPIADMIN.T_KPI_DETAIL kd 
+         left join CRMADMIN.V_WEB_BUYER b on kd.KPI_KEY_VALUE = b.BUYER_NBR
+and kd.TIME_GRANULARITY = 'W'
+;
+
+
+--------------------------------------------------Food Distribution-------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------
 --slotted items by buyer
 --source:  CRM
 

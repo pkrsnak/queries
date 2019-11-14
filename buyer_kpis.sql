@@ -54,7 +54,8 @@ SELECT   'buyer' SCORECARD_TYPE,
          'B' DATA_GRANULARITY,
          'W' TIME_GRANULARITY
 FROM     WHMGR.DC_WHSE_SHIP_DTL a11 
-         join WHMGR.DC_ITEM a12 on (a11.FACILITY_ID = a12.FACILITY_ID and a11.ITEM_NBR = a12.ITEM_NBR) 
+         join WHMGR.DC_ITEM a12 on (a11.FACILITY_ID = a12.FACILITY_ID and a11.ITEM_NBR = a12.ITEM_NBR)
+         join WHMGR.dc_customer cust on (cust.facility_id = a11.facility_id and cust.customer_nbr = a11.customer_nbr and cust.corporation_id not in (634001, 248561)) 
          join WHMGR.fiscal_day a13 on (a11.TRANSACTION_DATE = a13.SALES_DT) 
          join WHMGR.fiscal_week a14 on (a13.FISCAL_WEEK_ID = a14.FISCAL_WEEK_ID)
 WHERE    (a14.end_dt = '10-05-2019'  --To_Date('10/05/2019', 'mm/dd/yyyy')  --need to determine prior week Saturday date
@@ -79,6 +80,7 @@ SELECT   'buyer' SCORECARD_TYPE,
          'W' TIME_GRANULARITY
 FROM     WHMGR.dc_sales_hst dsh 
          join WHMGR.DC_ITEM di on (dsh.FACILITY_ID = di.FACILITY_ID and dsh.ITEM_NBR = di.ITEM_NBR) 
+         join WHMGR.dc_customer cust on (cust.facility_id = dsh.facility_id and cust.customer_nbr = dsh.customer_nbr and cust.corporation_id not in (634001, 248561)) 
          join WHMGR.fiscal_day fd on (dsh.TRANSACTION_DATE = fd.SALES_DT) 
          join WHMGR.fiscal_week fw on (fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID)
 WHERE    (fw.end_dt = '11-02-2019'  --To_Date('10/05/2019', 'mm/dd/yyyy')  --need to determine prior week Saturday date
@@ -88,6 +90,36 @@ GROUP BY fw.end_dt,
 --         dsh.FACILITY_ID, 
          dsh.BUYER_ID
 ;
+
+/*
+Select ((select sum(not_ship_case_qty)
+from dc_bill_error_dtl, dc_customer, dc_corporation
+where  ship_error_cd not in ( '003', '004', '005', '006', '011', '013', '014',
+'015', '018', '022', '024', '025', '026', '027', '028', '029', '041', '106',
+'113', '121', '126', '141', 'DI', 'NA')
+and transaction_date = '11/06/2019'
+and dc_bill_error_dtl.facility_id = dc_customer.facility_id
+and dc_bill_error_dtl.customer_nbr = dc_customer.customer_nbr
+and dc_customer.corporation_id = dc_corporation.corporation_id
+and dc_bill_error_dtl.facility_id not in (16, 2, 71)) +
+
+((select sum(ship_case_qty)
+from dc_whse_ship_dtl,dc_customer, dc_corporation
+where dc_whse_ship_dtl.transaction_date = '11/06/2019'
+and dc_whse_ship_dtl.facility_id = dc_customer.facility_id
+and dc_whse_ship_dtl.customer_nbr = dc_customer.customer_nbr
+and dc_customer.corporation_id = dc_corporation.corporation_id
+and dc_whse_ship_dtl.facility_id not in (16, 2, 71)) -
+
+(select sum(not_ship_case_qty)
+from dc_bill_error_dtl, dc_customer, dc_corporation
+where  ship_error_cd in ( 'MK')
+and transaction_date = '11/06/2019'
+and dc_bill_error_dtl.facility_id = dc_customer.facility_id
+and dc_bill_error_dtl.customer_nbr = dc_customer.customer_nbr
+and dc_customer.corporation_id = dc_corporation.corporation_id
+and dc_bill_error_dtl.facility_id not in (16, 2, 71)))) as  cases_ordered
+*/
 
 --cases outed by buyer
 --source:  datawhse02 & eisdw01
@@ -102,6 +134,7 @@ SELECT   'buyer' SCORECARD_TYPE,
          'W' TIME_GRANULARITY
 FROM     WHMGR.DC_BILL_ERROR_DTL a11 
          join WHMGR.DC_ITEM a12 on (a11.FACILITY_ID = a12.FACILITY_ID and a11.ITEM_NBR = a12.ITEM_NBR) 
+         join WHMGR.dc_customer cust on (cust.facility_id = a11.facility_id and cust.customer_nbr = a11.customer_nbr and cust.corporation_id not in (634001, 248561)) 
          join WHMGR.fiscal_day a13 on (a11.TRANSACTION_DATE = a13.SALES_DT) 
          join WHMGR.fiscal_week a14 on (a13.FISCAL_WEEK_ID = a14.FISCAL_WEEK_ID)
          left outer join WHMGR.SHIP_ERROR a15 on (a11.SHIP_ERROR_CD = a15.SHIP_ERROR_CD) 
@@ -127,21 +160,22 @@ SELECT   'buyer' SCORECARD_TYPE,
          'cases_shipped_promo' KPI_TYPE,
          fw.end_dt DATE_VALUE,
          2 DIVISION_ID,
---         sh.FACILITY_ID FACILITY_ID,
+         sh.FACILITY_ID FACILITY_ID,
          i.BUYER_ID KEY_VALUE,
          sum(sh.SHIPPED_QTY) DATA_VALUE,
          'B' DATA_GRANULARITY,
          'W' TIME_GRANULARITY
 FROM     WHMGR.DC_SALES_HST sh 
          join WHMGR.DC_ITEM i on (sh.FACILITY_ID = i.FACILITY_ID and sh.ITEM_NBR = i.ITEM_NBR) 
+         join WHMGR.dc_customer cust on (cust.facility_id = sh.facility_id and cust.customer_nbr = sh.customer_nbr and cust.corporation_id not in (634001, 248561)) 
          join WHMGR.fiscal_day fd on (sh.TRANSACTION_DATE = fd.SALES_DT) 
          join WHMGR.fiscal_week fw on (fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID)
-WHERE    (fw.end_dt = To_Date('10/05/2019', 'mm/dd/yyyy')  --need to determine prior week Saturday date
+WHERE    (fw.end_dt = '11-09-2019'  --need to determine prior week Saturday date
      AND sh.FACILITY_ID not in (16)
      AND sh.COMMODITY_CODE not in (900))
-     AND (sh.ADV_BUYING_SYS_FLG = 'Y' or sh.SPECIAL_PRICE_FLG = 'Y' or sh.PRESELL_NBR is not null )
+     AND (sh.ext_reflect_amt > 0 or sh.ext_promo_allw_amt > 0 or sh.PRESELL_NBR >0 )
 GROUP BY fw.end_dt, 
---         sh.FACILITY_ID, 
+         sh.FACILITY_ID, 
          i.BUYER_ID
 ;
 
@@ -160,12 +194,13 @@ SELECT   'buyer' SCORECARD_TYPE,
          'W' TIME_GRANULARITY
 FROM     WHMGR.DC_SALES_HST sh 
          join WHMGR.DC_ITEM i on (sh.FACILITY_ID = i.FACILITY_ID and sh.ITEM_NBR = i.ITEM_NBR) 
+         join WHMGR.dc_customer cust on (cust.facility_id = sh.facility_id and cust.customer_nbr = sh.customer_nbr and cust.corporation_id not in (634001, 248561)) 
          join WHMGR.fiscal_day fd on (sh.TRANSACTION_DATE = fd.SALES_DT) 
          join WHMGR.fiscal_week fw on (fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID)
-WHERE    (fw.end_dt = To_Date('10/05/2019', 'mm/dd/yyyy')  --need to determine prior week Saturday date
+WHERE    (fw.end_dt = '10-05-2019'  --need to determine prior week Saturday date
      AND sh.FACILITY_ID not in (16)
      AND sh.COMMODITY_CODE not in (900))
-     AND (sh.ADV_BUYING_SYS_FLG = 'Y' or sh.SPECIAL_PRICE_FLG = 'Y' or sh.PRESELL_NBR is not null )
+     AND (sh.ext_reflect_amt > 0 or sh.ext_promo_allw_amt > 0 or sh.PRESELL_NBR >0 )
 GROUP BY fw.end_dt, 
 --         sh.FACILITY_ID, 
          i.BUYER_ID
@@ -258,7 +293,7 @@ SELECT   'buyer' SCORECARD_TYPE,
          'week ending date' DATE_VALUE,
          2 DIVISION_ID,
          kif.BUYER_NBR KEY_VALUE, --sum(kif.INVENTORY_TOTAL * kif.LIST_COST) total_inventory,
-         sum(max(kif.MAX_INVENTORY - kif.INVENTORY_TOTAL, 0) * kif.LIST_COST) DATA_VALUE,
+         sum(max(kif.INVENTORY_TOTAL - kif.ORDER_POINT - kif.IN_PROCESS_REGULAR - kif.poq_30 - kif.RESERVE_COMMITTED - kif.RESERVE_UNCOMMITTED - kif.STORAGE_COMMITTED - kif.STORAGE_UNCOMMITTED - kif.INVENTORY_PROMOTION - kif.INVENTORY_FWD_BUY - ceiling(kif.CASES_PER_WEEK * .5), 0) * kif.LIST_COST) DATA_VALUE,
          'B' DATA_GRANULARITY,
          'W' TIME_GRANULARITY
 FROM     KPIADMIN.V_KPI_ITEM_FACTORS kif

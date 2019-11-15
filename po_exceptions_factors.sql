@@ -5,52 +5,59 @@ SELECT   i.FACILITYID,
          i.ITEM_NBR_HS,
          i.PURCH_STATUS,
          i.BILLING_STATUS_BACKSCREEN,
-         case when i.LIST_COST is null then 0 else i.LIST_COST end LIST_COST,
+         nvl(i.LIST_COST,0) LIST_COST,
          i.LV_DESC,
          CASE 
               WHEN left(i.LV_DESC, 3) = 'I/O' OR left(i.LV_DESC, 3) = 'SS ' OR left(i.LV_DESC, 3) = 'BTS' OR left(i.LV_DESC, 2) = 'C-' OR left(i.LV_DESC, 2) = 'H-' OR left(i.LV_DESC, 2) = 'V-' OR left(i.LV_DESC, 2) = 'E-' OR left(i.LV_DESC, 3) = 'S/O' THEN 1 
               ELSE 0 
          END I_O_FLAG,
-         case when i.SAFETY_STOCK is null then 0 else i.SAFETY_STOCK end SAFETY_STOCK,
-         case when i.CYCLE_STOCK is null then 0 else i.CYCLE_STOCK end CYCLE_STOCK,
-         case when i.ORDER_INTERVAL_WEEKS is null then 0 else i.ORDER_INTERVAL_WEEKS end ORDER_INTERVAL_WEEKS,
-         case when i.CASES_PER_WEEK is null then 0 else i.CASES_PER_WEEK end CASES_PER_WEEK,
+         nvl(i.SAFETY_STOCK, 0) SAFETY_STOCK,
+         nvl(i.CYCLE_STOCK, 0) CYCLE_STOCK,
+         nvl(i.ORDER_INTERVAL_WEEKS, 0) ORDER_INTERVAL_WEEKS,
+         nvl(i.CASES_PER_WEEK, 0) CASES_PER_WEEK,
          i.WHSE_TIE,
          i.WHSE_TIER,
          i.VENDOR_TIE,
          i.VENDOR_TIER,
-         case when i.INVENTORY_TOTAL is null then 0 else i.INVENTORY_TOTAL end INVENTORY_TOTAL,
-         case when i.IN_PROCESS_REGULAR is null then 0 else i.IN_PROCESS_REGULAR end IN_PROCESS_REGULAR,
-         case when i.IN_PROCESS_PROMO is null then 0 else i.IN_PROCESS_PROMO end IN_PROCESS_PROMO,
-         case when i.RESERVE_COMMITTED is null then 0 else i.RESERVE_COMMITTED end RESERVE_COMMITTED,
-         case when i.RESERVE_UNCOMMITTED is null then 0 else i.RESERVE_UNCOMMITTED end RESERVE_UNCOMMITTED,
-         case when i.STORAGE_COMMITTED is null then 0 else i.STORAGE_COMMITTED end STORAGE_COMMITTED,
-         case when i.STORAGE_UNCOMMITTED is null then 0 else i.STORAGE_UNCOMMITTED end STORAGE_UNCOMMITTED,
-         case when poq.POQ_QTY is null then 0 else poq.POQ_QTY end POQ_30,
-         case when i.ORDER_POINT is null then 0 else i.ORDER_POINT end ORDER_POINT,
-         case when i.INVENTORY_TURN is null then 0 else i.INVENTORY_TURN end INVENTORY_TURN,
-         case when i.INVENTORY_PROMOTION is null then 0 else i.INVENTORY_PROMOTION end INVENTORY_PROMOTION,
-         case when i.INVENTORY_FWD_BUY is null then 0 else i.INVENTORY_FWD_BUY end INVENTORY_FWD_BUY,
-         case when i.ON_ORDER_TOTAL is null then 0 else i.ON_ORDER_TOTAL end ON_ORDER_TOTAL,
+         nvl(i.INVENTORY_TOTAL, 0) INVENTORY_TOTAL,
+         nvl(i.IN_PROCESS_REGULAR, 0) IN_PROCESS_REGULAR,
+         nvl(i.IN_PROCESS_PROMO, 0) IN_PROCESS_PROMO,
+         nvl(i.RESERVE_COMMITTED, 0) RESERVE_COMMITTED,
+         nvl(i.RESERVE_UNCOMMITTED, 0) RESERVE_UNCOMMITTED,
+         nvl(i.STORAGE_COMMITTED, 0) STORAGE_COMMITTED,
+         nvl(i.STORAGE_UNCOMMITTED, 0) STORAGE_UNCOMMITTED,
+         nvl(poq_30.POQ_QTY, 0) POQ_30,
+         nvl(poq_curr.POQ_QTY, 0) POQ_CURR,
+         nvl(i.ORDER_POINT, 0) ORDER_POINT,
+         nvl(i.INVENTORY_TURN, 0) INVENTORY_TURN,
+         nvl(i.INVENTORY_PROMOTION, 0) INVENTORY_PROMOTION,
+         nvl(i.INVENTORY_FWD_BUY, 0) INVENTORY_FWD_BUY,
+         nvl(i.ON_ORDER_TOTAL, 0) ON_ORDER_TOTAL,
          CASE 
               WHEN i.VENDOR_PALLET_FACTOR = 'C' THEN -1 
-              WHEN i.VENDOR_PALLET_FACTOR = 'L' THEN i.WHSE_TIE 
+              WHEN i.VENDOR_PALLET_FACTOR = 'L' THEN nvl(i.WHSE_TIE, 0) 
               WHEN i.VENDOR_PALLET_FACTOR = 'N' THEN 0 
-              WHEN i.VENDOR_PALLET_FACTOR = 'P' THEN i.VENDOR_TIE * i.VENDOR_TIER 
-              WHEN i.VENDOR_PALLET_FACTOR = 'T' THEN i.VENDOR_TIE 
+              WHEN i.VENDOR_PALLET_FACTOR = 'P' THEN nvl(i.VENDOR_TIE, 0) * nvl(i.VENDOR_TIER, 0) 
+              WHEN i.VENDOR_PALLET_FACTOR = 'T' THEN nvl(i.VENDOR_TIE, 0) 
               WHEN i.VENDOR_PALLET_FACTOR = 'U' THEN 1 
-              WHEN i.VENDOR_PALLET_FACTOR = 'W' THEN i.WHSE_TIE * i.WHSE_TIER 
+              WHEN i.VENDOR_PALLET_FACTOR = 'W' THEN nvl(i.WHSE_TIE, 0) * nvl(i.WHSE_TIER, 0)
               ELSE -99 
          END mfg_min_order_qty,
-         case when i.PRODUCT_DATING is null then 0 else i.PRODUCT_DATING end PRODUCT_DATING,
-         case when i.SHELF_LIFE is null then 0 else i.SHELF_LIFE end SHELF_LIFE,
-         case when i.DISTRESS_DAYS is null then 0 else i.DISTRESS_DAYS end DISTRESS_DAYS
---         (ceiling(((i.ORDER_INTERVAL_WEEKS * 7) * (double(i.CASES_PER_WEEK) / 7)))) + i.CYCLE_STOCK + i.SAFETY_STOCK max1,
---         max((ceiling(((i.ORDER_INTERVAL_WEEKS * 7) * (double(i.CASES_PER_WEEK) / 7)))) + i.CYCLE_STOCK + i.SAFETY_STOCK, (CASE WHEN i.VENDOR_PALLET_FACTOR = 'C' THEN -1 WHEN i.VENDOR_PALLET_FACTOR = 'L' THEN i.WHSE_TIE WHEN i.VENDOR_PALLET_FACTOR = 'N' THEN 0 WHEN i.VENDOR_PALLET_FACTOR = 'P' THEN i.VENDOR_TIE * i.VENDOR_TIER WHEN i.VENDOR_PALLET_FACTOR = 'T' THEN i.VENDOR_TIE WHEN i.VENDOR_PALLET_FACTOR = 'U' THEN 1 WHEN i.VENDOR_PALLET_FACTOR = 'W' THEN i.WHSE_TIE * i.WHSE_TIER ELSE -99 END) + i.SAFETY_STOCK) MAX_INVENTORY
+         nvl(i.PRODUCT_DATING, 0) PRODUCT_DATING,
+         nvl(i.SHELF_LIFE, 0) SHELF_LIFE,
+         nvl(i.DISTRESS_DAYS, 0) DISTRESS_DAYS,
+         (nvl(i.SAFETY_STOCK, 0) + nvl(i.CYCLE_STOCK, 0) + (ceiling((nvl(case when i.ORDER_INTERVAL_WEEKS = 0 then 1 else i.ORDER_INTERVAL_WEEKS end, 0) * 7) * (double(nvl(i.CASES_PER_WEEK, 0)) / 7))) + nvl(i.IN_PROCESS_REGULAR, 0) + nvl(i.IN_PROCESS_PROMO, 0) + nvl(i.RESERVE_COMMITTED, 0) + nvl(i.RESERVE_UNCOMMITTED, 0) + nvl(i.STORAGE_COMMITTED, 0) + nvl(i.STORAGE_UNCOMMITTED, 0) + nvl(i.ORDER_POINT, 0) + nvl(poq_30.poq_qty, 0) + ceiling((nvl(i.CASES_PER_WEEK, 0) * .5))) MAX_INVENTORY_CASES,
+         (nvl(i.SAFETY_STOCK, 0) + nvl(i.CYCLE_STOCK, 0) + (ceiling((nvl(case when i.ORDER_INTERVAL_WEEKS = 0 then 1 else i.ORDER_INTERVAL_WEEKS end, 0) * 7) * (double(nvl(i.CASES_PER_WEEK, 0)) / 7))) + nvl(i.IN_PROCESS_REGULAR, 0) + nvl(i.IN_PROCESS_PROMO, 0) + nvl(i.RESERVE_COMMITTED, 0) + nvl(i.RESERVE_UNCOMMITTED, 0) + nvl(i.STORAGE_COMMITTED, 0) + nvl(i.STORAGE_UNCOMMITTED, 0) + nvl(i.ORDER_POINT, 0) + nvl(poq_30.poq_qty, 0) + ceiling((nvl(i.CASES_PER_WEEK, 0) * .5))) * nvl(i.LIST_COST, 0) MAX_INVENTORY
 FROM     CRMADMIN.T_WHSE_ITEM i
-         left outer join (SELECT d.FACILITYID, d.ITEM_NBR, sum(d.PROMO_QTY) POQ_QTY FROM CRMADMIN.T_WHSE_DEAL d WHERE d.DATE_START >= (current_date + -30 DAY) AND d.PROMO_QTY <> 0 GROUP BY d.FACILITYID, d.ITEM_NBR) poq on i.FACILITYID = poq.FACILITYID and i.ITEM_NBR_HS = poq.ITEM_NBR
+         left outer join (SELECT d.FACILITYID, d.ITEM_NBR, sum(d.PROMO_QTY) POQ_QTY FROM CRMADMIN.T_WHSE_DEAL d WHERE d.DATE_START >= (current_date + -30 DAY) AND d.PROMO_QTY <> 0 GROUP BY d.FACILITYID, d.ITEM_NBR) poq_30 on i.FACILITYID = poq_30.FACILITYID and i.ITEM_NBR_HS = poq_30.ITEM_NBR
+         left outer join (SELECT d.FACILITYID, d.ITEM_NBR, sum(d.PROMO_QTY) POQ_QTY FROM CRMADMIN.T_WHSE_DEAL d WHERE current date between d.DATE_START and d.DATE_END AND d.PROMO_QTY <> 0 GROUP BY d.FACILITYID, d.ITEM_NBR) poq_curr on i.FACILITYID = poq_curr.FACILITYID and i.ITEM_NBR_HS = poq_curr.ITEM_NBR
 WHERE    i.PURCH_STATUS not in 'Z'
+--and max(nvl(i.INVENTORY_TURN, 0) - (nvl(i.SAFETY_STOCK, 0) + nvl(i.CYCLE_STOCK, 0) + (ceiling((nvl(case when i.ORDER_INTERVAL_WEEKS = 0 then 1 else i.ORDER_INTERVAL_WEEKS end, 0) * 7) * (double(nvl(i.CASES_PER_WEEK, 0)) / 7))) + nvl(i.IN_PROCESS_REGULAR, 0) + nvl(i.IN_PROCESS_PROMO, 0) + nvl(i.RESERVE_COMMITTED, 0) + nvl(i.RESERVE_UNCOMMITTED, 0) + nvl(i.STORAGE_COMMITTED, 0) + nvl(i.STORAGE_UNCOMMITTED, 0) + nvl(i.ORDER_POINT, 0) + nvl(poq_30.poq_qty, 0) + ceiling((nvl(i.CASES_PER_WEEK, 0) * .5))),0) > 0
 ;
+
+
+         max(nvl(i.INVENTORY_TURN, 0) - (nvl(i.SAFETY_STOCK, 0) + nvl(i.CYCLE_STOCK, 0) + (ceiling((nvl(case when i.ORDER_INTERVAL_WEEKS = 0 then 1 else i.ORDER_INTERVAL_WEEKS end, 0) * 7) * (double(nvl(i.CASES_PER_WEEK, 0)) / 7))) + nvl(i.IN_PROCESS_REGULAR, 0) + nvl(i.IN_PROCESS_PROMO, 0) + nvl(i.RESERVE_COMMITTED, 0) + nvl(i.RESERVE_UNCOMMITTED, 0) + nvl(i.STORAGE_COMMITTED, 0) + nvl(i.STORAGE_UNCOMMITTED, 0) + nvl(i.ORDER_POINT, 0) + nvl(poq_30.poq_qty, 0) + ceiling((nvl(i.CASES_PER_WEEK, 0) * .5))),0) EXCESS_INVENTORY_CASES,
+         max(nvl(i.INVENTORY_TURN, 0) - (nvl(i.SAFETY_STOCK, 0) + nvl(i.CYCLE_STOCK, 0) + (ceiling((nvl(case when i.ORDER_INTERVAL_WEEKS = 0 then 1 else i.ORDER_INTERVAL_WEEKS end, 0) * 7) * (double(nvl(i.CASES_PER_WEEK, 0)) / 7))) + nvl(i.IN_PROCESS_REGULAR, 0) + nvl(i.IN_PROCESS_PROMO, 0) + nvl(i.RESERVE_COMMITTED, 0) + nvl(i.RESERVE_UNCOMMITTED, 0) + nvl(i.STORAGE_COMMITTED, 0) + nvl(i.STORAGE_UNCOMMITTED, 0) + nvl(i.ORDER_POINT, 0) + nvl(poq_30.poq_qty, 0) + ceiling((nvl(i.CASES_PER_WEEK, 0) * .5))),0) * nvl(i.LIST_COST, 0) EXCESS_INVENTORY
 
 
 MOQ	"IF([Ord Restriction] = ""L"", [Whse Tie] 
@@ -85,7 +92,8 @@ SELECT   i.FACILITYID,
          pod.PO_NBR,
          pod.DATE_ORDERED,
          i.ITEM_NBR_HS,
-         pod.BUYER_NBR,
+         pod.BUYER_NBR, i.LIST_COST, i.LV_DESC, i.I_O_FLAG, i.SAFETY_STOCK, i.CYCLE_STOCK, i.ORDER_INTERVAL_WEEKS, i.CASES_PER_WEEK, i.WHSE_TIE, i.WHSE_TIER, i.VENDOR_TIE, i.VENDOR_TIER, i.INVENTORY_TOTAL, i.IN_PROCESS_REGULAR, i.IN_PROCESS_PROMO, i.RESERVE_COMMITTED, i.RESERVE_UNCOMMITTED, i.STORAGE_COMMITTED, i.STORAGE_UNCOMMITTED, i.POQ_30, i.POQ_CURR, i.ORDER_POINT, i.INVENTORY_TURN, i.INVENTORY_PROMOTION, i.INVENTORY_FWD_BUY, i.ON_ORDER_TOTAL, i.MFG_MIN_ORDER_QTY, i.PRODUCT_DATING, 
+         max(((i.INVENTORY_TOTAL + i.ON_ORDER_TOTAL) - (i.ORDER_POINT + i.IN_PROCESS_REGULAR + i.IN_PROCESS_PROMO + i.POQ_CURR + i.RESERVE_COMMITTED + i.RESERVE_UNCOMMITTED + i.STORAGE_COMMITTED + i.STORAGE_UNCOMMITTED + (ceiling(((case when i.ORDER_INTERVAL_WEEKS = 0 then 1 else i.ORDER_INTERVAL_WEEKS end) * 7) * (double(nvl(i.CASES_PER_WEEK, 0)) / 7))) + i.INVENTORY_PROMOTION + i.INVENTORY_FWD_BUY + pod.FORWARD_BUY)) - ceiling(i.CASES_PER_WEEK * .5), 0) excess_check_new,
          case 
               when ((i.INVENTORY_TOTAL + i.ON_ORDER_TOTAL) - ((i.ORDER_POINT + i.SAFETY_STOCK + i.CYCLE_STOCK) + (pod.PROMOTION + pod.FORWARD_BUY + i.IN_PROCESS_REGULAR + i.RESERVE_COMMITTED + i.RESERVE_UNCOMMITTED + i.STORAGE_COMMITTED + i.STORAGE_UNCOMMITTED + i.INVENTORY_PROMOTION + i.INVENTORY_FWD_BUY))) > ceiling(0.5 * i.CASES_PER_WEEK) then (case 
                                                                                                                                                                                                                                                                                                                                                                    when i.ON_ORDER_TOTAL > MFG_MIN_ORDER_QTY then 1 
@@ -110,7 +118,7 @@ SELECT   i.FACILITYID,
          END i_o_check
 FROM     CRMADMIN.T_WHSE_PO_DTL pod 
          inner join KPIADMIN.V_KPI_ITEM_FACTORS i on pod.FACILITYID = i.FACILITYID and pod.ITEM_NBR = i.ITEM_NBR 
---WHERE    pod.DATE_ORDERED between '2019-10-27' and '2019-11-02'
+--where pod.DATE_ORDERED = current date - 1 day
 ;
 
 

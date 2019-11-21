@@ -76,7 +76,7 @@ FROM     MDVSLS_DY_CUST_ITM sls
          join MDV_ITEM i on (sls.CASE_UPC_CD = i.CASE_UPC_CD and sls.DEPT_CD = i.DEPT_CD) 
          join fiscal_week fw on (fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID) 
 WHERE    fw.end_dt = '10-05-2019'
-  AND    sls.ship_error_cd in ('NEW', 'OOS', 'TMP')  --sales_catgy_code???? est vs final
+  AND    sls.ship_error_cd in ('OOS', 'STK')  --sales_catgy_code???? est vs final
 GROUP BY fw.end_dt, i.buyer_id 
 ;
 
@@ -118,3 +118,22 @@ GROUP BY fw.end_dt, i.buyer_id
 --source:  CRM
 
 --see fd file
+
+--po lines
+--source:  CRM
+Select 'buyer' SCORECARD_TYPE,
+         'po_lines' KPI_TYPE,
+         '2019-10-05' DATE_VALUE,   --need to run on Saturday week end date (then plug that value in DATE_VALUE)
+         2 DIVISION_ID,
+--         i.FACILITYID FACILITY_ID,
+         buyer_id KEY_VALUE,
+         sum(item_count) KEY_DATA,
+         'B' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY 
+from whmgr.mdv_po_hdr
+where order_date between '11-10-2019' and '11-16-2019'
+group by buyer_id
+;
+
+
+

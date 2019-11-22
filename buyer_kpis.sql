@@ -236,7 +236,7 @@ SELECT   'buyer' SCORECARD_TYPE,
          dx.ENTERPRISE_KEY + 1 DIVISION_ID,
 --         lh.FACILITYID FACILITY_ID,
          lh.BUYER_NBR KEY_VALUE,
-         sum((lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) * ((case when lh.CORRECT_NET_COST <> 0 then lh.CORRECT_NET_COST else lh.NET_COST_PER_CASE end) * (case when lh.RAND_WGT_CD = 'R' then lh.SHIPPING_CASE_WEIGHT else 1 end))) DATA_VALUE,
+         sum((lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) * ((case when lh.CORRECT_NET_COST <> 0 then lh.CORRECT_NET_COST else lh.NET_COST_PER_CASE end) * case when dx.ENTERPRISE_KEY = 1 then (case when lh.RAND_WGT_CD = 'R' then lh.SHIPPING_CASE_WEIGHT else 1 end) else 1 end)) DATA_VALUE,
          'B' DATA_GRANULARITY,
          'W' TIME_GRANULARITY
 FROM     CRMADMIN.T_WHSE_LAYER_HISTORY lh 
@@ -258,12 +258,12 @@ SELECT   'buyer' SCORECARD_TYPE,
          dx.ENTERPRISE_KEY + 1 DIVISION_ID,
 --         lh.FACILITYID FACILITY_ID,
          lh.BUYER_NBR KEY_VALUE,
-         sum((lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) * ((case when lh.CORRECT_NET_COST <> 0 then lh.CORRECT_NET_COST else lh.NET_COST_PER_CASE end) * (case when lh.RAND_WGT_CD = 'R' then lh.SHIPPING_CASE_WEIGHT else 1 end))) DATA_VALUE,
+         sum((lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) * ((case when lh.CORRECT_NET_COST <> 0 then lh.CORRECT_NET_COST else lh.NET_COST_PER_CASE end) * case when dx.ENTERPRISE_KEY = 1 then (case when lh.RAND_WGT_CD = 'R' then lh.SHIPPING_CASE_WEIGHT else 1 end) else 1 end)) DATA_VALUE,
          'B' DATA_GRANULARITY,
          'W' TIME_GRANULARITY
 FROM     CRMADMIN.T_WHSE_LAYER_HISTORY lh
          inner join CRMADMIN.T_WHSE_DIV_XREF dx on lh.FACILITYID = dx.SWAT_ID
-WHERE    LAYER_FILE_DTE >= '2019-11-21'   --need to determine prior week Saturday date
+WHERE    LAYER_FILE_DTE >= '2019-11-20'   --need to determine prior week Saturday date
 GROUP BY lh.LAYER_FILE_DTE, 
          dx.ENTERPRISE_KEY,
          lh.BUYER_NBR
@@ -353,7 +353,7 @@ SELECT   'buyer' SCORECARD_TYPE,
          dx.ENTERPRISE_KEY + 1 DIVISION_ID,
 --         lh.FACILITYID FACILITY_ID,
          lh.BUYER_NBR KEY_VALUE,
-         sum((lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) * ((case when lh.CORRECT_NET_COST <> 0 then lh.CORRECT_NET_COST else lh.NET_COST_PER_CASE end) * (case when lh.RAND_WGT_CD = 'R' then lh.SHIPPING_CASE_WEIGHT else 1 end))) DATA_VALUE,
+         sum((lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) * ((case when lh.CORRECT_NET_COST <> 0 then lh.CORRECT_NET_COST else lh.NET_COST_PER_CASE end) * case when dx.ENTERPRISE_KEY = 1 then (case when lh.RAND_WGT_CD = 'R' then lh.SHIPPING_CASE_WEIGHT else 1 end) else 1 end)) DATA_VALUE,
          'B' DATA_GRANULARITY,
          'W' TIME_GRANULARITY
 FROM     CRMADMIN.T_WHSE_LAYER_HISTORY lh

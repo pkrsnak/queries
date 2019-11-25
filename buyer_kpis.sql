@@ -3,7 +3,7 @@
 --testing extract
 
 SELECT   kd.SCORECARD_TYPE,
-         kd.ENTERPRISE_ID,
+         kd.DIVISION_ID,
          kd.KPI_TYPE,
          kd.DATA_GRANULARITY,
          kd.TIME_GRANULARITY,
@@ -14,7 +14,7 @@ SELECT   kd.SCORECARD_TYPE,
          kd.KPI_DATA_VALUE
 FROM     KPIADMIN.T_KPI_DETAIL kd 
          left join CRMADMIN.V_WEB_BUYER b on kd.KPI_KEY_VALUE = b.BUYER_NBR
-and kd.TIME_GRANULARITY = 'W'
+where kd.TIME_GRANULARITY = 'W'
 ;
 
 

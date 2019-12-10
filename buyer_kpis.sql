@@ -241,7 +241,7 @@ SELECT   'buyer' SCORECARD_TYPE,
          'W' TIME_GRANULARITY
 FROM     CRMADMIN.T_WHSE_LAYER_HISTORY lh 
          inner join CRMADMIN.T_WHSE_DIV_XREF dx on lh.FACILITYID = dx.SWAT_ID
-WHERE    LAYER_FILE_DTE = date('2019-10-05') - 7 days  --need to determine prior week Saturday date
+WHERE    LAYER_FILE_DTE = date('2019-11-30') - 7 days  --need to determine prior week Saturday date
 GROUP BY lh.LAYER_FILE_DTE, 
          dx.ENTERPRISE_KEY,
          lh.BUYER_NBR
@@ -263,7 +263,7 @@ SELECT   'buyer' SCORECARD_TYPE,
          'W' TIME_GRANULARITY
 FROM     CRMADMIN.T_WHSE_LAYER_HISTORY lh
          inner join CRMADMIN.T_WHSE_DIV_XREF dx on lh.FACILITYID = dx.SWAT_ID
-WHERE    LAYER_FILE_DTE >= '2019-11-20'   --need to determine prior week Saturday date
+WHERE    LAYER_FILE_DTE = '2019-11-30'   --need to determine prior week Saturday date
 GROUP BY lh.LAYER_FILE_DTE, 
          dx.ENTERPRISE_KEY,
          lh.BUYER_NBR

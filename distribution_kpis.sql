@@ -72,10 +72,13 @@ FROM     WH_OWNER.DCLBR_WK_LOC dwl
 --         inner join WH_OWNER.PS_HR_EARNINGS he on dwl.EARNINGS_CD = he.EARNINGS_CD 
 --         inner join wh_owner.PS_HR_OPER_UNIT ou on hd.OPERATING_UNIT_CD = ou.OPERATING_UNIT_CD
 WHERE    FISCAL_WEEK_ID = 201949
+--AND    hl.exec_rollup_cd = 'DIST'
 ) lbr
 where FACILITY_ID <> '999'
 group by 3, 4, 5
 ;
+
+
 
 --netezza
 --total labor hours
@@ -354,61 +357,486 @@ WHERE    date(receipt_dtim) = '10-28-2019'
 GROUP BY 1, 2, 3, 4, 5, 7, 8
 ;
 
-S_DIVISION_CD	LOCATION_CD
-DISTR	2007
-DISTR	2016
-DISTR	2037
-DISTR	2038
-DISTR	2040
-DISTR	2052
-DISTR	2054
-DISTR	2058
-DISTR	2067
-DISTR	2071
-DISTR	2115
-DISTR	2165
-DISTR	2170
-DISTR	2185
-DISTR	2915
-DISTR	2917
-DISTR	GGM
-DISTR	GGR
-DISTR	GPR
-DISTR	VSPT
-MDV	6922
-MDV	6924
-MDV	6927
-MDV	6929
-MDV	6933
-MDV	6938
-MDV	6939
-MDV	S6924
+--cases shipped by facility
+--source:  datawhse02
+SELECT   'distribution' SCORECARD_TYPE,
+         'cases_shipped' KPI_TYPE,
+         fw.end_dt DATE_VALUE,
+         2 DIVISION_ID,
+         wsd.FACILITY_ID KEY_VALUE,
+--         i.BUYER_ID KEY_VALUE,
+         sum(wsd.SHIP_CASE_QTY) DATA_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     WHMGR.DC_WHSE_SHIP_DTL wsd 
+         join WHMGR.DC_ITEM i on (wsd.FACILITY_ID = i.FACILITY_ID and wsd.ITEM_NBR = i.ITEM_NBR)
+         join WHMGR.dc_customer cust on (cust.facility_id = wsd.facility_id and cust.customer_nbr = wsd.customer_nbr and cust.corporation_id not in (634001, 248561)) 
+         join WHMGR.fiscal_day fd on (wsd.TRANSACTION_DATE = fd.SALES_DT) 
+         join WHMGR.fiscal_week fw on (fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID)
+WHERE    (fw.end_dt = '10-05-2019'  --To_Date('10/05/2019', 'mm/dd/yyyy')  --need to determine prior week Saturday date
+     AND wsd.FACILITY_ID not in (16)
+     AND wsd.COMMODITY_CODE not in (900))
+GROUP BY fw.end_dt, 
+         wsd.FACILITY_ID
+;
+
+--pshrdw
+--total headcount
+SELECT   'distribution' SCORECARD_TYPE,
+         'headcount_total' KPI_TYPE,
+         hc.fiscal_day_dt DATE_VALUE,  --need end date, not weekid
+         hc.DIVISION_ID,
+         hc.FACILITY_ID KEY_VALUE,
+         count(hc.empl_id) DATA_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+from (
+SELECT   ea.fiscal_day_dt,
+         case when loc.division_cd = 'MDV' then 3 else case when loc.region_cd in ('BRT', 'CAITO') then 4 else 2 end end division_id,
+         case 
+              when loc.LOCATION_CD = '2007' then '008' 
+              when loc.LOCATION_CD = '2016' then '016' 
+              when loc.LOCATION_CD = '2037' then '003' 
+              when loc.LOCATION_CD = '2038' then '003' 
+              when loc.LOCATION_CD = '2040' then '040' 
+              when loc.LOCATION_CD = '2052' then '002' 
+              when loc.LOCATION_CD = '2054' then '054' 
+              when loc.LOCATION_CD = '2058' then '058' 
+              when loc.LOCATION_CD = '2067' then '067' 
+              when loc.LOCATION_CD = '2071' then '071' 
+              when loc.LOCATION_CD = '2115' then '115' 
+              when loc.LOCATION_CD = '2165' then '165' 
+              when loc.LOCATION_CD = '2170' then '170' 
+              when loc.LOCATION_CD = '2185' then '185' 
+              when loc.LOCATION_CD = '2915' then '015' 
+              when loc.LOCATION_CD = '2917' then '061' 
+              when loc.LOCATION_CD = 'GGM' then '001' 
+              when loc.LOCATION_CD = 'GGR' then '001' 
+              when loc.LOCATION_CD = 'GPR' then '001' 
+              when loc.LOCATION_CD = 'VSPT' then '001' 
+              when loc.LOCATION_CD = '6922' then '069' 
+              when loc.LOCATION_CD = '6924' then '070' 
+              when loc.LOCATION_CD = '6927' then '027' 
+              when loc.LOCATION_CD = '6929' then case when dept.DEPT_ID in ('1479', '1476', '1472') then '090' else '029' end 
+              when loc.LOCATION_CD = '6933' then case when dept.DEPT_ID in ('1492', '1496', '1480') then '080' else '033' end
+              when loc.LOCATION_CD = '6938' then '038' 
+              when loc.LOCATION_CD = '6939' then '039' 
+              when loc.LOCATION_CD = 'S6924' then '070' 
+              else '999' 
+         end facility_id,
+         ea.empl_id,
+--         ea.position_key,
+--         ea.job_code_key,
+--         ea.job_title_nm,
+         ea.job_function_cd,
+         ea.job_family_cd,
+--         ea.supervisor_id,
+         ea.location_key,
+         ea.dept_key,
+         ea.gl_dept_id,
+         ea.business_unit_id,
+         ea.operating_unit_key,
+         ea.empl_type_cd,
+         ea.termination_dt,
+         ea.service_dt,
+         ea.day_employed_qty
+FROM     whmgr.hr_day_empl_hst ea 
+         inner join whmgr.hr_location loc on ea.location_key = loc.location_key
+         inner join whmgr.hr_department dept on ea.dept_key = dept.dept_key
+WHERE    loc.exec_rollup_cd = 'DIST'
+AND      ea.fiscal_day_dt = '12-14-2019'
+) hc
+where hc.FACILITY_ID <> '999'
+group by 3, 4, 5
+;
+
+--pshrdw
+--termed headcount
+SELECT   'distribution' SCORECARD_TYPE,
+         'headcount_termed' KPI_TYPE,
+         max(tc.fiscal_day_dt) DATE_VALUE,  --need end date, not MAX function
+         tc.DIVISION_ID,
+         tc.FACILITY_ID KEY_VALUE,
+         count(tc.empl_id) DATA_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+from (
+SELECT   eah.fiscal_day_dt,
+         case when loc.division_cd = 'MDV' then 3 else case when loc.region_cd in ('BRT', 'CAITO') then 4 else 2 end end division_id,
+         case 
+              when loc.LOCATION_CD = '2007' then '008' 
+              when loc.LOCATION_CD = '2016' then '016' 
+              when loc.LOCATION_CD = '2037' then '003' 
+              when loc.LOCATION_CD = '2038' then '003' 
+              when loc.LOCATION_CD = '2040' then '040' 
+              when loc.LOCATION_CD = '2052' then '002' 
+              when loc.LOCATION_CD = '2054' then '054' 
+              when loc.LOCATION_CD = '2058' then '058' 
+              when loc.LOCATION_CD = '2067' then '067' 
+              when loc.LOCATION_CD = '2071' then '071' 
+              when loc.LOCATION_CD = '2115' then '115' 
+              when loc.LOCATION_CD = '2165' then '165' 
+              when loc.LOCATION_CD = '2170' then '170' 
+              when loc.LOCATION_CD = '2185' then '185' 
+              when loc.LOCATION_CD = '2915' then '015' 
+              when loc.LOCATION_CD = '2917' then '061' 
+              when loc.LOCATION_CD = 'GGM' then '001' 
+              when loc.LOCATION_CD = 'GGR' then '001' 
+              when loc.LOCATION_CD = 'GPR' then '001' 
+              when loc.LOCATION_CD = 'VSPT' then '001' 
+              when loc.LOCATION_CD = '6922' then '069' 
+              when loc.LOCATION_CD = '6924' then '070' 
+              when loc.LOCATION_CD = '6927' then '027' 
+              when loc.LOCATION_CD = '6929' then case when dept.DEPT_ID in ('1479', '1476', '1472') then '090' else '029' end 
+              when loc.LOCATION_CD = '6933' then case when dept.DEPT_ID in ('1492', '1496', '1480') then '080' else '033' end
+              when loc.LOCATION_CD = '6938' then '038' 
+              when loc.LOCATION_CD = '6939' then '039' 
+              when loc.LOCATION_CD = 'S6924' then '070' 
+              else '999' 
+         end facility_id,
+         eah.empl_id,
+         eah.action_cd,
+         eah.action_reason_cd,
+         eah.status_flg,
+         eah.position_key,
+         eah.job_code_key, loc.loc_shrt_desc,
+         eah.location_key,
+         loc.location_cd,
+         loc.location_desc,
+         eah.dept_key,
+         eah.gl_dept_id,
+         eah.business_unit_id,
+         eah.operating_unit_key,
+         eah.day_employed_qty,
+         eah.empl_type_cd
+FROM     whmgr.hr_dy_empl_act_hst eah 
+         inner join whmgr.hr_location loc on eah.location_key = loc.location_key
+         inner join whmgr.hr_department dept on eah.dept_key = dept.dept_key
+WHERE    eah.fiscal_day_dt between '12-08-2019' and '12-14-2019'
+AND      eah.status_flg = 'Y'
+and      loc.exec_rollup_cd = 'DIST'
+) tc
+where tc.FACILITY_ID <> '999'
+group by  4, 5  --needs fixing once DATE_KEY is fixed
+;
 
 
-select distinct S_DIVISION_CD, LOCATION_CD from (
-SELECT   dwl.FISCAL_WEEK_ID,
-         hd.OPERATING_UNIT_CD,
---         ou.OP_UNIT_DESC,
-         dwl.LOCATION_CD,
-         hl.LOCATION_DESC,
-         hl.S_DIVISION_CD,
-         hl.S_REGION_CD,
-         hl.S_DISTRICT_CD,
-         hl.S_BANNER_CD,
-         dwl.DEPT_ID,
-         hd.DEPT_DESC,
-         dwl.EARNINGS_CD,
-         dwl.PAY_GROUP_CD,
-         dwl.JOB_CD,
-         hj.JOB_CD_DESC,
-         dwl.EARNINGS_AMT,
-         dwl.HRS_QTY,
-         dwl.OVERTIME_HRS_QTY,
-         dwl.LOAD_BATCH_ID,
-         dwl.ORIGIN_ID
-FROM     WH_OWNER.DCLBR_WK_LOC dwl 
-         inner join WH_OWNER.PS_HR_LOCATION hl on dwl.LOCATION_CD = hl.LOCATION_CD 
-         inner join WH_OWNER.PS_HR_DEPT hd on dwl.DEPT_ID = hd.DEPT_ID 
-         inner join WH_OWNER.PS_HR_JOB hj on dwl.JOB_CD = hj.JOB_CD 
---         inner join wh_owner.PS_HR_OPER_UNIT ou on hd.OPERATING_UNIT_CD = ou.OPERATING_UNIT_CD
-WHERE    FISCAL_WEEK_ID = 201949) x
+select whse_id, lcat_id, lsta_id, "Freezer", count(*),
+sum(case when sel_pos_hgt between 2 and 30 then 1 else 0 end) as s,
+sum(case when sel_pos_hgt between 31 and 60 then 1 else 0 end) as m,     
+sum(case when sel_pos_hgt between 61 and 90 then 1 else 0 end) as l,     
+sum(case when sel_pos_hgt between 91 and 200 then 1 else 0 end) as xl,   
+sum(case when sel_pos_hgt between 201 and 10000 then 1 else 0 end) as xxl
+from iloc                                                                
+where whse_id = 7                                                       
+and lcat_id = "S"                                                        
+and sel_pos_hgt > 1
+and lsta_id = "F"                                                        
+and ldes_id != "TR"                                                      
+and ldes_id != "TP"
+and ldes_id != "OS"      
+and ldes_id != "FK"                                                      
+and loc_id >= "FA00000"                                                
+and Loc_id <= "FJZZZZZ"                                                 
+GROUP BY whse_id, lcat_id, lsta_id, 4                                                                               
+                                                                       
+union                                                                    
+select whse_id, lcat_id, lsta_id, "Freezer", count(*), 
+sum(case when rsv_pos_hgt between 2 and 30 then 1 else 0 end) as s,      
+sum(case when rsv_pos_hgt between 31 and 60 then 1 else 0 end) as m,     
+sum(case when rsv_pos_hgt between 61 and 90 then 1 else 0 end) as l,     
+sum(case when rsv_pos_hgt between 91 and 200 then 1 else 0 end) as xl,   
+sum(case when rsv_pos_hgt between 201 and 10000 then 1 else 0 end) as XXL
+from iloc                                                                
+where whse_id = 7       
+and lcat_id = "R"  
+and rsv_pos_hgt > 1                                                      
+and lsta_id = "F"                                                        
+and ldes_id != "TR"                                                      
+and ldes_id != "TP"     
+and ldes_id != "OS"                                                 
+and ldes_id != "FK"                                                      
+and loc_id >= "FA00000"                                                
+and loc_id <= "FJZZZZZ"                                                
+                                    
+group by whse_id, lcat_id, lsta_id, 4                     
+
+Union                                                                     
+select whse_id, lcat_id, lsta_id, "Freezer", count(*),
+sum(case when sel_pos_hgt between 2 and 30 then 1 else 0 end) as s,       
+sum(case when sel_pos_hgt between 31 and 60 then 1 else 0 end) as m,      
+sum(case when sel_pos_hgt between 61 and 90 then 1 else 0 end) as l,      
+sum(case when sel_pos_hgt between 91 and 200 then 1 else 0 end) as xl,    
+sum(case when sel_pos_hgt between 201 and 10000 then 1 else 0 end) as XXL 
+from iloc                                                                 
+where whse_id = 7                                                        
+and lcat_id = "S" 
+and sel_pos_hgt > 1                                                        
+and lsta_id = "A"                                                         
+and ldes_id != "TR"                                                       
+and ldes_id != "TP"   
+and ldes_id != "OS"                                                    
+and ldes_id != "FK"                                                       
+and loc_id >= "FA00000"                                                 
+and Loc_id <= "FJZZZZZ" 
+group by whse_id, lcat_id, 3, 4                                       
+
+union                                                                      
+select whse_id, lcat_id, lsta_id, "Freezer", count(*),
+sum(case when rsv_pos_hgt between 2 and 30 then 1 else 0 end) as s,        
+sum(case when rsv_pos_hgt between 31 and 60 then 1 else 0 end) as m,       
+sum(case when rsv_pos_hgt between 61 and 90 then 1 else 0 end) as l,       
+sum(case when rsv_pos_hgt between 91 and 200 then 1 else 0 end) as xl,     
+sum(case when rsv_pos_hgt between 201 and 10000 then 1 else 0 end) as XXL  
+from iloc                                                                  
+where whse_id = 7                                                         
+and lcat_id = "R"   
+and rsv_pos_hgt > 1                                                       
+and lsta_id = "A"                                                          
+and ldes_id != "TR"                                                        
+and ldes_id != "TP"    
+and ldes_id != "OS"                                                    
+and ldes_id != "FK"                                                        
+and loc_id >= "FA00000"                                                  
+and loc_id <= "FJZZZZZ"
+group by whse_id, lcat_id, lsta_id, 4
+
+
+
+union
+select whse_id, lcat_id, lsta_id, "IceCream", count(*), 
+sum(case when sel_pos_hgt between 2 and 30 then 1 else 0 end) as s,
+sum(case when sel_pos_hgt between 31 and 60 then 1 else 0 end) as m,     
+sum(case when sel_pos_hgt between 61 and 90 then 1 else 0 end) as l,     
+sum(case when sel_pos_hgt between 91 and 200 then 1 else 0 end) as xl,   
+sum(case when sel_pos_hgt between 201 and 10000 then 1 else 0 end) as xxl
+from iloc                                                                
+where whse_id = 7                                                       
+and lcat_id = "S"    
+and sel_pos_hgt > 1                                                    
+and lsta_id = "F"                                                        
+and ldes_id != "TR"                                                      
+and ldes_id != "TP"
+and ldes_id != "OS"                                                      
+and ldes_id != "FK"                                                      
+and loc_id >= "FM00000"                                                
+and loc_id <= "FNZZZZ"                                                 
+GROUP BY whse_id, lcat_id, lsta_id, 4                                                                             
+                                                                       
+union                                                                    
+select whse_id, lcat_id, lsta_id, "IceCream", count(*), 
+sum(case when rsv_pos_hgt between 2 and 30 then 1 else 0 end) as s,      
+sum(case when rsv_pos_hgt between 31 and 60 then 1 else 0 end) as m,     
+sum(case when rsv_pos_hgt between 61 and 90 then 1 else 0 end) as l,     
+sum(case when rsv_pos_hgt between 91 and 200 then 1 else 0 end) as xl,   
+sum(case when rsv_pos_hgt between 201 and 10000 then 1 else 0 end) as XXL
+from iloc                                                                
+where whse_id = 7                                                       
+and lcat_id = "R"     
+and rsv_pos_hgt > 1                                                   
+and lsta_id = "F"                                                        
+and ldes_id != "TR"                                                      
+and ldes_id != "TP"   
+and ldes_id != "OS"                                                   
+and ldes_id != "FK"  
+and loc_id >= "FM00000"                                                
+and loc_id <= "FNZZZZZ"
+group by whse_id, lcat_id, lsta_id, 4                       
+
+Union                                                                     
+select whse_id, lcat_id, lsta_id, "IceCream", count(*), 
+sum(case when sel_pos_hgt between 2 and 30 then 1 else 0 end) as s,       
+sum(case when sel_pos_hgt between 31 and 60 then 1 else 0 end) as m,      
+sum(case when sel_pos_hgt between 61 and 90 then 1 else 0 end) as l,      
+sum(case when sel_pos_hgt between 91 and 200 then 1 else 0 end) as xl,    
+sum(case when sel_pos_hgt between 201 and 10000 then 1 else 0 end) as XXL 
+from iloc                                                                 
+where whse_id = 7                                                        
+and lcat_id = "S"    
+and sel_pos_hgt > 1                                                     
+and lsta_id = "A"                                                         
+and ldes_id != "TR"                                                       
+and ldes_id != "TP"   
+and ldes_id != "OS"                                                    
+and ldes_id != "FK"      
+and loc_id >= "FM00000"                                                
+and loc_id <= "FNZZZZZ"
+group by whse_id, lcat_id, 3, 4                                         
+
+union                                                                      
+select whse_id, lcat_id, lsta_id, "IceCream", count(*), 
+sum(case when rsv_pos_hgt between 2 and 30 then 1 else 0 end) as s,        
+sum(case when rsv_pos_hgt between 31 and 60 then 1 else 0 end) as m,       
+sum(case when rsv_pos_hgt between 61 and 90 then 1 else 0 end) as l,       
+sum(case when rsv_pos_hgt between 91 and 200 then 1 else 0 end) as xl,     
+sum(case when rsv_pos_hgt between 201 and 10000 then 1 else 0 end) as XXL  
+from iloc                                                                  
+where whse_id = 7                                                         
+and lcat_id = "R"      
+and rsv_pos_hgt > 1                                                    
+and lsta_id = "A"                                                          
+and ldes_id != "TR"                                                        
+and ldes_id != "TP"
+and ldes_id != "OS"                                                        
+and ldes_id != "FK"                                                        
+and loc_id >= "FM00000"
+and loc_id <= "FNZZZZZ"
+group by whse_id, lcat_id, lsta_id, 4
+
+
+
+union                                                                      
+select whse_id, lcat_id, lsta_id, "CHILL", count(*), 
+sum(case when rsv_pos_hgt between 2 and 30 then 1 else 0 end) as s,        
+sum(case when rsv_pos_hgt between 31 and 60 then 1 else 0 end) as m,       
+sum(case when rsv_pos_hgt between 61 and 90 then 1 else 0 end) as l,       
+sum(case when rsv_pos_hgt between 91 and 200 then 1 else 0 end) as xl,     
+sum(case when rsv_pos_hgt between 201 and 10000 then 1 else 0 end) as XXL  
+from iloc                                                                  
+where whse_id = 8                                                         
+and lcat_id = "R"   
+and rsv_pos_hgt > 1                                                       
+and lsta_id = "A"                                                          
+and ldes_id != "TR"                                                        
+and ldes_id != "TP"     
+and ldes_id != "OS"                                                   
+and ldes_id != "FK"
+and loc_id >= "CA00000"
+and loc_id <= "MZZZZZZ"
+group by whse_id, lcat_id, lsta_id, 4
+
+union                                                                      
+select whse_id, lcat_id, lsta_id, "CHILL", count(*), 
+sum(case when rsv_pos_hgt between 2 and 30 then 1 else 0 end) as s,        
+sum(case when rsv_pos_hgt between 31 and 60 then 1 else 0 end) as m,       
+sum(case when rsv_pos_hgt between 61 and 90 then 1 else 0 end) as l,       
+sum(case when rsv_pos_hgt between 91 and 200 then 1 else 0 end) as xl,     
+sum(case when rsv_pos_hgt between 201 and 10000 then 1 else 0 end) as XXL  
+from iloc                                                                  
+where whse_id = 8                                                         
+and lcat_id = "R" 
+and rsv_pos_hgt > 1                                                         
+and lsta_id = "F"                                                          
+and ldes_id != "TR"                                                        
+and ldes_id != "TP"
+and ldes_id != "OS"                                                        
+and ldes_id != "FK"                                                        
+and loc_id >= "CA00000"
+and loc_id <= "MZZZZZZ"
+group by whse_id, lcat_id, lsta_id, 4
+                                            
+union                                                                      
+select whse_id, lcat_id, lsta_id, "CHILL", count(*), 
+sum(case when sel_pos_hgt between 2 and 30 then 1 else 0 end) as s,        
+sum(case when sel_pos_hgt between 31 and 60 then 1 else 0 end) as m,       
+sum(case when sel_pos_hgt between 61 and 90 then 1 else 0 end) as l,       
+sum(case when sel_pos_hgt between 91 and 200 then 1 else 0 end) as xl,     
+sum(case when sel_pos_hgt between 201 and 10000 then 1 else 0 end) as XXL  
+from iloc                                                                  
+where whse_id = 8                                                         
+and lcat_id = "S"   
+and sel_pos_hgt > 1                                                       
+and lsta_id = "A"                                                          
+and ldes_id != "TR"                                                        
+and ldes_id != "TP"  
+and ldes_id != "OS"                                                      
+and ldes_id != "FK"
+and loc_id >= "CA00000"
+and loc_id <= "MZZZZZZ"
+group by whse_id, lcat_id, lsta_id, 4
+
+union                                                                      
+select whse_id, lcat_id, lsta_id, "CHILL", count(*), 
+sum(case when sel_pos_hgt between 2 and 30 then 1 else 0 end) as s,        
+sum(case when sel_pos_hgt between 31 and 60 then 1 else 0 end) as m,       
+sum(case when sel_pos_hgt between 61 and 90 then 1 else 0 end) as l,       
+sum(case when sel_pos_hgt between 91 and 200 then 1 else 0 end) as xl,     
+sum(case when sel_pos_hgt between 201 and 10000 then 1 else 0 end) as XXL  
+from iloc                                                                  
+where whse_id = 8  
+and lcat_id = "S"         
+and sel_pos_hgt > 1                                                 
+and lsta_id = "F"                                                          
+and ldes_id != "TR"                                                        
+and ldes_id != "TP"   
+and ldes_id != "OS"                                                     
+and ldes_id != "FK"
+and loc_id >= "CA00000"
+and loc_id <= "MZZZZZZ"
+group by whse_id, lcat_id, lsta_id, 4
+
+
+
+union                                                                      
+select whse_id, lcat_id, lsta_id, "Cigarettes", count(*), 
+sum(case when rsv_pos_hgt between 2 and 30 then 1 else 0 end) as s,        
+sum(case when rsv_pos_hgt between 31 and 60 then 1 else 0 end) as m,       
+sum(case when rsv_pos_hgt between 61 and 90 then 1 else 0 end) as l,       
+sum(case when rsv_pos_hgt between 91 and 200 then 1 else 0 end) as xl,     
+sum(case when rsv_pos_hgt between 201 and 10000 then 1 else 0 end) as XXL  
+from iloc                                                                  
+where whse_id = 6
+and lcat_id = "R"         
+and rsv_pos_hgt > 1                                                 
+and lsta_id = "A"                                                          
+and ldes_id != "TR"                                                        
+and ldes_id != "TP"
+and ldes_id != "OS"                                                        
+and ldes_id != "FK"
+group by whse_id, lcat_id, lsta_id, 4
+
+union                                                                      
+select whse_id, lcat_id, lsta_id, "Cigarettes", count(*), 
+sum(case when sel_pos_hgt between 2 and 30 then 1 else 0 end) as s,        
+sum(case when sel_pos_hgt between 31 and 60 then 1 else 0 end) as m,       
+sum(case when sel_pos_hgt between 61 and 90 then 1 else 0 end) as l,       
+sum(case when sel_pos_hgt between 91 and 200 then 1 else 0 end) as xl,     
+sum(case when sel_pos_hgt between 201 and 10000 then 1 else 0 end) as XXL  
+from iloc                                                                  
+where whse_id = 6
+and lcat_id = "S" 
+and sel_pos_hgt > 1                                                         
+and lsta_id = "A"                                                          
+and ldes_id != "TR"                                                        
+and ldes_id != "TP"    
+and ldes_id != "OS"                                                    
+and ldes_id != "FK"
+group by whse_id, lcat_id, lsta_id, 4
+
+union                                                                      
+select whse_id, lcat_id, lsta_id, "Cigarettes", count(*), 
+sum(case when rsv_pos_hgt between 2 and 30 then 1 else 0 end) as s,        
+sum(case when rsv_pos_hgt between 31 and 60 then 1 else 0 end) as m,       
+sum(case when rsv_pos_hgt between 61 and 90 then 1 else 0 end) as l,       
+sum(case when rsv_pos_hgt between 91 and 200 then 1 else 0 end) as xl,     
+sum(case when rsv_pos_hgt between 201 and 10000 then 1 else 0 end) as XXL  
+from iloc                                                                  
+where whse_id = 6
+and lcat_id = "R"       
+and rsv_pos_hgt > 1                                                   
+and lsta_id = "F"                                                          
+and ldes_id != "TR"                                                        
+and ldes_id != "TP" 
+and ldes_id != "OS"                                                       
+and ldes_id != "FK"                                                        
+group by whse_id, lcat_id, lsta_id, 4
+
+union                                                                      
+select whse_id, lcat_id, lsta_id, "Cigarettes", count(*), 
+sum(case when sel_pos_hgt between 2 and 30 then 1 else 0 end) as s,        
+sum(case when sel_pos_hgt between 31 and 60 then 1 else 0 end) as m,       
+sum(case when sel_pos_hgt between 61 and 90 then 1 else 0 end) as l,       
+sum(case when sel_pos_hgt between 91 and 200 then 1 else 0 end) as xl,     
+sum(case when sel_pos_hgt between 201 and 10000 then 1 else 0 end) as XXL  
+from iloc                                                                  
+where whse_id = 6
+and lcat_id = "S"     
+and sel_pos_hgt > 1                                                     
+and lsta_id = "F"                                                          
+and ldes_id != "TR"                                                        
+and ldes_id != "TP"   
+and ldes_id != "OS"                                                     
+and ldes_id != "FK"                                                        
+group by whse_id, lcat_id, lsta_id, 4                                            
+order by whse_id, 4, lcat_id, lsta_id
+                 

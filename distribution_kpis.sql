@@ -357,6 +357,7 @@ WHERE    date(receipt_dtim) = '10-28-2019'
 GROUP BY 1, 2, 3, 4, 5, 7, 8
 ;
 
+/*
 --cases shipped by facility
 --source:  datawhse02
 SELECT   'distribution' SCORECARD_TYPE,
@@ -379,6 +380,7 @@ WHERE    (fw.end_dt = '10-05-2019'  --To_Date('10/05/2019', 'mm/dd/yyyy')  --nee
 GROUP BY fw.end_dt, 
          wsd.FACILITY_ID
 ;
+*/
 
 --pshrdw
 --total headcount
@@ -520,7 +522,106 @@ where tc.FACILITY_ID <> '999'
 group by  4, 5  --needs fixing once DATE_KEY is fixed
 ;
 
+--total abs value inventory adjustments by facility
+--source:  datawhse02
+SELECT   'distribution' SCORECARD_TYPE,
+         'inventory_adjust_total' KPI_TYPE,
+         max(fia.invtry_adj_date) DATE_VALUE, --need week end date for prior week
+         2 DIVISION_ID,
+         fia.facility_id KEY_VALUE,
+         sum(abs(fia.ext_layer_cost_amt)) DATA_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     whmgr.dc_d_fac_invctrl_adj fia
+WHERE    fia.ext_layer_cost_amt <> 0
+AND      fia.invtry_adj_date between '12-08-2019' and '12-14-2019' --need to determine prior week start - end
+group by fia.facility_id
 
+union all
+
+SELECT   'distribution' SCORECARD_TYPE,
+         'inventory_adjust_total' KPI_TYPE,
+         max(mia.invtry_adj_date) DATE_VALUE, --need week end date for prior week
+         2 DIVISION_ID,
+         mia.facility_id KEY_VALUE,
+         sum(abs(mia.ext_layer_cost_amt)) DATA_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     whmgr.mdv_d_fac_invctrl_adj mia
+WHERE    mia.ext_layer_cost_amt <> 0
+AND      mia.invtry_adj_date between '12-08-2019' and '12-14-2019' --need to determine prior week start - end
+and      mia.facility_id in (80, 90)
+group by mia.facility_id
+
+union all
+
+SELECT   'distribution' SCORECARD_TYPE,
+         'inventory_adjust_total' KPI_TYPE,
+         max(mia.invtry_adj_date) DATE_VALUE, --need week end date for prior week
+         3 DIVISION_ID,
+         mia.facility_id KEY_VALUE,
+         sum(abs(mia.ext_layer_cost_amt)) DATA_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     whmgr.mdv_d_fac_invctrl_adj mia
+WHERE    mia.ext_layer_cost_amt <> 0
+AND      mia.invtry_adj_date between '12-08-2019' and '12-14-2019' --need to determine prior week start - end
+and      mia.facility_id not in (80, 90)
+group by mia.facility_id
+;
+
+--warehouse damage abs value inventory adjustments by facility
+--source:  datawhse02
+SELECT   'distribution' SCORECARD_TYPE,
+         'inventory_adjust_total' KPI_TYPE,
+         max(fia.invtry_adj_date) DATE_VALUE, --need week end date for prior week
+         2 DIVISION_ID,
+         fia.facility_id KEY_VALUE,
+         sum(abs(fia.ext_layer_cost_amt)) DATA_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     whmgr.dc_d_fac_invctrl_adj fia
+WHERE    fia.ext_layer_cost_amt <> 0
+AND      fia.invtry_adj_date between '12-08-2019' and '12-14-2019' --need to determine prior week start - end
+AND      fia.invtry_adjust_cd in ('WD')
+group by fia.facility_id
+
+union all
+
+SELECT   'distribution' SCORECARD_TYPE,
+         'inventory_adjust_total' KPI_TYPE,
+         max(mia.invtry_adj_date) DATE_VALUE, --need week end date for prior week
+         2 DIVISION_ID,
+         mia.facility_id KEY_VALUE,
+         sum(abs(mia.ext_layer_cost_amt)) DATA_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     whmgr.mdv_d_fac_invctrl_adj mia
+WHERE    mia.ext_layer_cost_amt <> 0
+AND      mia.invtry_adj_date between '12-08-2019' and '12-14-2019' --need to determine prior week start - end
+and      mia.facility_id in (80, 90)
+AND      mia.invtry_adjust_cd in ('WD')
+group by mia.facility_id
+
+union all
+
+SELECT   'distribution' SCORECARD_TYPE,
+         'inventory_adjust_total' KPI_TYPE,
+         max(mia.invtry_adj_date) DATE_VALUE,
+         3 DIVISION_ID,
+         mia.facility_id KEY_VALUE,
+         sum(abs(mia.ext_layer_cost_amt)) DATA_VALUE, --need week end date for prior week
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     whmgr.mdv_d_fac_invctrl_adj mia
+WHERE    mia.ext_layer_cost_amt <> 0
+AND      mia.invtry_adj_date between '12-08-2019' and '12-14-2019' --need to determine prior week start - end
+and      mia.facility_id not in (80, 90)
+AND      mia.invtry_adjust_cd in ('WD')
+group by mia.facility_id
+;
+
+/*
 select whse_id, lcat_id, lsta_id, "Freezer", count(*),
 sum(case when sel_pos_hgt between 2 and 30 then 1 else 0 end) as s,
 sum(case when sel_pos_hgt between 31 and 60 then 1 else 0 end) as m,     
@@ -839,4 +940,4 @@ and ldes_id != "OS"
 and ldes_id != "FK"                                                        
 group by whse_id, lcat_id, lsta_id, 4                                            
 order by whse_id, 4, lcat_id, lsta_id
-                 
+*/

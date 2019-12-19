@@ -38,8 +38,8 @@ SELECT   dwl.FISCAL_WEEK_ID,
               when dwl.LOCATION_CD = '6922' then '069' 
               when dwl.LOCATION_CD = '6924' then '070' 
               when dwl.LOCATION_CD = '6927' then '027' 
-              when dwl.LOCATION_CD = '6929' then case when dwl.DEPT_ID in ('1479', '1476', '1472') then '090' else '029' end 
-              when dwl.LOCATION_CD = '6933' then case when dwl.DEPT_ID in ('1492', '1496', '1480') then '080' else '033' end
+              when dwl.LOCATION_CD = '6929' then '029' --case when dwl.DEPT_ID in ('1479', '1476', '1472') then '090' else '029' end 
+              when dwl.LOCATION_CD = '6933' then '033' --case when dwl.DEPT_ID in ('1492', '1496', '1480') then '080' else '033' end
               when dwl.LOCATION_CD = '6938' then '038' 
               when dwl.LOCATION_CD = '6939' then '039' 
               when dwl.LOCATION_CD = 'S6924' then '070' 
@@ -53,7 +53,7 @@ SELECT   dwl.FISCAL_WEEK_ID,
          hl.S_REGION_CD,
          hl.S_DISTRICT_CD,
          hl.S_BANNER_CD,
-         dwl.DEPT_ID,
+         dwl.DEPT_ID, hd.S_GL_DEPT_ID, hd.S_GL_DEPT_ID_DESC, 
          hd.DEPT_DESC,
          dwl.EARNINGS_CD,
          dwl.PAY_GROUP_CD,
@@ -72,12 +72,12 @@ FROM     WH_OWNER.DCLBR_WK_LOC dwl
 --         inner join WH_OWNER.PS_HR_EARNINGS he on dwl.EARNINGS_CD = he.EARNINGS_CD 
 --         inner join wh_owner.PS_HR_OPER_UNIT ou on hd.OPERATING_UNIT_CD = ou.OPERATING_UNIT_CD
 WHERE    FISCAL_WEEK_ID = 201949
+AND      hd.S_GL_DEPT_ID in ('8100', '8110', '8160', '8500', '8115', '8116', '8117', '8716', '8717')
 --AND    hl.exec_rollup_cd = 'DIST'
 ) lbr
 where FACILITY_ID <> '999'
 group by 3, 4, 5
 ;
-
 
 
 --netezza
@@ -120,8 +120,8 @@ SELECT   dwl.FISCAL_WEEK_ID,
               when dwl.LOCATION_CD = '6922' then '069' 
               when dwl.LOCATION_CD = '6924' then '070' 
               when dwl.LOCATION_CD = '6927' then '027' 
-              when dwl.LOCATION_CD = '6929' then case when dwl.DEPT_ID in ('1479', '1476', '1472') then '090' else '029' end 
-              when dwl.LOCATION_CD = '6933' then case when dwl.DEPT_ID in ('1492', '1496', '1480') then '080' else '033' end
+              when dwl.LOCATION_CD = '6929' then '029' --case when dwl.DEPT_ID in ('1479', '1476', '1472') then '090' else '029' end 
+              when dwl.LOCATION_CD = '6933' then '033' --case when dwl.DEPT_ID in ('1492', '1496', '1480') then '080' else '033' end
               when dwl.LOCATION_CD = '6938' then '038' 
               when dwl.LOCATION_CD = '6939' then '039' 
               when dwl.LOCATION_CD = 'S6924' then '070' 
@@ -154,6 +154,7 @@ FROM     WH_OWNER.DCLBR_WK_LOC dwl
 --         inner join WH_OWNER.PS_HR_EARNINGS he on dwl.EARNINGS_CD = he.EARNINGS_CD 
 --         inner join wh_owner.PS_HR_OPER_UNIT ou on hd.OPERATING_UNIT_CD = ou.OPERATING_UNIT_CD
 WHERE    FISCAL_WEEK_ID = 201949
+AND      hd.S_GL_DEPT_ID in ('8100', '8110', '8160', '8500', '8115', '8116', '8117', '8716', '8717')
 ) lbr
 where FACILITY_ID <> '999'
 group by 3, 4, 5
@@ -199,8 +200,8 @@ SELECT   dwl.FISCAL_WEEK_ID,
               when dwl.LOCATION_CD = '6922' then '069' 
               when dwl.LOCATION_CD = '6924' then '070' 
               when dwl.LOCATION_CD = '6927' then '027' 
-              when dwl.LOCATION_CD = '6929' then case when dwl.DEPT_ID in ('1479', '1476', '1472') then '090' else '029' end 
-              when dwl.LOCATION_CD = '6933' then case when dwl.DEPT_ID in ('1492', '1496', '1480') then '080' else '033' end
+              when dwl.LOCATION_CD = '6929' then '029' --case when dwl.DEPT_ID in ('1479', '1476', '1472') then '090' else '029' end 
+              when dwl.LOCATION_CD = '6933' then '033' --case when dwl.DEPT_ID in ('1492', '1496', '1480') then '080' else '033' end
               when dwl.LOCATION_CD = '6938' then '038' 
               when dwl.LOCATION_CD = '6939' then '039' 
               when dwl.LOCATION_CD = 'S6924' then '070' 
@@ -233,6 +234,7 @@ FROM     WH_OWNER.DCLBR_WK_LOC dwl
 --         inner join WH_OWNER.PS_HR_EARNINGS he on dwl.EARNINGS_CD = he.EARNINGS_CD 
 --         inner join wh_owner.PS_HR_OPER_UNIT ou on hd.OPERATING_UNIT_CD = ou.OPERATING_UNIT_CD
 WHERE    FISCAL_WEEK_ID = 201949
+AND      hd.S_GL_DEPT_ID in ('8100', '8110', '8160', '8500', '8115', '8116', '8117', '8716', '8717')
 ) lbr
 where FACILITY_ID <> '999'
 group by 3, 4, 5
@@ -357,7 +359,7 @@ WHERE    date(receipt_dtim) = '10-28-2019'
 GROUP BY 1, 2, 3, 4, 5, 7, 8
 ;
 
-/*
+
 --cases shipped by facility
 --source:  datawhse02
 SELECT   'distribution' SCORECARD_TYPE,
@@ -380,7 +382,7 @@ WHERE    (fw.end_dt = '10-05-2019'  --To_Date('10/05/2019', 'mm/dd/yyyy')  --nee
 GROUP BY fw.end_dt, 
          wsd.FACILITY_ID
 ;
-*/
+
 
 --pshrdw
 --total headcount
@@ -419,8 +421,8 @@ SELECT   ea.fiscal_day_dt,
               when loc.LOCATION_CD = '6922' then '069' 
               when loc.LOCATION_CD = '6924' then '070' 
               when loc.LOCATION_CD = '6927' then '027' 
-              when loc.LOCATION_CD = '6929' then case when dept.DEPT_ID in ('1479', '1476', '1472') then '090' else '029' end 
-              when loc.LOCATION_CD = '6933' then case when dept.DEPT_ID in ('1492', '1496', '1480') then '080' else '033' end
+              when loc.LOCATION_CD = '6929' then '029' --case when loc.DEPT_ID in ('1479', '1476', '1472') then '090' else '029' end 
+              when loc.LOCATION_CD = '6933' then '033' --case when loc.DEPT_ID in ('1492', '1496', '1480') then '080' else '033' end
               when loc.LOCATION_CD = '6938' then '038' 
               when loc.LOCATION_CD = '6939' then '039' 
               when loc.LOCATION_CD = 'S6924' then '070' 
@@ -445,8 +447,8 @@ SELECT   ea.fiscal_day_dt,
 FROM     whmgr.hr_day_empl_hst ea 
          inner join whmgr.hr_location loc on ea.location_key = loc.location_key
          inner join whmgr.hr_department dept on ea.dept_key = dept.dept_key
-WHERE    loc.exec_rollup_cd = 'DIST'
-AND      ea.fiscal_day_dt = '12-14-2019'
+WHERE    ea.fiscal_day_dt = '12-14-2019'
+AND      ea.gl_dept_id in ('8100', '8110', '8160', '8500', '8115', '8116', '8117', '8716', '8717')
 ) hc
 where hc.FACILITY_ID <> '999'
 group by 3, 4, 5
@@ -489,8 +491,8 @@ SELECT   eah.fiscal_day_dt,
               when loc.LOCATION_CD = '6922' then '069' 
               when loc.LOCATION_CD = '6924' then '070' 
               when loc.LOCATION_CD = '6927' then '027' 
-              when loc.LOCATION_CD = '6929' then case when dept.DEPT_ID in ('1479', '1476', '1472') then '090' else '029' end 
-              when loc.LOCATION_CD = '6933' then case when dept.DEPT_ID in ('1492', '1496', '1480') then '080' else '033' end
+              when loc.LOCATION_CD = '6929' then '029' --case when loc.DEPT_ID in ('1479', '1476', '1472') then '090' else '029' end 
+              when loc.LOCATION_CD = '6933' then '033' --case when loc.DEPT_ID in ('1492', '1496', '1480') then '080' else '033' end
               when loc.LOCATION_CD = '6938' then '038' 
               when loc.LOCATION_CD = '6939' then '039' 
               when loc.LOCATION_CD = 'S6924' then '070' 
@@ -516,7 +518,7 @@ FROM     whmgr.hr_dy_empl_act_hst eah
          inner join whmgr.hr_department dept on eah.dept_key = dept.dept_key
 WHERE    eah.fiscal_day_dt between '12-08-2019' and '12-14-2019'
 AND      eah.status_flg = 'Y'
-and      loc.exec_rollup_cd = 'DIST'
+AND      eah.gl_dept_id in ('8100', '8110', '8160', '8500', '8115', '8116', '8117', '8716', '8717')
 ) tc
 where tc.FACILITY_ID <> '999'
 group by  4, 5  --needs fixing once DATE_KEY is fixed

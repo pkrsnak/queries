@@ -240,6 +240,148 @@ where FACILITY_ID <> '999'
 group by 3, 4, 5
 ;
 
+
+--pshrdw
+--total headcount
+SELECT   'distribution' SCORECARD_TYPE,
+         'headcount_total' KPI_TYPE,
+         hc.fiscal_day_dt DATE_VALUE,  --need end date, not weekid
+         hc.DIVISION_ID,
+         hc.FACILITY_ID KEY_VALUE,
+         count(hc.empl_id) DATA_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+from (
+SELECT   ea.fiscal_day_dt,
+         case when loc.division_cd = 'MDV' then 3 else case when loc.region_cd in ('BRT', 'CAITO') then 4 else 2 end end division_id,
+         case 
+              when loc.LOCATION_CD = '2007' then '008' 
+              when loc.LOCATION_CD = '2016' then '016' 
+              when loc.LOCATION_CD = '2037' then '003' 
+              when loc.LOCATION_CD = '2038' then '003' 
+              when loc.LOCATION_CD = '2040' then '040' 
+              when loc.LOCATION_CD = '2052' then '002' 
+              when loc.LOCATION_CD = '2054' then '054' 
+              when loc.LOCATION_CD = '2058' then '058' 
+              when loc.LOCATION_CD = '2067' then '067' 
+              when loc.LOCATION_CD = '2071' then '071' 
+              when loc.LOCATION_CD = '2115' then '115' 
+              when loc.LOCATION_CD = '2165' then '165' 
+              when loc.LOCATION_CD = '2170' then '170' 
+              when loc.LOCATION_CD = '2185' then '185' 
+              when loc.LOCATION_CD = '2915' then '015' 
+              when loc.LOCATION_CD = '2917' then '061' 
+              when loc.LOCATION_CD = 'GGM' then '001' 
+              when loc.LOCATION_CD = 'GGR' then '001' 
+              when loc.LOCATION_CD = 'GPR' then '001' 
+              when loc.LOCATION_CD = 'VSPT' then '001' 
+              when loc.LOCATION_CD = '6922' then '069' 
+              when loc.LOCATION_CD = '6924' then '070' 
+              when loc.LOCATION_CD = '6927' then '027' 
+              when loc.LOCATION_CD = '6929' then '029' --case when loc.DEPT_ID in ('1479', '1476', '1472') then '090' else '029' end 
+              when loc.LOCATION_CD = '6933' then '033' --case when loc.DEPT_ID in ('1492', '1496', '1480') then '080' else '033' end
+              when loc.LOCATION_CD = '6938' then '038' 
+              when loc.LOCATION_CD = '6939' then '039' 
+              when loc.LOCATION_CD = 'S6924' then '070' 
+              else '999' 
+         end facility_id,
+         ea.empl_id,
+--         ea.position_key,
+--         ea.job_code_key,
+--         ea.job_title_nm,
+         ea.job_function_cd,
+         ea.job_family_cd,
+--         ea.supervisor_id,
+         ea.location_key,
+         ea.dept_key,
+         ea.gl_dept_id,
+         ea.business_unit_id,
+         ea.operating_unit_key,
+         ea.empl_type_cd,
+         ea.termination_dt,
+         ea.service_dt,
+         ea.day_employed_qty
+FROM     whmgr.hr_day_empl_hst ea 
+         inner join whmgr.hr_location loc on ea.location_key = loc.location_key
+         inner join whmgr.hr_department dept on ea.dept_key = dept.dept_key
+WHERE    ea.fiscal_day_dt = '12-14-2019'
+AND      ea.gl_dept_id in ('8100', '8110', '8160', '8500', '8115', '8116', '8117', '8716', '8717')
+) hc
+where hc.FACILITY_ID <> '999'
+group by 3, 4, 5
+;
+
+--pshrdw
+--termed headcount
+SELECT   'distribution' SCORECARD_TYPE,
+         'headcount_termed' KPI_TYPE,
+         max(tc.fiscal_day_dt) DATE_VALUE,  --need end date, not MAX function
+         tc.DIVISION_ID,
+         tc.FACILITY_ID KEY_VALUE,
+         count(tc.empl_id) DATA_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+from (
+SELECT   eah.fiscal_day_dt,
+         case when loc.division_cd = 'MDV' then 3 else case when loc.region_cd in ('BRT', 'CAITO') then 4 else 2 end end division_id,
+         case 
+              when loc.LOCATION_CD = '2007' then '008' 
+              when loc.LOCATION_CD = '2016' then '016' 
+              when loc.LOCATION_CD = '2037' then '003' 
+              when loc.LOCATION_CD = '2038' then '003' 
+              when loc.LOCATION_CD = '2040' then '040' 
+              when loc.LOCATION_CD = '2052' then '002' 
+              when loc.LOCATION_CD = '2054' then '054' 
+              when loc.LOCATION_CD = '2058' then '058' 
+              when loc.LOCATION_CD = '2067' then '067' 
+              when loc.LOCATION_CD = '2071' then '071' 
+              when loc.LOCATION_CD = '2115' then '115' 
+              when loc.LOCATION_CD = '2165' then '165' 
+              when loc.LOCATION_CD = '2170' then '170' 
+              when loc.LOCATION_CD = '2185' then '185' 
+              when loc.LOCATION_CD = '2915' then '015' 
+              when loc.LOCATION_CD = '2917' then '061' 
+              when loc.LOCATION_CD = 'GGM' then '001' 
+              when loc.LOCATION_CD = 'GGR' then '001' 
+              when loc.LOCATION_CD = 'GPR' then '001' 
+              when loc.LOCATION_CD = 'VSPT' then '001' 
+              when loc.LOCATION_CD = '6922' then '069' 
+              when loc.LOCATION_CD = '6924' then '070' 
+              when loc.LOCATION_CD = '6927' then '027' 
+              when loc.LOCATION_CD = '6929' then '029' --case when loc.DEPT_ID in ('1479', '1476', '1472') then '090' else '029' end 
+              when loc.LOCATION_CD = '6933' then '033' --case when loc.DEPT_ID in ('1492', '1496', '1480') then '080' else '033' end
+              when loc.LOCATION_CD = '6938' then '038' 
+              when loc.LOCATION_CD = '6939' then '039' 
+              when loc.LOCATION_CD = 'S6924' then '070' 
+              else '999' 
+         end facility_id,
+         eah.empl_id,
+         eah.action_cd,
+         eah.action_reason_cd,
+         eah.status_flg,
+         eah.position_key,
+         eah.job_code_key, loc.loc_shrt_desc,
+         eah.location_key,
+         loc.location_cd,
+         loc.location_desc,
+         eah.dept_key,
+         eah.gl_dept_id,
+         eah.business_unit_id,
+         eah.operating_unit_key,
+         eah.day_employed_qty,
+         eah.empl_type_cd
+FROM     whmgr.hr_dy_empl_act_hst eah 
+         inner join whmgr.hr_location loc on eah.location_key = loc.location_key
+         inner join whmgr.hr_department dept on eah.dept_key = dept.dept_key
+WHERE    eah.fiscal_day_dt between '12-08-2019' and '12-14-2019'
+AND      eah.status_flg = 'Y'
+AND      eah.gl_dept_id in ('8100', '8110', '8160', '8500', '8115', '8116', '8117', '8716', '8717')
+) tc
+where tc.FACILITY_ID <> '999'
+group by  4, 5  --needs fixing once DATE_KEY is fixed
+;
+
+
 --sales by facility - fd
 --source:  datawhse02
 SELECT   'distribution' SCORECARD_TYPE,
@@ -381,147 +523,6 @@ WHERE    (fw.end_dt = '10-05-2019'  --To_Date('10/05/2019', 'mm/dd/yyyy')  --nee
      AND wsd.COMMODITY_CODE not in (900))
 GROUP BY fw.end_dt, 
          wsd.FACILITY_ID
-;
-
-
---pshrdw
---total headcount
-SELECT   'distribution' SCORECARD_TYPE,
-         'headcount_total' KPI_TYPE,
-         hc.fiscal_day_dt DATE_VALUE,  --need end date, not weekid
-         hc.DIVISION_ID,
-         hc.FACILITY_ID KEY_VALUE,
-         count(hc.empl_id) DATA_VALUE,
-         'F' DATA_GRANULARITY,
-         'W' TIME_GRANULARITY
-from (
-SELECT   ea.fiscal_day_dt,
-         case when loc.division_cd = 'MDV' then 3 else case when loc.region_cd in ('BRT', 'CAITO') then 4 else 2 end end division_id,
-         case 
-              when loc.LOCATION_CD = '2007' then '008' 
-              when loc.LOCATION_CD = '2016' then '016' 
-              when loc.LOCATION_CD = '2037' then '003' 
-              when loc.LOCATION_CD = '2038' then '003' 
-              when loc.LOCATION_CD = '2040' then '040' 
-              when loc.LOCATION_CD = '2052' then '002' 
-              when loc.LOCATION_CD = '2054' then '054' 
-              when loc.LOCATION_CD = '2058' then '058' 
-              when loc.LOCATION_CD = '2067' then '067' 
-              when loc.LOCATION_CD = '2071' then '071' 
-              when loc.LOCATION_CD = '2115' then '115' 
-              when loc.LOCATION_CD = '2165' then '165' 
-              when loc.LOCATION_CD = '2170' then '170' 
-              when loc.LOCATION_CD = '2185' then '185' 
-              when loc.LOCATION_CD = '2915' then '015' 
-              when loc.LOCATION_CD = '2917' then '061' 
-              when loc.LOCATION_CD = 'GGM' then '001' 
-              when loc.LOCATION_CD = 'GGR' then '001' 
-              when loc.LOCATION_CD = 'GPR' then '001' 
-              when loc.LOCATION_CD = 'VSPT' then '001' 
-              when loc.LOCATION_CD = '6922' then '069' 
-              when loc.LOCATION_CD = '6924' then '070' 
-              when loc.LOCATION_CD = '6927' then '027' 
-              when loc.LOCATION_CD = '6929' then '029' --case when loc.DEPT_ID in ('1479', '1476', '1472') then '090' else '029' end 
-              when loc.LOCATION_CD = '6933' then '033' --case when loc.DEPT_ID in ('1492', '1496', '1480') then '080' else '033' end
-              when loc.LOCATION_CD = '6938' then '038' 
-              when loc.LOCATION_CD = '6939' then '039' 
-              when loc.LOCATION_CD = 'S6924' then '070' 
-              else '999' 
-         end facility_id,
-         ea.empl_id,
---         ea.position_key,
---         ea.job_code_key,
---         ea.job_title_nm,
-         ea.job_function_cd,
-         ea.job_family_cd,
---         ea.supervisor_id,
-         ea.location_key,
-         ea.dept_key,
-         ea.gl_dept_id,
-         ea.business_unit_id,
-         ea.operating_unit_key,
-         ea.empl_type_cd,
-         ea.termination_dt,
-         ea.service_dt,
-         ea.day_employed_qty
-FROM     whmgr.hr_day_empl_hst ea 
-         inner join whmgr.hr_location loc on ea.location_key = loc.location_key
-         inner join whmgr.hr_department dept on ea.dept_key = dept.dept_key
-WHERE    ea.fiscal_day_dt = '12-14-2019'
-AND      ea.gl_dept_id in ('8100', '8110', '8160', '8500', '8115', '8116', '8117', '8716', '8717')
-) hc
-where hc.FACILITY_ID <> '999'
-group by 3, 4, 5
-;
-
---pshrdw
---termed headcount
-SELECT   'distribution' SCORECARD_TYPE,
-         'headcount_termed' KPI_TYPE,
-         max(tc.fiscal_day_dt) DATE_VALUE,  --need end date, not MAX function
-         tc.DIVISION_ID,
-         tc.FACILITY_ID KEY_VALUE,
-         count(tc.empl_id) DATA_VALUE,
-         'F' DATA_GRANULARITY,
-         'W' TIME_GRANULARITY
-from (
-SELECT   eah.fiscal_day_dt,
-         case when loc.division_cd = 'MDV' then 3 else case when loc.region_cd in ('BRT', 'CAITO') then 4 else 2 end end division_id,
-         case 
-              when loc.LOCATION_CD = '2007' then '008' 
-              when loc.LOCATION_CD = '2016' then '016' 
-              when loc.LOCATION_CD = '2037' then '003' 
-              when loc.LOCATION_CD = '2038' then '003' 
-              when loc.LOCATION_CD = '2040' then '040' 
-              when loc.LOCATION_CD = '2052' then '002' 
-              when loc.LOCATION_CD = '2054' then '054' 
-              when loc.LOCATION_CD = '2058' then '058' 
-              when loc.LOCATION_CD = '2067' then '067' 
-              when loc.LOCATION_CD = '2071' then '071' 
-              when loc.LOCATION_CD = '2115' then '115' 
-              when loc.LOCATION_CD = '2165' then '165' 
-              when loc.LOCATION_CD = '2170' then '170' 
-              when loc.LOCATION_CD = '2185' then '185' 
-              when loc.LOCATION_CD = '2915' then '015' 
-              when loc.LOCATION_CD = '2917' then '061' 
-              when loc.LOCATION_CD = 'GGM' then '001' 
-              when loc.LOCATION_CD = 'GGR' then '001' 
-              when loc.LOCATION_CD = 'GPR' then '001' 
-              when loc.LOCATION_CD = 'VSPT' then '001' 
-              when loc.LOCATION_CD = '6922' then '069' 
-              when loc.LOCATION_CD = '6924' then '070' 
-              when loc.LOCATION_CD = '6927' then '027' 
-              when loc.LOCATION_CD = '6929' then '029' --case when loc.DEPT_ID in ('1479', '1476', '1472') then '090' else '029' end 
-              when loc.LOCATION_CD = '6933' then '033' --case when loc.DEPT_ID in ('1492', '1496', '1480') then '080' else '033' end
-              when loc.LOCATION_CD = '6938' then '038' 
-              when loc.LOCATION_CD = '6939' then '039' 
-              when loc.LOCATION_CD = 'S6924' then '070' 
-              else '999' 
-         end facility_id,
-         eah.empl_id,
-         eah.action_cd,
-         eah.action_reason_cd,
-         eah.status_flg,
-         eah.position_key,
-         eah.job_code_key, loc.loc_shrt_desc,
-         eah.location_key,
-         loc.location_cd,
-         loc.location_desc,
-         eah.dept_key,
-         eah.gl_dept_id,
-         eah.business_unit_id,
-         eah.operating_unit_key,
-         eah.day_employed_qty,
-         eah.empl_type_cd
-FROM     whmgr.hr_dy_empl_act_hst eah 
-         inner join whmgr.hr_location loc on eah.location_key = loc.location_key
-         inner join whmgr.hr_department dept on eah.dept_key = dept.dept_key
-WHERE    eah.fiscal_day_dt between '12-08-2019' and '12-14-2019'
-AND      eah.status_flg = 'Y'
-AND      eah.gl_dept_id in ('8100', '8110', '8160', '8500', '8115', '8116', '8117', '8716', '8717')
-) tc
-where tc.FACILITY_ID <> '999'
-group by  4, 5  --needs fixing once DATE_KEY is fixed
 ;
 
 --total abs value inventory adjustments by facility

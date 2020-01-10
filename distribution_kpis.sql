@@ -576,7 +576,7 @@ group by mia.facility_id
 --warehouse damage abs value inventory adjustments by facility
 --source:  datawhse02
 SELECT   'distribution' SCORECARD_TYPE,
-         'inventory_adjust_total' KPI_TYPE,
+         'inventory_adjust_whse_dmg' KPI_TYPE,
          max(fia.invtry_adj_date) DATE_VALUE, --need week end date for prior week
          2 DIVISION_ID,
          fia.facility_id KEY_VALUE,
@@ -592,7 +592,7 @@ group by fia.facility_id
 union all
 
 SELECT   'distribution' SCORECARD_TYPE,
-         'inventory_adjust_total' KPI_TYPE,
+         'inventory_adjust_whse_dmg' KPI_TYPE,
          max(mia.invtry_adj_date) DATE_VALUE, --need week end date for prior week
          2 DIVISION_ID,
          mia.facility_id KEY_VALUE,
@@ -609,7 +609,7 @@ group by mia.facility_id
 union all
 
 SELECT   'distribution' SCORECARD_TYPE,
-         'inventory_adjust_total' KPI_TYPE,
+         'inventory_adjust_whse_dmg' KPI_TYPE,
          max(mia.invtry_adj_date) DATE_VALUE,
          3 DIVISION_ID,
          mia.facility_id KEY_VALUE,
@@ -623,6 +623,129 @@ and      mia.facility_id not in (80, 90)
 AND      mia.invtry_adjust_cd in ('WD')
 group by mia.facility_id
 ;
+
+
+--warehouse total slots available by facility
+--source:  CRM
+SELECT   'distribution' SCORECARD_TYPE,
+         'slots_total' KPI_TYPE,
+--         WEEK_END_DT DATE_VALUE,
+         dx.ENTERPRISE_KEY + 1 DIVISION_ID,
+         iloc.FACILITYID KEY_VALUE,
+         sum(CASE_COUNT) KPI_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     CRMADMIN.T_WHSE_EXE_ILOC iloc 
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on iloc.FACILITYID = dx.SWAT_ID
+--WHERE    WEEK_END_DT = '2020-01-08'
+GROUP BY dx.ENTERPRISE_KEY, iloc.FACILITYID
+;
+
+--warehouse selection slots available by facility
+--source:  CRM
+SELECT   'distribution' SCORECARD_TYPE,
+         'slots_selection' KPI_TYPE,
+--         WEEK_END_DT DATE_VALUE,
+         dx.ENTERPRISE_KEY + 1 DIVISION_ID,
+         iloc.FACILITYID KEY_VALUE,
+         sum(CASE_COUNT) KPI_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     CRMADMIN.T_WHSE_EXE_ILOC iloc 
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on iloc.FACILITYID = dx.SWAT_ID
+WHERE    iloc.ISTA_ID = 'A'
+AND      iloc.ICAT_ID = 'S'
+--AND      WEEK_END_DT = '2020-01-08'
+GROUP BY dx.ENTERPRISE_KEY, iloc.FACILITYID
+;
+
+--warehouse reserve slots available by facility
+--source:  CRM
+SELECT   'distribution' SCORECARD_TYPE,
+         'slots_reserve' KPI_TYPE,
+--         WEEK_END_DT DATE_VALUE,
+         dx.ENTERPRISE_KEY + 1 DIVISION_ID,
+         iloc.FACILITYID KEY_VALUE,
+         sum(CASE_COUNT) KPI_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     CRMADMIN.T_WHSE_EXE_ILOC iloc 
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on iloc.FACILITYID = dx.SWAT_ID
+WHERE    iloc.ISTA_ID = 'A'
+AND      iloc.ICAT_ID = 'R'
+--AND      WEEK_END_DT = '2020-01-08'
+GROUP BY dx.ENTERPRISE_KEY, iloc.FACILITYID
+;
+
+--warehouse all other expenses by facility
+--source:  entods
+SELECT   'distribution' SCORECARD_TYPE,
+         'expenses_whse_all' KPI_TYPE,
+         x.per_wk_id DATE_VALUE,
+         2 DIVISION_ID, 
+         x.facility_id , 
+         x.data_value, 
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+from (
+SELECT   fas.per_wk_id,
+         case 
+              when fas.facility_name = 'St_Cloud' then '008' 
+              when fas.facility_name = 'Fargo' then '003' 
+              when fas.facility_name = 'Omaha_Combined' then '040' 
+              when fas.facility_name = 'NF_SF_Combined' then '002' 
+              when fas.facility_name = 'Lima' then '058' 
+              when fas.facility_name = 'Belle_Cigs' then '067' 
+              when fas.facility_name = 'Belle' then '071' 
+              when fas.facility_name = 'Lumberton_Combined' then '015' 
+              when fas.facility_name = 'Bluefield' then '061' 
+              when fas.facility_name = 'GR' then '001' 
+              when fas.facility_name = 'San_Antonio' then '090' 
+              when fas.facility_name = 'Columbus' then '080' 
+              else '999' 
+         end facility_id,
+         fas.act_all_other_amt * 1000 DATA_VALUE
+FROM     whmgr.dc_wk_fcst_act_stg fas
+where fas.per_wk_id = 201941
+) x
+where x.facility_id <> '999'
+;
+
+--warehouse contract labor by facility
+--source:  entods
+SELECT   'distribution' SCORECARD_TYPE,
+         'labor_contract_dollars' KPI_TYPE,
+         x.per_wk_id DATE_VALUE,
+         2 DIVISION_ID, 
+         x.facility_id , 
+         x.data_value, 
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+from (
+SELECT   fas.per_wk_id,
+         case 
+              when fas.facility_name = 'St_Cloud' then '008' 
+              when fas.facility_name = 'Fargo' then '003' 
+              when fas.facility_name = 'Omaha_Combined' then '040' 
+              when fas.facility_name = 'NF_SF_Combined' then '002' 
+              when fas.facility_name = 'Lima' then '058' 
+              when fas.facility_name = 'Belle_Cigs' then '067' 
+              when fas.facility_name = 'Belle' then '071' 
+              when fas.facility_name = 'Lumberton_Combined' then '015' 
+              when fas.facility_name = 'Bluefield' then '061' 
+              when fas.facility_name = 'GR' then '001' 
+              when fas.facility_name = 'San_Antonio' then '090' 
+              when fas.facility_name = 'Columbus' then '080' 
+              else '999' 
+         end facility_id,
+         fas.act_cntrct_lbr_amt * 1000 DATA_VALUE
+FROM     whmgr.dc_wk_fcst_act_stg fas
+where fas.per_wk_id = 201941
+) x
+where x.facility_id <> '999'
+;
+
+
 
 /*
 select whse_id, lcat_id, lsta_id, "Freezer", count(*),

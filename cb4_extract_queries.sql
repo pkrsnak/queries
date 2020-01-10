@@ -13,7 +13,7 @@ FROM     entods@ods_prd_tcp:str_trans_dtl s,
          entods@ods_prd_tcp:fiscal_week f
 WHERE    s.sales_date >= f.start_dt
 AND      s.sales_date <= f.end_dt
-AND      f.fiscal_week_id = 201945
+AND      f.fiscal_week_id = 201942
 GROUP BY 1, 2, 3, 6
 ;
 

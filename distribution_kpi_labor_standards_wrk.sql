@@ -1,14 +1,34 @@
-Actual Hours on STD
-Select SUM(end_dtim - start_dtim) std_tim,                                             
-SUM(suspend_tim + walk_tim + wgt_tim + ftg_adj_tim 
-+ wgt_adj_tim + dly_adj_tim) dly_tim
-from aassg                                                                     
-where phys_whse_id = 1                                                         
-and rpt_dt between '11/10/2019' and '11/16/2019'                               
-and asgt_id = 'S'                                                              
-and asta_id = 'C'                                                              
-and assoc_id is not null                                                       
-INTO TEMP act_hours_std with no log;
+--Actual Hours on STD
+SELECT   FACILITYID,
+         ASGT_ID,
+         ASTA_ID,
+         ASSOC_ID,
+         end_dtim,
+         start_dtim,
+         suspend_tim,
+         walk_tim,
+         wgt_tim,
+         ftg_adj_tim,
+         time(wgt_adj_tim),
+         time(dly_adj_tim),
+         (end_dtim - start_dtim) std_tim,
+         ((hour(end_dtim - start_dtim) * 60) + minute(end_dtim - start_dtim) + (decimal(second(end_dtim - start_dtim)) / 60)) std_tim,
+         value(hour(suspend_tim) * 60 + minute(SUSPEND_TIM) + (decimal(second(SUSPEND_TIM)) / 60), 0) suspend_time,
+         value(hour(walk_tim) * 60 + minute(walk_tim) + (decimal(second(walk_tim)) / 60), 0) walk_time,
+         value(hour(wgt_tim) * 60 + minute(wgt_tim) + (decimal(second(wgt_tim)) / 60), 0) wgt_time,
+         value(hour(ftg_adj_tim) * 60 + minute(ftg_adj_tim) + (decimal(second(ftg_adj_tim)) / 60), 0) ftg_adj_time,
+         value(hour(time(wgt_adj_tim)) * 60 + minute(time(wgt_adj_tim)) + (decimal(second(time(wgt_adj_tim))) / 60), 0) wgt_adj_time,
+         value(hour(time(dly_adj_tim)) * 60 + minute(time(dly_adj_tim)) + (decimal(second(time(dly_adj_tim))) / 60), 0) dly_adj_time
+FROM     CRMADMIN.T_WHSE_EXE_AASSG
+WHERE    rpt_dt between '2020-01-05' and '2020-01-11'
+AND      asgt_id = 'S'
+AND      asta_id = 'C'
+AND      assoc_id is not null
+;
+
+(hour(current timestamp) * 60) + minute(current timestamp) + (decimal(second(current timestamp)) / 60),
+ current timestamp - (current timestamp - 14 hour),
+
 
 select SUM(std_tim - dly_tim)
 from act_hours_std

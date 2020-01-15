@@ -327,12 +327,14 @@ group by 3, 4, 5
 --total headcount
 SELECT   'distribution' SCORECARD_TYPE,
          'headcount_total' KPI_TYPE,
-         hc.fiscal_day_dt DATE_VALUE,  --need end date, not weekid
+         max(fiscal_day_dt) DATE_VALUE,  --need end date, not weekid
          hc.DIVISION_ID,
          hc.FACILITY_ID KEY_VALUE,
-         count(hc.empl_id) DATA_VALUE,
+         trunc(avg(head_count) + 1) DATA_VALUE,
          'F' DATA_GRANULARITY,
          'W' TIME_GRANULARITY
+from (
+select division_id, facility_id, fiscal_day_dt, count(*) head_count
 from (
 SELECT   ea.fiscal_day_dt,
          case when loc.division_cd = 'MDV' then 3 else case when loc.region_cd in ('BRT', 'CAITO') then 4 else 2 end end division_id,
@@ -386,11 +388,13 @@ SELECT   ea.fiscal_day_dt,
 FROM     whmgr.hr_day_empl_hst ea 
          inner join whmgr.hr_location loc on ea.location_key = loc.location_key
          inner join whmgr.hr_department dept on ea.dept_key = dept.dept_key
-WHERE    ea.fiscal_day_dt = '12-14-2019'
+WHERE    ea.fiscal_day_dt between '01-05-2020' and '01-11-2020'
 AND      ea.gl_dept_id in ('8100', '8110', '8160', '8500', '8115', '8116', '8117', '8716', '8717')
+)
+group by division_id, facility_id, fiscal_day_dt
 ) hc
 where hc.FACILITY_ID <> '999'
-group by 3, 4, 5
+group by 4, 5
 ;
 
 --pshrdw
@@ -455,7 +459,7 @@ SELECT   eah.fiscal_day_dt,
 FROM     whmgr.hr_dy_empl_act_hst eah 
          inner join whmgr.hr_location loc on eah.location_key = loc.location_key
          inner join whmgr.hr_department dept on eah.dept_key = dept.dept_key
-WHERE    eah.fiscal_day_dt between '12-08-2019' and '12-14-2019'
+WHERE    eah.fiscal_day_dt between '01-05-2020' and '01-11-2020'
 AND      eah.status_flg = 'Y'
 AND      eah.gl_dept_id in ('8100', '8110', '8160', '8500', '8115', '8116', '8117', '8716', '8717')
 ) tc

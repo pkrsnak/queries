@@ -827,7 +827,139 @@ where fas.per_wk_id = 201941
 where x.facility_id <> '999'
 ;
 
+--warehouse els actual minutes by facility
+--source:  crm
+SELECT   'distribution' SCORECARD_TYPE,
+         'els_actuals' KPI_TYPE,
+--         x.per_wk_id DATE_VALUE,
+         dx.ENTERPRISE_KEY + 1 DIVISION_ID,
+         FACILITYID KEY_VALUE, 
+         round(sum(final_std_tim), 2) data_value,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+from (
+SELECT   FACILITYID,
+         ASGT_ID,
+         ASTA_ID,
+         ASSOC_ID,
+         end_dtim,
+         start_dtim,
+         suspend_tim,
+         walk_tim,
+         wgt_tim,
+         ftg_adj_tim,
+         wgt_adj_tim,
+         dly_adj_tim,
+         (end_dtim - start_dtim) std_tim,
+         ((hour(end_dtim - start_dtim) * 60) + minute(end_dtim - start_dtim) + (decimal(second(end_dtim - start_dtim)) / 60)) std_tim,
+         value(hour(suspend_tim) * 60 + minute(SUSPEND_TIM) + (decimal(second(SUSPEND_TIM)) / 60), 0) suspend_time,
+         value(hour(walk_tim) * 60 + minute(walk_tim) + (decimal(second(walk_tim)) / 60), 0) walk_time,
+         value(hour(wgt_tim) * 60 + minute(wgt_tim) + (decimal(second(wgt_tim)) / 60), 0) wgt_time,
+         value(hour(ftg_adj_tim) * 60 + minute(ftg_adj_tim) + (decimal(second(ftg_adj_tim)) / 60), 0) ftg_adj_time,
+         value(hour(wgt_adj_tim) * 60 + minute(wgt_adj_tim) + (decimal(second(wgt_adj_tim)) / 60), 0) wgt_adj_time,
+         value(hour(dly_adj_tim) * 60 + minute(dly_adj_tim) + (decimal(second(dly_adj_tim)) / 60), 0) dly_adj_time,
+         ((hour(end_dtim - start_dtim) * 60) + minute(end_dtim - start_dtim) + (decimal(second(end_dtim - start_dtim)) / 60)) - value(hour(suspend_tim) * 60 + minute(SUSPEND_TIM) + (decimal(second(SUSPEND_TIM)) / 60), 0) - value(hour(walk_tim) * 60 + minute(walk_tim) + (decimal(second(walk_tim)) / 60), 0) - value(hour(wgt_tim) * 60 + minute(wgt_tim) + (decimal(second(wgt_tim)) / 60), 0) - value(hour(ftg_adj_tim) * 60 + minute(ftg_adj_tim) + (decimal(second(ftg_adj_tim)) / 60), 0) - value(hour(wgt_adj_tim) * 60 + minute(wgt_adj_tim) + (decimal(second(wgt_adj_tim)) / 60), 0) - value(hour(dly_adj_tim) * 60 + minute(dly_adj_tim) + (decimal(second(dly_adj_tim)) / 60), 0) final_std_tim
+FROM     CRMADMIN.T_WHSE_EXE_AASSG
+WHERE    rpt_dt between '2020-01-05' and '2020-01-11'
+AND      asgt_id = 'S'
+AND      asta_id = 'C'
+AND      assoc_id is not null) x
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on x.FACILITYID = dx.SWAT_ID
+group by dx.ENTERPRISE_KEY, x.FACILITYID
+;
 
+
+--warehouse els standard minutes by facility
+--source:  crm
+SELECT   'distribution' SCORECARD_TYPE,
+         'els_standards' KPI_TYPE,
+--         x.per_wk_id DATE_VALUE,
+         dx.ENTERPRISE_KEY + 1 DIVISION_ID,
+         x.FACILITYID KEY_VALUE,
+         round(SUM(value(hour(std_tim) * 60 + minute(std_tim) + (decimal(second(std_tim)) / 60), 0)), 2) data_value,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     CRMADMIN.T_WHSE_EXE_AASSG x 
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on x.FACILITYID = dx.SWAT_ID
+WHERE    x.rpt_dt between '2020-01-05' and '2020-01-11'
+AND      x.asgt_id = 'S'
+GROUP BY dx.ENTERPRISE_KEY, x.FACILITYID
+;
+
+--warehouse actual selection hours by facility
+--source:  crm
+SELECT   'distribution' SCORECARD_TYPE,
+         'labor_selector_hours' KPI_TYPE,
+--         x.per_wk_id DATE_VALUE,
+         dx.ENTERPRISE_KEY + 1 DIVISION_ID,
+         FACILITYID KEY_VALUE, 
+         round(sum(final_std_tim)/ 60, 2) data_value,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+from (
+SELECT   FACILITYID,
+         ASGT_ID,
+         ASTA_ID,
+         ASSOC_ID,
+         end_dtim,
+         start_dtim,
+         suspend_tim,
+         walk_tim,
+         wgt_tim,
+         ftg_adj_tim,
+         wgt_adj_tim,
+         dly_adj_tim,
+         (end_dtim - start_dtim) std_tim,
+         ((hour(end_dtim - start_dtim) * 60) + minute(end_dtim - start_dtim) + (decimal(second(end_dtim - start_dtim)) / 60)) std_tim,
+         value(hour(suspend_tim) * 60 + minute(SUSPEND_TIM) + (decimal(second(SUSPEND_TIM)) / 60), 0) suspend_time,
+         value(hour(walk_tim) * 60 + minute(walk_tim) + (decimal(second(walk_tim)) / 60), 0) walk_time,
+         value(hour(wgt_tim) * 60 + minute(wgt_tim) + (decimal(second(wgt_tim)) / 60), 0) wgt_time,
+         value(hour(ftg_adj_tim) * 60 + minute(ftg_adj_tim) + (decimal(second(ftg_adj_tim)) / 60), 0) ftg_adj_time,
+         value(hour(wgt_adj_tim) * 60 + minute(wgt_adj_tim) + (decimal(second(wgt_adj_tim)) / 60), 0) wgt_adj_time,
+         value(hour(dly_adj_tim) * 60 + minute(dly_adj_tim) + (decimal(second(dly_adj_tim)) / 60), 0) dly_adj_time,
+         ((hour(end_dtim - start_dtim) * 60) + minute(end_dtim - start_dtim) + (decimal(second(end_dtim - start_dtim)) / 60)) - value(hour(suspend_tim) * 60 + minute(SUSPEND_TIM) + (decimal(second(SUSPEND_TIM)) / 60), 0) - value(hour(walk_tim) * 60 + minute(walk_tim) + (decimal(second(walk_tim)) / 60), 0) - value(hour(wgt_tim) * 60 + minute(wgt_tim) + (decimal(second(wgt_tim)) / 60), 0) - value(hour(ftg_adj_tim) * 60 + minute(ftg_adj_tim) + (decimal(second(ftg_adj_tim)) / 60), 0) - value(hour(wgt_adj_tim) * 60 + minute(wgt_adj_tim) + (decimal(second(wgt_adj_tim)) / 60), 0) - value(hour(dly_adj_tim) * 60 + minute(dly_adj_tim) + (decimal(second(dly_adj_tim)) / 60), 0) final_std_tim
+FROM     CRMADMIN.T_WHSE_EXE_AASSG
+WHERE    rpt_dt between '2020-01-05' and '2020-01-11'
+AND      asgt_id = 'S'
+AND      asta_id = 'C'
+AND      assoc_id is not null) x
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on x.FACILITYID = dx.SWAT_ID
+group by dx.ENTERPRISE_KEY, x.FACILITYID
+;
+
+
+
+--warehouse cases selected by facility
+--source:  crm
+SELECT   'distribution' SCORECARD_TYPE,
+         'cases_selected' KPI_TYPE,
+--         x.per_wk_id DATE_VALUE,
+         dx.ENTERPRISE_KEY + 1 DIVISION_ID,
+         FACILITYID KEY_VALUE, 
+         sum(cases_selected) data_value,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+from (
+select FACILITYID, SUM(prod_qty / unit_ship_cse) cases_selected
+from CRMADMIN.T_WHSE_EXE_ASELD aseld
+where (FACILITYID, assg_id) in 
+(select aassg.FACILITYID, aassg.assg_id from CRMADMIN.T_WHSE_EXE_AASSG aassg
+where aassg.FACILITYID = aseld.FACILITYID and aassg.phys_whse_id = aseld.phys_whse_id
+and aassg.assg_id = aseld.assg_id
+and rpt_dt between '2020-01-05' and '2020-01-11')
+group by FACILITYID
+union
+select FACILITYID, SUM(prod_qty / unit_ship_cse) cases_selected
+from CRMADMIN.T_WHSE_EXE_ASELH aselh
+where (FACILITYID, assg_id) in (select aassg.FACILITYID, aassg.assg_id from CRMADMIN.T_WHSE_EXE_AASSG aassg
+where aassg.FACILITYID = aselh.FACILITYID and aassg.phys_whse_id = aselh.phys_whse_id
+and aassg.assg_id = aselh.assg_id
+and rpt_dt between '2020-01-05' and '2020-01-11')
+group by FACILITYID
+) x
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on x.FACILITYID = dx.SWAT_ID
+group by dx.ENTERPRISE_KEY, x.FACILITYID
+;
 
 /*
 select whse_id, lcat_id, lsta_id, "Freezer", count(*),

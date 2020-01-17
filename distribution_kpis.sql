@@ -1,3 +1,15 @@
+--uat extract
+SELECT   DIVISION_ID,
+         KPI_TYPE,
+         KPI_DATE,
+         KPI_KEY_VALUE,
+         KPI_DATA_VALUE
+FROM     KPIADMIN.T_KPI_DETAIL
+WHERE    SCORECARD_TYPE = 'distribution'
+AND      KPI_DATE = '2020-01-11'
+AND      DIVISION_ID in (2, 3)
+;
+
 --netezza
 --total labor hours
 SELECT   'distribution' SCORECARD_TYPE,
@@ -618,12 +630,12 @@ SELECT   'distribution' SCORECARD_TYPE,
          max(fia.invtry_adj_date) DATE_VALUE, --need week end date for prior week
          2 DIVISION_ID,
          fia.facility_id KEY_VALUE,
-         sum(abs(fia.ext_layer_cost_amt)) DATA_VALUE,
+         sum(fia.ext_layer_cost_amt) DATA_VALUE,
          'F' DATA_GRANULARITY,
          'W' TIME_GRANULARITY
 FROM     whmgr.dc_d_fac_invctrl_adj fia
 WHERE    fia.ext_layer_cost_amt <> 0
-AND      fia.invtry_adj_date between '12-08-2019' and '12-14-2019' --need to determine prior week start - end
+AND      fia.invtry_adj_date between '01-05-2020' and '01-11-2020' --need to determine prior week start - end
 group by fia.facility_id
 
 union all
@@ -633,12 +645,12 @@ SELECT   'distribution' SCORECARD_TYPE,
          max(mia.invtry_adj_date) DATE_VALUE, --need week end date for prior week
          2 DIVISION_ID,
          mia.facility_id KEY_VALUE,
-         sum(abs(mia.ext_layer_cost_amt)) DATA_VALUE,
+         sum(mia.ext_layer_cost_amt) DATA_VALUE,
          'F' DATA_GRANULARITY,
          'W' TIME_GRANULARITY
 FROM     whmgr.mdv_d_fac_invctrl_adj mia
 WHERE    mia.ext_layer_cost_amt <> 0
-AND      mia.invtry_adj_date between '12-08-2019' and '12-14-2019' --need to determine prior week start - end
+AND      mia.invtry_adj_date between '01-05-2020' and '01-11-2020' --need to determine prior week start - end
 and      mia.facility_id in (80, 90)
 group by mia.facility_id
 
@@ -649,12 +661,12 @@ SELECT   'distribution' SCORECARD_TYPE,
          max(mia.invtry_adj_date) DATE_VALUE, --need week end date for prior week
          3 DIVISION_ID,
          mia.facility_id KEY_VALUE,
-         sum(abs(mia.ext_layer_cost_amt)) DATA_VALUE,
+         sum(mia.ext_layer_cost_amt) DATA_VALUE,
          'F' DATA_GRANULARITY,
          'W' TIME_GRANULARITY
 FROM     whmgr.mdv_d_fac_invctrl_adj mia
 WHERE    mia.ext_layer_cost_amt <> 0
-AND      mia.invtry_adj_date between '12-08-2019' and '12-14-2019' --need to determine prior week start - end
+AND      mia.invtry_adj_date between '01-05-2020' and '01-11-2020' --need to determine prior week start - end
 and      mia.facility_id not in (80, 90)
 group by mia.facility_id
 ;

@@ -746,12 +746,12 @@ SELECT   'distribution' SCORECARD_TYPE,
 --         WEEK_END_DT DATE_VALUE,
          dx.ENTERPRISE_KEY + 1 DIVISION_ID,
          iloc.FACILITYID KEY_VALUE,
-         sum(CASE_COUNT) KPI_VALUE,
+         sum(iloc.SLOT_COUNT) KPI_VALUE,
          'F' DATA_GRANULARITY,
          'W' TIME_GRANULARITY
 FROM     CRMADMIN.T_WHSE_EXE_ILOC iloc 
          inner join CRMADMIN.T_WHSE_DIV_XREF dx on iloc.FACILITYID = dx.SWAT_ID
-WHERE    iloc.ISTA_ID = 'A'
+WHERE    iloc.ISTA_ID = 'F'
 AND      iloc.ICAT_ID = 'S'
 --AND      WEEK_END_DT = '2020-01-08'
 GROUP BY dx.ENTERPRISE_KEY, iloc.FACILITYID
@@ -764,16 +764,53 @@ SELECT   'distribution' SCORECARD_TYPE,
 --         WEEK_END_DT DATE_VALUE,
          dx.ENTERPRISE_KEY + 1 DIVISION_ID,
          iloc.FACILITYID KEY_VALUE,
-         sum(CASE_COUNT) KPI_VALUE,
+         sum(iloc.SLOT_COUNT) KPI_VALUE,
          'F' DATA_GRANULARITY,
          'W' TIME_GRANULARITY
 FROM     CRMADMIN.T_WHSE_EXE_ILOC iloc 
          inner join CRMADMIN.T_WHSE_DIV_XREF dx on iloc.FACILITYID = dx.SWAT_ID
-WHERE    iloc.ISTA_ID = 'A'
+WHERE    iloc.ISTA_ID = 'F'
 AND      iloc.ICAT_ID = 'R'
 --AND      WEEK_END_DT = '2020-01-08'
 GROUP BY dx.ENTERPRISE_KEY, iloc.FACILITYID
 ;
+
+--warehouse selection slots total by facility
+--source:  CRM
+SELECT   'distribution' SCORECARD_TYPE,
+         'slots_selection_total' KPI_TYPE,
+--         WEEK_END_DT DATE_VALUE,
+         dx.ENTERPRISE_KEY + 1 DIVISION_ID,
+         iloc.FACILITYID KEY_VALUE,
+         sum(iloc.SLOT_COUNT) KPI_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     CRMADMIN.T_WHSE_EXE_ILOC iloc 
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on iloc.FACILITYID = dx.SWAT_ID
+WHERE    iloc.ICAT_ID = 'S'
+AND      iloc.ISTA_ID not in ('H')
+--AND      WEEK_END_DT = '2020-01-08'
+GROUP BY dx.ENTERPRISE_KEY, iloc.FACILITYID
+;
+
+--warehouse reserve slots total by facility
+--source:  CRM
+SELECT   'distribution' SCORECARD_TYPE,
+         'slots_reserve_total' KPI_TYPE,
+--         WEEK_END_DT DATE_VALUE,
+         dx.ENTERPRISE_KEY + 1 DIVISION_ID,
+         iloc.FACILITYID KEY_VALUE,
+         sum(iloc.SLOT_COUNT) KPI_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     CRMADMIN.T_WHSE_EXE_ILOC iloc 
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on iloc.FACILITYID = dx.SWAT_ID
+WHERE    iloc.ICAT_ID = 'R'
+AND      iloc.ISTA_ID not in ('H')
+--AND      WEEK_END_DT = '2020-01-08'
+GROUP BY dx.ENTERPRISE_KEY, iloc.FACILITYID
+;
+
 
 --warehouse all other expenses by facility
 --source:  entods

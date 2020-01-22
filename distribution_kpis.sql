@@ -2,7 +2,7 @@
 SELECT   DIVISION_ID,
          KPI_TYPE,
          KPI_DATE,
-         KPI_KEY_VALUE,
+         int(KPI_KEY_VALUE) kpi_key_value,
          KPI_DATA_VALUE
 FROM     KPIADMIN.T_KPI_DETAIL
 WHERE    SCORECARD_TYPE = 'distribution'

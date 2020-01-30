@@ -980,35 +980,33 @@ AND      assoc_id is not null) x
 group by dx.ENTERPRISE_KEY, x.FACILITYID
 ;
 
-
-
 --warehouse cases selected by facility
 --source:  crm
 SELECT   'distribution' SCORECARD_TYPE,
-         'cases_selected' KPI_TYPE,
---         x.per_wk_id DATE_VALUE,
          dx.ENTERPRISE_KEY + 1 DIVISION_ID,
-         FACILITYID KEY_VALUE, 
-         sum(cases_selected) data_value,
-         'F' DATA_GRANULARITY,
-         'W' TIME_GRANULARITY
+         'cases_selected' KPI_TYPE,
+          'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY,
+         DATE('2020-01-22') - (DAYOFWEEK(DATE('2020-01-22'))-0) DAYS KPI_DATE,
+         FACILITYID KPI_KEY_VALUE, 
+         sum(cases_selected) KPI_DATA_VALUE
 from (
-select FACILITYID, SUM(prod_qty / unit_ship_cse) cases_selected
-from CRMADMIN.T_WHSE_EXE_ASELD aseld
-where (FACILITYID, assg_id) in 
-(select aassg.FACILITYID, aassg.assg_id from CRMADMIN.T_WHSE_EXE_AASSG aassg
-where aassg.FACILITYID = aseld.FACILITYID and aassg.phys_whse_id = aseld.phys_whse_id
-and aassg.assg_id = aseld.assg_id
-and rpt_dt between '2020-01-05' and '2020-01-11')
-group by FACILITYID
+SELECT FACILITYID, SUM((prod_qty - value(out_qty,0)) / unit_ship_cse) cases_selected FROM CRMADMIN.T_WHSE_EXE_ASELD aseld WHERE (FACILITYID, assg_id) in (select aassg.FACILITYID, aassg.assg_id from CRMADMIN.T_WHSE_EXE_AASSG aassg where aassg.FACILITYID = aseld.FACILITYID AND aassg.phys_whse_id = aseld.phys_whse_id AND aassg.assg_id = aseld.assg_id 
+AND rpt_dt between '2020-01-19' and '2020-01-25') 
+GROUP BY FACILITYID
+
+--and rpt_dt between DATE('2020-01-22') - (DAYOFWEEK(DATE('2020-01-22'))+6) DAYS and DATE('2020-01-29') - (DAYOFWEEK(DATE('2020-01-22'))-0) DAYS)
+--group by FACILITYID
+/*
 union
 select FACILITYID, SUM(prod_qty / unit_ship_cse) cases_selected
 from CRMADMIN.T_WHSE_EXE_ASELH aselh
 where (FACILITYID, assg_id) in (select aassg.FACILITYID, aassg.assg_id from CRMADMIN.T_WHSE_EXE_AASSG aassg
 where aassg.FACILITYID = aselh.FACILITYID and aassg.phys_whse_id = aselh.phys_whse_id
 and aassg.assg_id = aselh.assg_id
-and rpt_dt between '2020-01-05' and '2020-01-11')
+and rpt_dt between DATE('2020-01-22') - (DAYOFWEEK(DATE('2020-01-22'))+6) DAYS and DATE('2020-01-22') - (DAYOFWEEK(DATE('2020-01-22'))-0) DAYS)
 group by FACILITYID
+*/
 ) x
          inner join CRMADMIN.T_WHSE_DIV_XREF dx on x.FACILITYID = dx.SWAT_ID
 group by dx.ENTERPRISE_KEY, x.FACILITYID

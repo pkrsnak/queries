@@ -485,7 +485,7 @@ FROM     WH_OWNER.DC_ITEM i
 --         inner join WH_OWNER.MDSE_GROUP mgrp on mctg.MDSE_GRP_KEY = mgrp.MDSE_GRP_KEY
 --         inner join wh_owner.DEPARTMENT md on mgrp.DEPT_KEY = md.DEPT_KEY
 --WHERE    sh.TRANSACTION_DATE between '06-17-2018' and '06-15-2019'
-WHERE    sh.transaction_date between '12-02-2018' and '11-30-2019'
+WHERE    sh.transaction_date between '01-27-2019' and '01-25-2020'
 AND      i.FACILITY_ID not in (80, 90)
 AND      sh.ORDER_TYPE_CD <> 'CR'
 --AND      i.PURCH_STATUS_CD = 'A'
@@ -493,9 +493,9 @@ AND      sh.ORDER_TYPE_CD <> 'CR'
 --AND      sh.EXT_CASE_COST_AMT <> 0
 AND      i.ITEM_NBR > 0
 GROUP BY i.FACILITY_ID, i.SHIP_FACILITY_ID, sh.WHOLESALE_DEPT_ID, i.ITEM_NBR, i.PURCH_STATUS_CD, i.SHIP_UNIT_CD 
-
+;
 union all
-
+;
 SELECT   'GM_PY' factor,
          max(sh.TRANSACTION_DATE) file_date,
          lpad(i.FACILITY_ID, 3, '0') || lpad(i.ITEM_NBR, 7, '0') MATCH_KEY,
@@ -520,7 +520,7 @@ FROM     WH_OWNER.DC_ITEM i
 --         inner join WH_OWNER.MDSE_GROUP mgrp on mctg.MDSE_GRP_KEY = mgrp.MDSE_GRP_KEY
 --         inner join wh_owner.DEPARTMENT md on mgrp.DEPT_KEY = md.DEPT_KEY
 --WHERE    sh.TRANSACTION_DATE between '06-17-2018' and '06-15-2019'
-WHERE    sh.transaction_date between '12-03-2017' and '12-01-2018'
+WHERE    sh.transaction_date between '01-28-2018' and '01-26-2019'
 AND      i.FACILITY_ID not in (80, 90)
 AND      sh.ORDER_TYPE_CD <> 'CR'
 --AND      i.PURCH_STATUS_CD = 'A'

@@ -623,6 +623,83 @@ GROUP BY fw.end_dt,
          wsd.FACILITY_ID
 ;
 
+--sales by stocked facility - fd
+--source:  datawhse02
+SELECT   'distribution' SCORECARD_TYPE,
+         'sales_stocked' KPI_TYPE,
+         fw.end_dt DATE_VALUE,
+         2 DIVISION_ID,
+         sh.ship_facility_id KEY_VALUE,
+         sum(sh.TOTAL_SALES_AMT) DATA_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     WHMGR.DC_SALES_HST sh 
+         join WHMGR.fiscal_day fd on (sh.TRANSACTION_DATE = fd.SALES_DT) 
+         join WHMGR.fiscal_week fw on (fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID)
+WHERE    fw.end_dt = '01-25-2020' --need to determine prior week Saturday date
+     AND sh.FACILITY_ID not in (16)
+group by fw.end_dt,
+--         sh.FACILITY_ID,
+         sh.ship_facility_id
+;
+
+--sales by stocked facility - mdv 
+--source:  eisdw01
+SELECT   'distribution' SCORECARD_TYPE,
+         'sales_stocked' KPI_TYPE,
+         fw.end_dt DATE_VALUE,
+         3 DIVISION_ID,
+         sls.dept_cd KEY_VALUE,    -- NEED TO LOOK UP FACILITY ID BASED ON DEPT_CD
+         sum(sls.tot_order_line_amt) DATA_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     MDVSLS_DY_CUST_ITM sls 
+         join fiscal_day fd on (sls.SHIP_DATE = fd.SALES_DT) 
+         join MDV_ITEM i on (sls.CASE_UPC_CD = i.CASE_UPC_CD and sls.DEPT_CD = i.DEPT_CD) 
+         join fiscal_week fw on (fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID)
+WHERE    fw.end_dt = '12-07-2019'
+GROUP BY fw.end_dt, sls.dept_cd
+;
+
+--cases shipped by stocked facility - fd
+--source:  datawhse02
+SELECT   'distribution' SCORECARD_TYPE,
+         'cases_shipped_stocked' KPI_TYPE,
+         fw.end_dt DATE_VALUE,
+         2 DIVISION_ID,
+         sh.ship_facility_id KEY_VALUE,
+         sum(sh.shipped_qty) DATA_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     WHMGR.DC_SALES_HST sh 
+         join WHMGR.fiscal_day fd on (sh.TRANSACTION_DATE = fd.SALES_DT) 
+         join WHMGR.fiscal_week fw on (fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID)
+WHERE    fw.end_dt = '12-07-2019' --need to determine prior week Saturday date
+     AND sh.FACILITY_ID not in (16)
+group by fw.end_dt,
+--         sh.FACILITY_ID,
+         sh.ship_facility_id
+;
+
+
+--cases shipped by stocked facility - mdv 
+--source:  eisdw01
+SELECT   'distribution' SCORECARD_TYPE,
+         'cases_shipped_stocked' KPI_TYPE,
+         fw.end_dt DATE_VALUE,
+         3 DIVISION_ID,
+         sls.dept_cd KEY_VALUE,    -- NEED TO LOOK UP FACILITY ID BASED ON DEPT_CD
+         sum(sls.ship_qty) DATA_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     MDVSLS_DY_CUST_ITM sls 
+         join fiscal_day fd on (sls.SHIP_DATE = fd.SALES_DT) 
+         join MDV_ITEM i on (sls.CASE_UPC_CD = i.CASE_UPC_CD and sls.DEPT_CD = i.DEPT_CD) 
+         join fiscal_week fw on (fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID)
+WHERE    fw.end_dt = '12-07-2019'
+GROUP BY fw.end_dt, sls.dept_cd
+;
+
 --total abs value inventory adjustments by facility
 --source:  datawhse02
 SELECT   'distribution' SCORECARD_TYPE,

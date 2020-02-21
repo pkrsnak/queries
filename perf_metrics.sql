@@ -433,6 +433,39 @@ GROUP BY i.FACILITYID, i.WAREHOUSE_CODE, wc.WAREHOUSE_CODE_DESC,
 HAVING   sum(lc.INVENTORY_TURN + lc.INVENTORY_PROMOTION + lc.INVENTORY_FWD_BUY) <> 0
 ;
 
+--mdv------------------
+SELECT   lc.FACILITYID,
+         dx.DIV_NAME,
+         lc.ITEM_DEPT,
+         lc.ITEM_NBR_HS,
+         lc.UPC_UNIT,
+         lc.ITEM_DESCRIPTION,
+         lc.PURCH_STATUS,
+         lc.BILLING_STATUS,
+         lc.CASES_PER_WEEK,
+         lc.PO_RECEIPT_DTE,
+         sum(lc.INVENTORY_TURN) turn_inventory,
+         sum((lc.INVENTORY_TURN) * ((case when (lc.CORRECT_NET_COST <> 0) then lc.CORRECT_NET_COST else lc.NET_COST_PER_CASE end) * (case when lc.RAND_WGT_CD = 'R' then lc.SHIPPING_CASE_WEIGHT else 1 end ))) turn_inventory_value,
+         sum(case when value(lc.CASES_PER_WEEK, 0) = 0 then 0 else lc.INVENTORY_TURN / value(lc.CASES_PER_WEEK, 0) end) turn_inventory_woh,
+         sum(lc.INVENTORY_PROMOTION) promo_inventory,
+         sum((lc.INVENTORY_PROMOTION) * ((case when (lc.CORRECT_NET_COST <> 0) then lc.CORRECT_NET_COST else lc.NET_COST_PER_CASE end) * (case when lc.RAND_WGT_CD = 'R' then lc.SHIPPING_CASE_WEIGHT else 1 end ))) promo_inventory_value,
+         sum(case when value(lc.CASES_PER_WEEK, 0) = 0 then 0 else lc.INVENTORY_PROMOTION / value(lc.CASES_PER_WEEK, 0) end) promo_inventory_woh,
+         sum(lc.INVENTORY_FWD_BUY) fwd_buy_inventory,
+         sum((lc.INVENTORY_FWD_BUY) * ((case when (lc.CORRECT_NET_COST <> 0) then lc.CORRECT_NET_COST else lc.NET_COST_PER_CASE end) * (case when lc.RAND_WGT_CD = 'R' then lc.SHIPPING_CASE_WEIGHT else 1 end ))) fwd_buy_inventory_value,
+         sum(case when value(lc.CASES_PER_WEEK, 0) = 0 then 0 else lc.INVENTORY_FWD_BUY / value(lc.CASES_PER_WEEK, 0) end) fwd_buy_inventory_woh,
+         sum(lc.INVENTORY_TURN + lc.INVENTORY_PROMOTION + lc.INVENTORY_FWD_BUY) total_inventory,
+         sum((lc.INVENTORY_TURN + lc.INVENTORY_PROMOTION + lc.INVENTORY_FWD_BUY) * ((case when (lc.CORRECT_NET_COST <> 0) then lc.CORRECT_NET_COST else lc.NET_COST_PER_CASE end) * (case when lc.RAND_WGT_CD = 'R' then lc.SHIPPING_CASE_WEIGHT else 1 end ))) total_inventory_value,
+         sum(case when value(lc.CASES_PER_WEEK, 0) = 0 then 0 else (lc.INVENTORY_TURN + lc.INVENTORY_PROMOTION + lc.INVENTORY_FWD_BUY) / value(lc.CASES_PER_WEEK, 0) end ) total_inventory_woh
+FROM     CRMADMIN.T_WHSE_LAYER_CURRENT lc 
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on lc.FACILITYID = dx.SWAT_ID
+WHERE    lc.LAYER_FILE_DTE = current date - 1 day
+GROUP BY lc.FACILITYID, dx.DIV_NAME, lc.ITEM_DEPT, lc.ITEM_NBR_HS, lc.UPC_UNIT, 
+         lc.ITEM_DESCRIPTION, lc.PURCH_STATUS, lc.BILLING_STATUS, 
+         lc.CASES_PER_WEEK, lc.PO_RECEIPT_DTE
+HAVING   sum(lc.INVENTORY_TURN + lc.INVENTORY_PROMOTION + lc.INVENTORY_FWD_BUY) <> 0
+;
+
+
 ---------------------------------------
 --gmroi
 ---------------------------------------

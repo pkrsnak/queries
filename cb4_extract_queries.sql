@@ -74,3 +74,27 @@ AND      ZONE_ID IS NOT NULL
 ;
 
 
+--validate null item_id
+select item_id, count(*)
+from (
+SELECT   f.start_dt,
+         s.store_nbr,
+         s.item_id,
+         sum(total_sales_amt),
+         sum(total_sales_qty),
+         s.list_unit_prc_amt,
+         '' out_of_stock_days,
+         '' returned_units,
+         '' promotion_days
+FROM     entods@ods_prd_tcp:str_trans_dtl s,
+         entods@ods_prd_tcp:fiscal_week f,
+         eisdw01@dss_prd_tcp:line l
+WHERE    s.store_nbr = l.store_nbr
+AND      s.sales_date >= f.start_dt
+AND      s.sales_date <= f.end_dt
+AND      f.fiscal_week_id = 202001
+AND      l.sales_chain_id in (210, 110, 250, 270, 280)
+GROUP BY 1, 2, 3, 6
+)
+group by item_id
+;

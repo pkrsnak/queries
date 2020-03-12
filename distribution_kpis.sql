@@ -6,9 +6,17 @@ SELECT   DIVISION_ID,
          KPI_DATA_VALUE
 FROM     KPIADMIN.T_KPI_DETAIL
 WHERE    SCORECARD_TYPE = 'distribution'
-AND      KPI_DATE = '2020-01-11'
+AND      KPI_DATE = '2020-03-07'
+AND      KPI_TYPE = 'expenses_whse_all'
 AND      DIVISION_ID in (2, 3)
 ;
+
+--netezza extract prod
+SELECT   *
+FROM     KPI_WK_DIV_DISTRIB
+WHERE    FISCAL_WEEK_ID = 202010
+;
+
 
 --netezza
 --total labor hours
@@ -617,7 +625,7 @@ FROM     WHMGR.DC_WHSE_SHIP_DTL wsd
          join WHMGR.fiscal_day fd on (wsd.TRANSACTION_DATE = fd.SALES_DT) 
          join WHMGR.fiscal_week fw on (fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID)
 WHERE    (fw.end_dt = '10-05-2019'  --To_Date('10/05/2019', 'mm/dd/yyyy')  --need to determine prior week Saturday date
-     AND wsd.FACILITY_ID not in (16)
+--     AND wsd.FACILITY_ID not in (16)
      AND wsd.COMMODITY_CODE not in (900))
 GROUP BY fw.end_dt, 
          wsd.FACILITY_ID
@@ -637,7 +645,7 @@ FROM     WHMGR.DC_SALES_HST sh
          join WHMGR.fiscal_day fd on (sh.TRANSACTION_DATE = fd.SALES_DT) 
          join WHMGR.fiscal_week fw on (fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID)
 WHERE    fw.end_dt = '01-25-2020' --need to determine prior week Saturday date
-     AND sh.FACILITY_ID not in (16)
+--     AND sh.FACILITY_ID not in (16)
 group by fw.end_dt,
 --         sh.FACILITY_ID,
          sh.ship_facility_id
@@ -674,8 +682,8 @@ SELECT   'distribution' SCORECARD_TYPE,
 FROM     WHMGR.DC_SALES_HST sh 
          join WHMGR.fiscal_day fd on (sh.TRANSACTION_DATE = fd.SALES_DT) 
          join WHMGR.fiscal_week fw on (fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID)
-WHERE    fw.end_dt = '12-07-2019' --need to determine prior week Saturday date
-     AND sh.FACILITY_ID not in (16)
+WHERE    fw.end_dt = '03-07-2020' --need to determine prior week Saturday date
+  AND    sh.order_type_cd not in ('CR')  
 group by fw.end_dt,
 --         sh.FACILITY_ID,
          sh.ship_facility_id
@@ -1067,24 +1075,7 @@ SELECT   'distribution' SCORECARD_TYPE,
          DATE('2020-01-22') - (DAYOFWEEK(DATE('2020-01-22'))-0) DAYS KPI_DATE,
          FACILITYID KPI_KEY_VALUE, 
          sum(cases_selected) KPI_DATA_VALUE
-from (
-SELECT FACILITYID, SUM((prod_qty - value(out_qty,0)) / unit_ship_cse) cases_selected FROM CRMADMIN.T_WHSE_EXE_ASELD aseld WHERE (FACILITYID, assg_id) in (select aassg.FACILITYID, aassg.assg_id from CRMADMIN.T_WHSE_EXE_AASSG aassg where aassg.FACILITYID = aseld.FACILITYID AND aassg.phys_whse_id = aseld.phys_whse_id AND aassg.assg_id = aseld.assg_id 
-AND rpt_dt between '2020-01-19' and '2020-01-25') 
-GROUP BY FACILITYID
-
---and rpt_dt between DATE('2020-01-22') - (DAYOFWEEK(DATE('2020-01-22'))+6) DAYS and DATE('2020-01-29') - (DAYOFWEEK(DATE('2020-01-22'))-0) DAYS)
---group by FACILITYID
-/*
-union
-select FACILITYID, SUM(prod_qty / unit_ship_cse) cases_selected
-from CRMADMIN.T_WHSE_EXE_ASELH aselh
-where (FACILITYID, assg_id) in (select aassg.FACILITYID, aassg.assg_id from CRMADMIN.T_WHSE_EXE_AASSG aassg
-where aassg.FACILITYID = aselh.FACILITYID and aassg.phys_whse_id = aselh.phys_whse_id
-and aassg.assg_id = aselh.assg_id
-and rpt_dt between DATE('2020-01-22') - (DAYOFWEEK(DATE('2020-01-22'))+6) DAYS and DATE('2020-01-22') - (DAYOFWEEK(DATE('2020-01-22'))-0) DAYS)
-group by FACILITYID
-*/
-) x
+from (SELECT aseld.FACILITYID, SUM((prod_qty - value(out_qty,0)) / unit_ship_cse) cases_selected FROM CRMADMIN.T_WHSE_EXE_ASELD aseld inner join CRMADMIN.T_WHSE_EXE_AASSG aassg on aassg.FACILITYID = aseld.FACILITYID AND aassg.phys_whse_id = aseld.phys_whse_id AND aassg.assg_id = aseld.assg_id AND aassg.rpt_dt between '2020-01-19' and '2020-01-25' where not(aseld.FACILITYID = '001' and aassg.RPTG_ID in ('X', '')) and not(aseld.FACILITYID = '070' and aassg.RPTG_ID in ('A', 'E', 'O')) GROUP BY aseld.FACILITYID) x
          inner join CRMADMIN.T_WHSE_DIV_XREF dx on x.FACILITYID = dx.SWAT_ID
 group by dx.ENTERPRISE_KEY, x.FACILITYID
 ;

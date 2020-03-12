@@ -145,4 +145,48 @@ where x.facility_id <> '999'
 
 
 
- 
+--warehouse fleet maintenance expenses by facility
+--source:  entods
+SELECT   'distribution' SCORECARD_TYPE,
+         x.division_id DIVISION_ID,
+         'expense_fleet_maint' KPI_TYPE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY,
+--         DATE('#CURRENT_DATE_INFX#') - (WEEKDAY(DATE('#CURRENT_DATE_INFX#')) + 1) UNITS DAY KPI_DATE,
+         x.facility_id KPI_KEY_VALUE,
+         x.data_value KPI_DATA_VALUE
+from (
+SELECT   fas.fiscal_week_id,
+         division_id,
+         facility_id,
+         fas.estact_fleet_maint_exp_amt * 1000 DATA_VALUE
+FROM     whmgr.kpi_wk_div_fcst fas
+where fas.fiscal_week_id IN (select fiscal_week_id from whmgr.fiscal_week where end_dt = '02/22/2020')
+) x
+where x.facility_id <> '999'
+;
+
+
+
+
+
+--warehouse leased miles by facility
+--source:  entods
+SELECT   'distribution' SCORECARD_TYPE,
+         x.division_id DIVISION_ID,
+         'miles_leased' KPI_TYPE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY,
+--         DATE('#CURRENT_DATE_INFX#') - (WEEKDAY(DATE('#CURRENT_DATE_INFX#')) + 1) UNITS DAY KPI_DATE,
+         x.facility_id KPI_KEY_VALUE,
+         x.data_value KPI_DATA_VALUE
+from (
+SELECT   fas.fiscal_week_id,
+         division_id,
+         facility_id,
+         fas.estact_lse_carrier_mile_amt DATA_VALUE
+FROM     whmgr.kpi_wk_div_fcst fas
+where fas.fiscal_week_id IN (select fiscal_week_id from whmgr.fiscal_week where end_dt = '02/22/2020')
+) x
+where x.facility_id <> '999'
+;

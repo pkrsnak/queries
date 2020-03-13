@@ -421,14 +421,14 @@ group by 4, 5
 --termed headcount
 SELECT   'distribution' SCORECARD_TYPE,
          'headcount_termed' KPI_TYPE,
-         max(tc.fiscal_day_dt) DATE_VALUE,  --need end date, not MAX function
+         tc.end_dt DATE_VALUE,  --need end date, not MAX function
          tc.DIVISION_ID,
          tc.FACILITY_ID KEY_VALUE,
          count(tc.empl_id) DATA_VALUE,
          'F' DATA_GRANULARITY,
          'W' TIME_GRANULARITY
 from (
-SELECT   eah.fiscal_day_dt,
+SELECT   eah.fiscal_day_dt, fw.end_dt, 
          case when loc.division_cd = 'MDV' then 3 else case when loc.region_cd in ('BRT', 'CAITO') then 4 else 2 end end division_id,
          case 
               when loc.LOCATION_CD = '2007' then '008' 
@@ -479,12 +479,14 @@ SELECT   eah.fiscal_day_dt,
 FROM     whmgr.hr_dy_empl_act_hst eah 
          inner join whmgr.hr_location loc on eah.location_key = loc.location_key
          inner join whmgr.hr_department dept on eah.dept_key = dept.dept_key
-WHERE    eah.fiscal_day_dt between '01-05-2020' and '01-11-2020'
+         inner join whmgr.fiscal_day fd on eah.fiscal_day_dt = fd.fiscal_day_dt 
+         inner join whmgr.fiscal_week fw on fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID
+WHERE    eah.fiscal_day_dt between '01-05-2020' and '03-07-2020'
 AND      eah.status_flg = 'Y'
 AND      eah.gl_dept_id in ('8100', '8110', '8160', '8500', '8115', '8116', '8117', '8716', '8717')
 ) tc
 where tc.FACILITY_ID <> '999'
-group by  4, 5  --needs fixing once DATE_KEY is fixed
+group by  3, 4, 5  --needs fixing once DATE_KEY is fixed
 ;
 
 
@@ -721,6 +723,7 @@ SELECT   'distribution' SCORECARD_TYPE,
 FROM     whmgr.dc_d_fac_invctrl_adj fia
 WHERE    fia.ext_layer_cost_amt <> 0
 AND      fia.invtry_adj_date between '01-05-2020' and '01-11-2020' --need to determine prior week start - end
+AND      fia.invtry_adjust_cd in ('CA', 'CC', 'DS', 'MA', 'PC', 'PI', 'RC')
 group by fia.facility_id
 
 union all
@@ -737,6 +740,7 @@ FROM     whmgr.mdv_d_fac_invctrl_adj mia
 WHERE    mia.ext_layer_cost_amt <> 0
 AND      mia.invtry_adj_date between '01-05-2020' and '01-11-2020' --need to determine prior week start - end
 and      mia.facility_id in (80, 90)
+AND      mia.invtry_adjust_cd in ('CA', 'CC', 'DS', 'MA', 'PC', 'PI', 'RC')
 group by mia.facility_id
 
 union all
@@ -753,6 +757,7 @@ FROM     whmgr.mdv_d_fac_invctrl_adj mia
 WHERE    mia.ext_layer_cost_amt <> 0
 AND      mia.invtry_adj_date between '01-05-2020' and '01-11-2020' --need to determine prior week start - end
 and      mia.facility_id not in (80, 90)
+AND      mia.invtry_adjust_cd in ('CA', 'CC', 'DS', 'MA', 'PC', 'PI', 'RC')
 group by mia.facility_id
 ;
 
@@ -769,7 +774,7 @@ SELECT   'distribution' SCORECARD_TYPE,
 FROM     whmgr.dc_d_fac_invctrl_adj fia
 WHERE    fia.ext_layer_cost_amt <> 0
 AND      fia.invtry_adj_date between '12-08-2019' and '12-14-2019' --need to determine prior week start - end
-AND      fia.invtry_adjust_cd in ('WD')
+AND      fia.invtry_adjust_cd in ('WD', 'DA')
 group by fia.facility_id
 
 union all
@@ -786,7 +791,7 @@ FROM     whmgr.mdv_d_fac_invctrl_adj mia
 WHERE    mia.ext_layer_cost_amt <> 0
 AND      mia.invtry_adj_date between '12-08-2019' and '12-14-2019' --need to determine prior week start - end
 and      mia.facility_id in (80, 90)
-AND      mia.invtry_adjust_cd in ('WD')
+AND      mia.invtry_adjust_cd in ('WD', 'DA')
 group by mia.facility_id
 
 union all
@@ -803,7 +808,7 @@ FROM     whmgr.mdv_d_fac_invctrl_adj mia
 WHERE    mia.ext_layer_cost_amt <> 0
 AND      mia.invtry_adj_date between '12-08-2019' and '12-14-2019' --need to determine prior week start - end
 and      mia.facility_id not in (80, 90)
-AND      mia.invtry_adjust_cd in ('WD')
+AND      mia.invtry_adjust_cd in ('WD', 'DA')
 group by mia.facility_id
 ;
 

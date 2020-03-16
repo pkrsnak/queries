@@ -25,7 +25,7 @@ FROM     WH_OWNER.DC_SALES_HST dsh
          inner join wh_owner.DC_CORPORATION corp on corp.CORPORATION_ID = cust.CORPORATION_ID 
          inner join WH_OWNER.fiscal_day fd on dsh.TRANSACTION_DATE = fd.SALES_DT 
          inner join WH_OWNER.fiscal_week fw on fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID
-WHERE    dsh.TRANSACTION_DATE between '03-13-2020' and '03-13-2020'
+WHERE    dsh.TRANSACTION_DATE between '11-03-2019' and current_date - 1
 AND      dsh.FACILITY_ID = 1
 GROUP BY fw.FISCAL_WEEK_ID, dsh.TRANSACTION_DATE, dsh.FACILITY_ID, 
          dsh.CUSTOMER_NBR, cust.CUSTOMER_NAME, cust.CUST_ST1_ADDR, 

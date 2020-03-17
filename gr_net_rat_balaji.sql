@@ -66,7 +66,7 @@ FROM     WH_OWNER.dc_bill_error_dtl bed
          inner join WH_OWNER.SHIP_ERROR se on bed.SHIP_ERROR_CD = se.SHIP_ERROR_CD
          inner join WH_OWNER.SHIP_ERROR_GRP seg on se.SHIP_ERROR_GRP_CD = seg.SHIP_ERROR_GRP_CD
 WHERE    bed.FACILITY_ID = 1
-AND      bed.TRANSACTION_DATE = '03-12-2020'
+AND      bed.TRANSACTION_DATE = current_date - 1
 group by fw.FISCAL_WEEK_ID,
          bed.TRANSACTION_DATE,
          bed.FACILITY_ID,

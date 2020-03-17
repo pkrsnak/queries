@@ -61,14 +61,15 @@ FROM     CRMADMIN.T_WHSE_EXE_ASELD aseld
 WHERE    not(aseld.FACILITYID = '001' AND aassg.RPTG_ID in ('X', ''))
 --AND      not(aseld.FACILITYID = '070' AND aassg.RPTG_ID in ('A', 'E', 'O'))
 AND      not(aseld.FACILITYID = '070' AND aseld.ORDER_TYPE_ID in ('EXP', 'UEXP', 'FLOX', 'CONV', 'UPST'))
-AND      not(aseld.FACILITYID = '070' AND aseld.ORDER_TYPE_ID like ('E%'))
-AND      not(aseld.FACILITYID = '070' AND aseld.ORDER_TYPE_ID like ('X%'))
+AND      not(aseld.FACILITYID = '070' AND aseld.ORDER_TYPE_ID between 'E000' and 'E999')
+AND      not(aseld.FACILITYID = '070' AND aseld.ORDER_TYPE_ID between 'X000' and 'X999')
+AND      not(aseld.FACILITYID = '070' AND aseld.ORDER_TYPE_ID between 'F000' and 'F999')
+AND      not(aseld.FACILITYID = '070' AND aseld.ORDER_TYPE_ID between 'L000' and 'L999')
 AND      aassg.RPTG_ID is not null
-AND aseld.FACILITYID = '070'
+--AND aseld.FACILITYID = '070'
 GROUP BY aseld.FACILITYID, d.WEEK_ENDING_DATE
 --, aassg.RPTG_ID, aseld.WHSE_ID, 
 --         aseld.ORDER_TYPE_ID;
 ;
 
-
-SELECT aseld.FACILITYID, d.WEEK_ENDING_DATE, SUM((prod_qty - value(out_qty,0)) / unit_ship_cse) cases_selected FROM CRMADMIN.T_WHSE_EXE_ASELD aseld inner join CRMADMIN.T_WHSE_EXE_AASSG aassg on aassg.FACILITYID = aseld.FACILITYID AND aassg.phys_whse_id = aseld.phys_whse_id AND aassg.assg_id = aseld.assg_id inner join CRMADMIN.V_WED d on aassg.rpt_dt = d.LOOKUP_DATE and d.WEEK_ENDING_DATE between '2020-01-25' and current date WHERE not(aseld.FACILITYID = '001' AND aassg.RPTG_ID in ('X', '')) AND not(aseld.FACILITYID = '070' AND aseld.ORDER_TYPE_ID in ('EXP', 'UEXP', 'FLOX', 'CONV', 'UPST')) AND not(aseld.FACILITYID = '070' AND aseld.ORDER_TYPE_ID like ('E%')) AND not(aseld.FACILITYID = '070' AND aseld.ORDER_TYPE_ID like ('X%')) AND aassg.RPTG_ID is not null AND aseld.FACILITYID = '070' GROUP BY aseld.FACILITYID, d.WEEK_ENDING_DATE ;
+SELECT aseld.FACILITYID, d.WEEK_ENDING_DATE, SUM((prod_qty - value(out_qty,0)) / unit_ship_cse) cases_selected FROM CRMADMIN.T_WHSE_EXE_ASELD aseld inner join CRMADMIN.T_WHSE_EXE_AASSG aassg on aassg.FACILITYID = aseld.FACILITYID AND aassg.phys_whse_id = aseld.phys_whse_id AND aassg.assg_id = aseld.assg_id inner join CRMADMIN.V_WED d on aassg.rpt_dt = d.LOOKUP_DATE and d.WEEK_ENDING_DATE between '2020-01-25' and current date WHERE not(aseld.FACILITYID = '001' AND aassg.RPTG_ID in ('X', '')) AND not(aseld.FACILITYID = '070' AND aseld.ORDER_TYPE_ID in ('EXP', 'UEXP', 'FLOX', 'CONV', 'UPST')) AND not(aseld.FACILITYID = '070' AND aseld.ORDER_TYPE_ID between 'E000' and 'E999') AND not(aseld.FACILITYID = '070' AND aseld.ORDER_TYPE_ID between 'X000' and 'X999') AND not(aseld.FACILITYID = '070' AND aseld.ORDER_TYPE_ID between 'F000' and 'F999') AND not(aseld.FACILITYID = '070' AND aseld.ORDER_TYPE_ID between 'L000' and 'L999') AND aassg.RPTG_ID is not null AND aseld.FACILITYID = '070' GROUP BY aseld.FACILITYID, d.WEEK_ENDING_DATE 

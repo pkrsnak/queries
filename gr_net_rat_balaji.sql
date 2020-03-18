@@ -1,3 +1,23 @@
+SELECT   FACILITYID,
+         ITEM_NBR_HS,
+         ITEM_NBR,
+         UPC_UNIT,
+         UPC_CASE,
+         ITEM_DESCRIP,
+         PACK_CASE,
+         ITEM_SIZE_DESCRIP,
+         COMMODITY_XREF,
+         FULFILL_FACILITYID,
+         FULFILL_ITEM_NBR_HS,
+         FULFILL_DC_AREA_ID,
+         PURCH_STATUS,
+         BILLING_STATUS_BACKSCREEN
+FROM     CRMADMIN.T_WHSE_ITEM
+WHERE    PURCH_STATUS not in ('D', 'Z', 'X')
+order by FACILITYID, UPC_UNIT, UPC_CASE, ITEM_NBR_HS
+;
+
+
 SELECT   fw.FISCAL_WEEK_ID,
          dsh.TRANSACTION_DATE,
          dsh.FACILITY_ID,

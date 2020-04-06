@@ -122,12 +122,12 @@ WHERE    (hd.S_GL_DEPT_ID in ('8100', '8105', '8110', '8160', '8500', '8115', '8
      AND hd.DEPT_ID in ('0839', '0843', '0851', '0842', '1116')
      AND dwl.EARNINGS_CD in ('035' ,'040' ,'050' ,'100' ,'35O' ,'FLS' ,'FNL' ,'FRG' ,'HLH' ,'HLS' ,'HLX' ,'HPN' ,'HXP' ,'INC' ,'IND' ,'JRY' ,'MOP' ,'MTG' ,'NET' ,'NPO' ,'NPR' ,'OT1' ,'PER' ,'PHS' ,'PIO' ,'PIP' ,'PPH' ,'PPX' ,'RAD' ,'REG' ,'RG+' ,'RTO' ,'SDH' ,'SDS' ,'SIC', 'SKH' ,'SKP' ,'SKS' ,'SKT' ,'SST' ,'TAD' ,'TRA', 'TRN' ,'VAB' ,'VAC' ,'VAP' ,'VAS' ,'VAT' ,'VBP' ,'VBS' ,'VBY')
      AND dwl.LOCATION_CD in ('2007', '2016', '2037', '2038', '2040', '2052', '2054', '2915', '2058', '2067', '2071', '2917', 'GGM', 'GGR', 'GPR', 'VSPT')
-     AND FISCAL_WEEK_ID between 202001 and 202012)
+     AND FISCAL_WEEK_ID = 202014)
 OR       (hd.S_GL_DEPT_ID in ('8100', '8105', '8110', '8160', '8500', '8115', '8116', '8117', '8716', '8717')
      AND hd.DEPT_ID not in ('0839', '0843', '0851', '0842', '1116')
      AND dwl.EARNINGS_CD in ('015' ,'025' ,'030' ,'035' ,'040' ,'050' ,'100' ,'15O' ,'1OT' ,'25O' ,'35O' ,'40O' ,'FAV' ,'FLD' ,'FPD' ,'FPO' ,'FRZ' ,'GAR' ,'GRO' ,'GRV' ,'HLH' ,'HXO' ,'HXP' ,'ICV' ,'INC' ,'LPD' ,'LPO' ,'LPY' ,'LSC' ,'LSI' ,'MID' ,'MIN' ,'MIO' ,'MTG' ,'NET' ,'NPD' ,'NPO' ,'NPR' ,'OAD' ,'OLA' ,'OT1' ,'OT2' ,'PIO' ,'PIP' ,'RAD' ,'RBN' ,'REG' ,'RG+' ,'RTO' ,'SDH' ,'TAD' ,'TRA', 'TRN')
      AND dwl.LOCATION_CD in ('2007', '2016', '2037', '2038', '2040', '2052', '2054', '2915', '2058', '2067', '2071', '2917', 'GGM', 'GGR', 'GPR', 'VSPT')
-     AND FISCAL_WEEK_ID between 202001 and 202012)
+     AND FISCAL_WEEK_ID = 202014)
 ) lbr
 --where FACILITY_ID <> '999'
 group by 3, 4, 5
@@ -224,12 +224,12 @@ WHERE    (hd.S_GL_DEPT_ID in ('8100', '8105', '8110', '8160', '8500', '8115', '8
      AND hd.DEPT_ID in ('0839', '0843', '0851', '0842', '1116')
      AND dwl.EARNINGS_CD in ('035' ,'040' ,'050' ,'100' ,'35O' ,'FLS' ,'FNL' ,'FRG' ,'HLH' ,'HLS' ,'HLX' ,'HPN' ,'HXP' ,'INC' ,'IND' ,'JRY' ,'MOP' ,'MTG' ,'NET' ,'NPO' ,'NPR' ,'OT1' ,'PER' ,'PHS' ,'PIO' ,'PIP' ,'PPH' ,'PPX' ,'RAD' ,'REG' ,'RG+' ,'RTO' ,'SDH' ,'SDS' ,'SIC', 'SKH' ,'SKP' ,'SKS' ,'SKT' ,'SST' ,'TAD' ,'TRA', 'TRN' ,'VAB' ,'VAC' ,'VAP' ,'VAS' ,'VAT' ,'VBP' ,'VBS' ,'VBY')
      AND dwl.LOCATION_CD in ('2007', '2016', '2037', '2038', '2040', '2052', '2054', '2915', '2058', '2067', '2071', '2917', 'GGM', 'GGR', 'GPR', 'VSPT') 
-     AND FISCAL_WEEK_ID between 202001 and 202013)
+     AND FISCAL_WEEK_ID = 202014)
 OR       (hd.S_GL_DEPT_ID in ('8100', '8105', '8110', '8160', '8500', '8115', '8116', '8117', '8716', '8717')
      AND hd.DEPT_ID not in ('0839', '0843', '0851', '0842', '1116')
      AND dwl.EARNINGS_CD in ('015' ,'025' ,'030' ,'035' ,'040' ,'050' ,'100' ,'15O' ,'1OT' ,'25O' ,'35O' ,'40O' ,'FAV' ,'FLD' ,'FPD' ,'FPO' ,'FRZ' ,'GAR' ,'GRO' ,'GRV' ,'HLH' ,'HXO' ,'HXP' ,'ICV' ,'INC' ,'LPD' ,'LPO' ,'LPY' ,'LSC' ,'LSI' ,'MID' ,'MIN' ,'MIO' ,'MTG' ,'NET' ,'NPD' ,'NPO' ,'NPR' ,'OAD' ,'OLA' ,'OT1' ,'OT2' ,'PIO' ,'PIP' ,'RAD' ,'RBN' ,'REG' ,'RG+' ,'RTO' ,'SDH' ,'TAD' ,'TRA', 'TRN')
      AND dwl.LOCATION_CD in ('2007', '2016', '2037', '2038', '2040', '2052', '2054', '2915', '2058', '2067', '2071', '2917', 'GGM', 'GGR', 'GPR', 'VSPT')
-     AND FISCAL_WEEK_ID between 202001 and 202013)
+     AND FISCAL_WEEK_ID = 202014)
 ) lbr
 group by 3, 4, 5
 ;
@@ -338,12 +338,12 @@ WHERE    (hd.S_GL_DEPT_ID in ('8100', '8105', '8110', '8160', '8500', '8115', '8
      AND hd.DEPT_ID in ('0839', '0843', '0851', '0842', '1116')
      AND dwl.EARNINGS_CD in ('035' ,'040' ,'050' ,'100' ,'35O' ,'FLS' ,'FNL' ,'FRG' ,'HLH' ,'HLS' ,'HLX' ,'HPN' ,'HXP' ,'INC' ,'IND' ,'JRY' ,'MOP' ,'MTG' ,'NET' ,'NPO' ,'NPR' ,'OT1' ,'PER' ,'PHS' ,'PIO' ,'PIP' ,'PPH' ,'PPX' ,'RAD' ,'REG' ,'RG+' ,'RTO' ,'SDH' ,'SDS' ,'SIC', 'SKH' ,'SKP' ,'SKS' ,'SKT' ,'SST' ,'TAD' ,'TRA', 'TRN' ,'VAB' ,'VAC' ,'VAP' ,'VAS' ,'VAT' ,'VBP' ,'VBS' ,'VBY')
      AND dwl.LOCATION_CD in ('2007', '2016', '2037', '2038', '2040', '2052', '2054', '2915', '2058', '2067', '2071', '2917', 'GGM', 'GGR', 'GPR', 'VSPT')
-     AND FISCAL_WEEK_ID between 202001 and 202012)
+     AND FISCAL_WEEK_ID = 202014)
 OR       (hd.S_GL_DEPT_ID in ('8100', '8105', '8110', '8160', '8500', '8115', '8116', '8117', '8716', '8717')
      AND hd.DEPT_ID not in ('0839', '0843', '0851', '0842', '1116')
      AND dwl.EARNINGS_CD in ('015' ,'025' ,'030' ,'035' ,'040' ,'050' ,'100' ,'15O' ,'1OT' ,'25O' ,'35O' ,'40O' ,'FAV' ,'FLD' ,'FPD' ,'FPO' ,'FRZ' ,'GAR' ,'GRO' ,'GRV' ,'HLH' ,'HXO' ,'HXP' ,'ICV' ,'INC' ,'LPD' ,'LPO' ,'LPY' ,'LSC' ,'LSI' ,'MID' ,'MIN' ,'MIO' ,'MTG' ,'NET' ,'NPD' ,'NPO' ,'NPR' ,'OAD' ,'OLA' ,'OT1' ,'OT2' ,'PIO' ,'PIP' ,'RAD' ,'RBN' ,'REG' ,'RG+' ,'RTO' ,'SDH' ,'TAD' ,'TRA', 'TRN')
      AND dwl.LOCATION_CD in ('2007', '2016', '2037', '2038', '2040', '2052', '2054', '2915', '2058', '2067', '2071', '2917', 'GGM', 'GGR', 'GPR', 'VSPT')
-     AND FISCAL_WEEK_ID between 202001 and 202012)
+     AND FISCAL_WEEK_ID = 202014)
 ) lbr
 group by 3, 4, 5
 ;
@@ -425,7 +425,7 @@ WHERE    (hd.S_GL_DEPT_ID in ('8100', '8500')
      AND dwl.PAY_GROUP_CD <> 'MSN'
      AND dwl.EARNINGS_CD in ('050', 'E25', 'F02', 'HXP', 'INC', 'IOV', 'IPO', 'IPT', 'IRG', 'MIC', 'MOT', 'MRG', 'N25', 'NET', 'OAD', 'OT1', 'PIP', 'RAD', 'REG', 'RTO', 'SDH', 'TAD', 'TRA', 'TRN')
      AND dwl.LOCATION_CD in ('6922', '6924', '6927', '6929', '6933', '6938', '6939', 'S6924')
-     AND FISCAL_WEEK_ID = 202011)
+     AND FISCAL_WEEK_ID = 202014)
 
 union all
 
@@ -478,14 +478,14 @@ WHERE    (hd.S_GL_DEPT_ID in ('8100', '8500')
      AND dwl.PAY_GROUP_CD <> 'MSN'
      AND dwl.EARNINGS_CD in ('050', 'E25', 'F02', 'HXP', 'INC', 'IOV', 'IPO', 'IPT', 'IRG', 'MIC', 'MOT', 'MRG', 'N25', 'NET', 'OAD', 'OT1', 'PIP', 'RAD', 'REG', 'RTO', 'SDH', 'TAD', 'TRA', 'TRN')
      AND dwl.LOCATION_CD in ('6929', '6933')
-     AND FISCAL_WEEK_ID = 202011)
+     AND FISCAL_WEEK_ID = 202014)
 ) lbr
 group by 1, 2, 3
 
 union all
 
 --salary labor
-SELECT   202011 fiscal_week,
+SELECT   202014 fiscal_week,
          3 division_id, 
          case 
               when dwl.LOCATION_CD = '6922' then '069' 
@@ -510,12 +510,12 @@ FROM     WH_OWNER.DCLBR_WK_LOC dwl
 WHERE    (hd.S_GL_DEPT_ID in ('8100', '8500')
      AND dwl.PAY_GROUP_CD = 'MSN'
      AND dwl.LOCATION_CD in ('6922', '6924', '6927', '6929', '6933', '6938', '6939', 'S6924')
-     AND FISCAL_WEEK_ID between 202010 and 202011)
+     AND FISCAL_WEEK_ID between 202013 and 202014)
 group by 2,3
 
 union all
 
-SELECT   202011 fiscal_week,
+SELECT   202014 fiscal_week,
          2 division_id,
          case 
               when dwl.LOCATION_CD = '6929' then '090' 
@@ -534,7 +534,7 @@ FROM     WH_OWNER.DCLBR_WK_LOC dwl
 WHERE    (hd.S_GL_DEPT_ID in ('8100', '8500')
      AND dwl.PAY_GROUP_CD = 'MSN'
      AND dwl.LOCATION_CD in ('6929', '6933')
-     AND FISCAL_WEEK_ID between 202010 and 202011)
+     AND FISCAL_WEEK_ID between 202013 and 202014)
 group by 2,3
 
 ) x
@@ -549,7 +549,7 @@ SELECT   case when msd.DEPT_CD in (87, 89, 84, 88, 90) then 33 else 29 end facil
 FROM     MDV_WHSE_SHIP_DTL msd 
          join fiscal_day fd on (msd.SHIP_DATE = fd.SALES_DT) 
          join fiscal_week fw on (fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID)
-WHERE    fw.FISCAL_WEEK_ID = 202011
+WHERE    fw.FISCAL_WEEK_ID = 202014
 AND      msd.DEPT_CD in (87, 89, 84, 88, 77, 79, 78, 80, 90)
 GROUP BY 1
 
@@ -561,7 +561,7 @@ SELECT   case when msd.DEPT_CD in (87, 89, 84, 88, 90) then 90 else 80 end facil
 FROM     MDV_WHSE_SHIP_DTL msd 
          join fiscal_day fd on (msd.SHIP_DATE = fd.SALES_DT) 
          join fiscal_week fw on (fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID)
-WHERE    fw.FISCAL_WEEK_ID = 202011
+WHERE    fw.FISCAL_WEEK_ID = 202014
 AND      msd.DEPT_CD in (87, 89, 84, 88, 77, 79, 78, 80, 90)
 GROUP BY 1
 ) cases

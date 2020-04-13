@@ -518,7 +518,7 @@ FROM     WH_OWNER.DC_ITEM i
 --         inner join WH_OWNER.MDSE_GROUP mgrp on mctg.MDSE_GRP_KEY = mgrp.MDSE_GRP_KEY
 --         inner join wh_owner.DEPARTMENT md on mgrp.DEPT_KEY = md.DEPT_KEY
 --WHERE    sh.TRANSACTION_DATE between '06-17-2018' and '06-15-2019'
-WHERE    sh.transaction_date between '01-27-2019' and '01-25-2020'
+WHERE    sh.transaction_date between '03-24-2019' and '03-21-2020'
 AND      i.FACILITY_ID not in (80, 90)
 AND      sh.ORDER_TYPE_CD <> 'CR'
 --AND      i.PURCH_STATUS_CD = 'A'

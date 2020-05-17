@@ -189,11 +189,6 @@ group by 2, 6, 7
 ;
 
 
-
-
-
-
-
  
 --netezza
 --total food distribution labor hours

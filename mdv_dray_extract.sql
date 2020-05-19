@@ -87,3 +87,54 @@ WHERE    (dx.ENTERPRISE_KEY = 2 or lh.FACILITYID in ('080', '090'))
 AND      lh.LAYER_FILE_DTE between '2019-12-29' and '2020-04-18'
 GROUP BY lh.FACILITYID, lh.ITEM_DEPT, lh.UPC_CASE, lh.RAND_WGT_CD
 ;
+
+
+--mdv
+--mdvods
+Select dept_cd, case_upc_cd, cube_msr from whmgr.mdv_item
+;
+
+--mdv
+--crm
+--average inventory extract
+SELECT   lh.FACILITYID,
+         lh.STOCK_FAC,
+         lh.ITEM_DEPT,
+         lh.ITEM_NBR_HS,
+         lh.ITEM_DESCRIPTION,
+         lh.UPC_CASE,
+         i.ITEM_RES28 AMAZON_RESTRICTION,
+         lh.RAND_WGT_CD,
+         count(distinct LAYER_FILE_DTE) num_days,
+         112 days_between,
+         sum(lh.INVENTORY_TURN) ext_turn_qty,
+         sum(lh.INVENTORY_PROMOTION) ext_promo_qty,
+         sum(lh.INVENTORY_FWD_BUY) ext_fwd_buy_qty,
+         sum(lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) ext_inventory_qty,
+         sum((lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) * ((case when lh.CORRECT_NET_COST <> 0 then lh.CORRECT_NET_COST else lh.NET_COST_PER_CASE end) * (case when lh.RAND_WGT_CD ='R' then lh.SHIPPING_CASE_WEIGHT else 1 end))) ext_inventory_value
+FROM     CRMADMIN.T_WHSE_LAYER_HISTORY lh 
+         inner join CRMADMIN.T_WHSE_ITEM i on lh.FACILITYID = i.FACILITYID and lh.ITEM_NBR_HS = i.ITEM_NBR_HS 
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on lh.FACILITYID = dx.SWAT_ID
+WHERE    lh.FACILITYID in ('015', '058', '054', '002', '040')
+AND      lh.LAYER_FILE_DTE between '2019-12-29' and '2020-04-18'
+GROUP BY lh.FACILITYID, lh.STOCK_FAC, lh.ITEM_DEPT, lh.ITEM_NBR_HS, lh.ITEM_DESCRIPTION, 
+         lh.UPC_CASE, i.ITEM_RES28, lh.RAND_WGT_CD
+;
+
+
+
+
+
+SELECT   'AVG_4P_INV_CY' FACTOR,
+         d.FISCAL_PERIOD,
+         lh.LAYER_FILE_DTE,
+         int(lh.FACILITYID) facility,
+         int(lh.STOCK_FAC) stock_facility,
+         int(i.ITEM_DEPT) dept,
+         '' dept_name,
+         int(i.ITEM_NBR_HS) item,
+         i.SHIP_UNIT_CD,
+         i.PURCH_STATUS,
+         sum((lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) * ((case when lh.CORRECT_NET_COST <> 0 then lh.CORRECT_NET_COST else lh.NET_COST_PER_CASE end) * (case when i.RAND_WGT_CD ='R' then i.AVERAGE_WEIGHT else 1 end))) inventory_value
+FROM     CRMADMIN.T_WHSE_LAYER_HISTORY lh 
+         inner join CRMADMIN.T_WHSE_ITEM i on lh.FACILITYID = i.FACILITYID and lh.ITEM_NBR_HS = i.ITEM_NBR_HS

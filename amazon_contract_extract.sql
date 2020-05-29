@@ -82,3 +82,36 @@ GROUP BY fd.FISCAL_PERIOD_ID,
 --         i.SHIP_CASE_CUBE_MSR
 ;
 ) x
+
+
+--inventory
+
+--mdv
+--crm
+--average inventory extract
+SELECT   lh.FACILITYID,
+         lh.STOCK_FAC,
+         lh.ITEM_DEPT, i.WAREHOUSE_CODE, wc.WAREHOUSE_CODE_TEMP_ZONE,
+         lh.ITEM_NBR_HS,
+         lh.ITEM_DESCRIPTION,
+         lh.UPC_CASE,
+         i.ITEM_RES28 AMAZON_RESTRICTION,
+         lh.RAND_WGT_CD, i.SHIPPING_CASE_CUBE,
+         count(distinct LAYER_FILE_DTE) num_days,
+         112 days_between,
+         sum(lh.INVENTORY_TURN) ext_turn_qty,
+         sum(lh.INVENTORY_PROMOTION) ext_promo_qty,
+         sum(lh.INVENTORY_FWD_BUY) ext_fwd_buy_qty,
+         sum(lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) ext_inventory_qty,
+         sum((lh.INVENTORY_TURN + lh.INVENTORY_PROMOTION + lh.INVENTORY_FWD_BUY) * ((case when lh.CORRECT_NET_COST <> 0 then lh.CORRECT_NET_COST else lh.NET_COST_PER_CASE end) * (case when lh.RAND_WGT_CD ='R' then lh.SHIPPING_CASE_WEIGHT else 1 end))) ext_inventory_value
+FROM     CRMADMIN.T_WHSE_LAYER_HISTORY lh 
+         inner join CRMADMIN.T_WHSE_ITEM i on lh.FACILITYID = i.FACILITYID and lh.ITEM_NBR_HS = i.ITEM_NBR_HS 
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on lh.FACILITYID = dx.SWAT_ID
+         inner join CRMADMIN.T_WHSE_WAREHOUSE_CODE wc on i.FACILITYID = wc.FACILITYID and i.WAREHOUSE_CODE = wc.WAREHOUSE_CODE
+--WHERE    lh.FACILITYID in ('015', '058', '054', '002', '040')
+WHERE    lh.FACILITYID in ('071') --, '058', '054', '002', '040')
+AND      lh.LAYER_FILE_DTE between '2019-12-29' and '2020-04-18'
+GROUP BY lh.FACILITYID, lh.STOCK_FAC, lh.ITEM_DEPT, i.WAREHOUSE_CODE, wc.WAREHOUSE_CODE_TEMP_ZONE, lh.ITEM_NBR_HS, 
+         lh.ITEM_DESCRIPTION, lh.UPC_CASE, i.ITEM_RES28, 
+         lh.RAND_WGT_CD, i.SHIPPING_CASE_CUBE
+;

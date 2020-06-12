@@ -21,7 +21,7 @@ SELECT   --fd.FISCAL_WEEK_ID,
          dsh.FACILITY_ID,
          ds.FACILITY_NAME DS_FACILITY,
          dsh.SHIP_FACILITY_ID,
-         us.FACILITY_NAME US_FACILITY,
+         us.FACILITY_NAME US_FACILITY, v.VENDOR_NBR, v.VENDOR_NAME, v.MSTR_VENDOR_NBR, v.MSTR_VENDOR_NAME, 
          dsh.WHSE_CMDTY_ID,
          mdg.DEPT_GRP_KEY,
          mdg.DEPT_GRP_NAME,
@@ -33,7 +33,7 @@ SELECT   --fd.FISCAL_WEEK_ID,
          mctg.MDSE_CATGY_NAME,
          dsh.MDSE_CLASS_KEY,
          mcl.MDSE_CLASS_NAME, 
-         i.ITEM_RANK_CD, 
+         i.ITEM_RANK_CD, i.SHIP_UNIT_CD, i.ITEM_RES28_CD, 
          dsh.ITEM_NBR,
          i.CASE_UPC_NBR,
          i.UNIT_UPC_NBR,
@@ -107,6 +107,7 @@ FROM     WH_OWNER.DC_SALES_HST dsh
          inner join WH_OWNER.DC_FACILITY ds on dsh.FACILITY_ID = ds.FACILITY_ID 
          inner join WH_OWNER.DC_FACILITY us on dsh.SHIP_FACILITY_ID = us.FACILITY_ID 
          inner join WH_OWNER.DC_ITEM i on dsh.FACILITY_ID = i.FACILITY_ID and dsh.ITEM_NBR = i.ITEM_NBR 
+         inner join WH_OWNER.DC_VENDOR v on i.VENDOR_NBR = v.VENDOR_NBR and i.FACILITY_ID = v.FACILITY_ID
          inner join WH_OWNER.DC_CUSTOMER cust on dsh.FACILITY_ID = cust.FACILITY_ID and dsh.CUSTOMER_NBR = cust.CUSTOMER_NBR 
          inner join WH_OWNER.DC_CORPORATION corp on cust.CORPORATION_ID = corp.CORPORATION_ID 
          inner join WH_OWNER.FISCAL_DAY fd on dsh.TRANSACTION_DATE = fd.SALES_DT 
@@ -121,7 +122,7 @@ GROUP BY --fd.FISCAL_WEEK_ID,
          dsh.FACILITY_ID,
          ds.FACILITY_NAME,
          dsh.SHIP_FACILITY_ID,
-         us.FACILITY_NAME,
+         us.FACILITY_NAME, v.VENDOR_NBR, v.VENDOR_NAME, v.MSTR_VENDOR_NBR, v.MSTR_VENDOR_NAME, 
          dsh.WHSE_CMDTY_ID,
          mdg.DEPT_GRP_KEY,
          mdg.DEPT_GRP_NAME,
@@ -133,7 +134,7 @@ GROUP BY --fd.FISCAL_WEEK_ID,
          mctg.MDSE_CATGY_NAME,
          dsh.MDSE_CLASS_KEY,
          mcl.MDSE_CLASS_NAME, 
-         i.ITEM_RANK_CD, 
+         i.ITEM_RANK_CD, i.SHIP_UNIT_CD, i.ITEM_RES28_CD, 
          dsh.ITEM_NBR,
          i.CASE_UPC_NBR,
          i.UNIT_UPC_NBR,
@@ -152,5 +153,12 @@ GROUP BY --fd.FISCAL_WEEK_ID,
          i.SHIP_CASE_HGHT_MSR, i.PURCH_STATUS_CD, i.BILLING_STATUS_CD
 ;
 ) x
+;
 
-
+SELECT   FACILITYID || ITEM_NBR_HS lookup,
+         FACILITYID,
+         ITEM_NBR_HS,
+         GTIN, UPC_CASE, UPC_UNIT, SHIPPING_CASE_HEIGHT, SHIPPING_CASE_WIDTH, SHIPPING_CASE_WIDTH, SHIPPING_CASE_WEIGHT, VENDOR_TIE, VENDOR_TIER, WHSE_TIE, WHSE_TIER
+FROM     CRMADMIN.T_WHSE_ITEM
+WHERE    FACILITYID not in ('002', '005', '071')
+AND      trim(GTIN) not in ('0', '00000000000000000')

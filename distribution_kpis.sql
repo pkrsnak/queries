@@ -1655,57 +1655,87 @@ WHERE    fw.end_dt = '12-07-2019'
 GROUP BY fw.end_dt, sls.dept_cd
 ;
 
---total inventory adjustments by facility
+
+--total abs value inventory adjustments by facility
+SELECT   'distribution' SCORECARD_TYPE,
+         DIVISION_ID,
+         'inventory_adjust_total' KPI_TYPE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY,
+         KPI_DATE,
+         KPI_KEY_VALUE,
+         sum(KPI_DATA_VALUE) KPI_DATA_VALUE
+from
+(
+--fd inventory adjustments except SAT / COL
 --source:  datawhse02
-SELECT   'distribution' SCORECARD_TYPE,
-         'inventory_adjust_total' KPI_TYPE,
-         max(fia.invtry_adj_date) DATE_VALUE, --need week end date for prior week
-         2 DIVISION_ID,
-         fia.facility_id KEY_VALUE,
-         sum(fia.ext_layer_cost_amt) DATA_VALUE,
-         'F' DATA_GRANULARITY,
-         'W' TIME_GRANULARITY
+SELECT   dr.division_id,
+         fd.fiscal_week_id KPI_DATE, --need week end date for prior week
+         fia.facility_id KPI_KEY_VALUE,
+         sum(abs(fia.ext_layer_cost_amt)) KPI_DATA_VALUE
 FROM     whmgr.dc_d_fac_invctrl_adj fia
+         inner join whmgr.FISCAL_DAY fd on fia.billing_date = fd.SALES_DT 
+         inner join whmgr.DC_FACILITY df on fia.FACILITY_ID = df.FACILITY_ID 
+         inner join whmgr.DC_REGION dr on df.REGION_ID = dr.REGION_ID
 WHERE    fia.ext_layer_cost_amt <> 0
-AND      fia.invtry_adj_date between '01-05-2020' and '01-11-2020' --need to determine prior week start - end
+AND      fd.FISCAL_WEEK_ID = 202025 --need to determine prior week start - end
 AND      fia.invtry_adjust_cd in ('CC', 'FL', 'CL', 'CG', 'DS', 'MA', 'AM', 'PC', 'PI', 'RC')
-group by fia.facility_id
-
-union all
-
-SELECT   'distribution' SCORECARD_TYPE,
-         'inventory_adjust_total' KPI_TYPE,
-         max(mia.invtry_adj_date) DATE_VALUE, --need week end date for prior week
-         2 DIVISION_ID,
-         mia.facility_id KEY_VALUE,
-         sum(mia.ext_layer_cost_amt) DATA_VALUE,
-         'F' DATA_GRANULARITY,
-         'W' TIME_GRANULARITY
+GROUP BY dr.division_id, fia.facility_id, fd.fiscal_week_id
+ 
+UNION ALL
+ 
+--fd inventory adjustments for SAT / COL
+SELECT   dr.division_id,
+         fd.fiscal_week_id KPI_DATE, --need week end date for prior week
+         mia.facility_id KPI_KEY_VALUE,
+         sum(abs(mia.ext_layer_cost_amt)) KPI_DATA_VALUE
 FROM     whmgr.mdv_d_fac_invctrl_adj mia
+         inner join whmgr.FISCAL_DAY fd on mia.invtry_adj_date = fd.SALES_DT 
+         inner join whmgr.DC_FACILITY df on mia.FACILITY_ID = df.FACILITY_ID 
+         inner join whmgr.DC_REGION dr on df.REGION_ID = dr.REGION_ID
 WHERE    mia.ext_layer_cost_amt <> 0
-AND      mia.invtry_adj_date between '01-05-2020' and '01-11-2020' --need to determine prior week start - end
-and      mia.facility_id in (80, 90)
+AND      fd.FISCAL_WEEK_ID = 202025 --need to determine prior week start - end
+AND      mia.facility_id in (80, 90)
 AND      mia.invtry_adjust_cd in ('CC', 'FL', 'CL', 'CG', 'DS', 'MA', 'AM', 'PC', 'PI', 'RC')
-group by mia.facility_id
+GROUP BY dr.division_id, mia.facility_id, fd.fiscal_week_id
+ 
+UNION ALL
 
-union all
-
-SELECT   'distribution' SCORECARD_TYPE,
-         'inventory_adjust_total' KPI_TYPE,
-         max(mia.invtry_adj_date) DATE_VALUE, --need week end date for prior week
-         3 DIVISION_ID,
-         mia.facility_id KEY_VALUE,
-         sum(mia.ext_layer_cost_amt) DATA_VALUE,
-         'F' DATA_GRANULARITY,
-         'W' TIME_GRANULARITY
+--mdv inventory adjustments928424
+SELECT   dr.division_id,
+         fd.fiscal_week_id KPI_DATE, --need week end date for prior week
+         mia.facility_id KPI_KEY_VALUE,
+         sum(abs(mia.ext_layer_cost_amt)) KPI_DATA_VALUE
 FROM     whmgr.mdv_d_fac_invctrl_adj mia
+         inner join whmgr.FISCAL_DAY fd on mia.invtry_adj_date = fd.SALES_DT 
+         inner join whmgr.DC_FACILITY df on mia.FACILITY_ID = df.FACILITY_ID 
+         inner join whmgr.DC_REGION dr on df.REGION_ID = dr.REGION_ID
 WHERE    mia.ext_layer_cost_amt <> 0
-AND      mia.invtry_adj_date between '01-05-2020' and '01-11-2020' --need to determine prior week start - end
+AND      fd.FISCAL_WEEK_ID = 202025 --need to determine prior week start - end
 and      mia.facility_id not in (80, 90)
 AND      mia.invtry_adjust_cd in ('CC', 'FL', 'CL', 'CG', 'DS', 'MA', 'AM', 'PC', 'PI', 'RC')
-group by mia.facility_id
-;
+GROUP BY dr.division_id, mia.facility_id, fd.fiscal_week_id
 
+UNION ALL
+
+--fd customer credits per definition
+SELECT   dr.DIVISION_ID,
+         fd.FISCAL_WEEK_ID KPI_DATE,
+         dsh.SHIP_FACILITY_ID KPI_KEY_VALUE,
+         sum(abs(dsh.TOTAL_SALES_AMT)) KPI_DATA_VALUE
+FROM     whmgr.DC_SALES_HST dsh 
+         inner join whmgr.FISCAL_DAY fd on dsh.TRANSACTION_DATE = fd.SALES_DT 
+         inner join whmgr.DC_FACILITY df on dsh.SHIP_FACILITY_ID = df.FACILITY_ID 
+         inner join whmgr.DC_REGION dr on df.REGION_ID = dr.REGION_ID
+WHERE    fd.FISCAL_WEEK_ID = 202025
+AND      ((dsh.FACILITY_ID <> 1
+        AND dsh.CREDIT_REASON_CD in ('01', '03', '05', '08', '09', '10', '11', '12', '19', '20', '21', '22', '26', '29', '40''43', '44', '45', '48'))
+     OR  (dsh.FACILITY_ID = 1
+        AND dsh.CREDIT_REASON_CD in ('01', '02', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '23', '24', '25')))
+GROUP BY dr.DIVISION_ID, dsh.SHIP_FACILITY_ID, fd.FISCAL_WEEK_ID
+) x
+group by division_id, KPI_DATE, KPI_KEY_VALUE
+;
 --warehouse damage abs value inventory adjustments by facility
 --source:  datawhse02
 SELECT   'distribution' SCORECARD_TYPE,

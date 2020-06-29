@@ -23,6 +23,7 @@ SELECT   hly.FISCAL_WEEK_ID,
 FROM     WH_OWNER.PLK_TEST1_VW hly
 WHERE    hly.FISCAL_WEEK_ID = 202025
 AND      hly.PAY_GROUP_CD not in ('SAL', 'SLY')
+AND      dwl.WORKER_TYPE <> 'Agency'
 GROUP BY 1, 2, 3
 union all
 --salary labor
@@ -36,7 +37,7 @@ SELECT   202023 fiscal_week_id,
 FROM     WH_OWNER.PLK_TEST1_VW sly
 WHERE    sly.FISCAL_WEEK_ID in (202024, 202025)
 AND      sly.PAY_GROUP_CD in ('SAL', 'SLY')
-GROUP BY 1, 2, 3
+AND      dwl.WORKER_TYPE <> 'Agency'GROUP BY 1, 2, 3
 ) lbr
 group by 2, 6, 7
 ;
@@ -138,12 +139,14 @@ FROM     WH_OWNER.DCLBR_WK_LOC dwl
 WHERE    (hd.S_GL_DEPT_ID in ('8100', '8105', '8110') --, '8160', '8500', '8115', '8116', '8117', '8716', '8717')
      AND hd.DEPT_ID in ('0285', '0289', '0295', '0305', '0306', '0314', '0341', '0369', '0412', '0416', '0616', '0820', '0826', '0839', '0851', '0842', '0850', '1103', '1116', '1119')
      AND dwl.PAY_GROUP_CD not in ('SAL', 'SLY')
+     AND dwl.WORKER_TYPE <> 'Agency'
      AND dwl.EARNINGS_CD in ('035', '040', '050', '100', '35O', 'FLS', 'FNL', 'FRG', 'HLH', 'HLS', 'HLX', 'HPN', 'HXP', 'INC', 'IND', 'JRY', 'MOP', 'MTG', 'NET', 'NPO', 'NPR', 'OT1', 'PER', 'PHS', 'PIO', 'PIP', 'PPH', 'PPX', 'RAD', 'REG', 'RG+', 'RTO', 'SDH', 'SDS', 'SIC', 'SKH', 'SKP', 'SKS', 'SKT', 'SST', 'TAD', 'TRA', 'TRN', 'VAB', 'VAC', 'VAP', 'VAS', 'VAT', 'VBP', 'VBS', 'VBY', 'AAB', 'FLB', 'FLP', 'FLU', 'IFP', 'WRP', 'FRP', 'LRP', 'PSP', 'TNP', 'CIN','OPM')
      AND dwl.LOCATION_CD in ('2007', '2016', '2037', '2038', '2040', '2052', '2054', '2915', '2058', '2067', '2071', '2917', 'GGM', 'GGR', 'GPR', 'VSPT')
  )
 OR       (hd.S_GL_DEPT_ID in ('8100', '8105', '8110') --, '8160', '8500', '8115', '8116', '8117', '8716', '8717')
      AND hd.DEPT_ID not in ('0285', '0289', '0295', '0305', '0306', '0314', '0341', '0369', '0412', '0416', '0616', '0820', '0826', '0839', '0851', '0842', '0850', '1103', '1116', '1119')
      AND dwl.PAY_GROUP_CD not in ('SAL', 'SLY')
+     AND dwl.WORKER_TYPE <> 'Agency'
      AND dwl.EARNINGS_CD in ('015', '025', '030', '035', '040', '050', '100', '15O', '1OT', '25O', '35O', '40O', 'FAV', 'FLD', 'FPD', 'FPO', 'FRZ', 'GAR', 'GRO', 'GRV', 'ICV', 'INC', 'LPD', 'LPO', 'LPY', 'LSC', 'LSI', 'MID', 'MIN', 'MIO', 'MTG', 'NET', 'NPD', 'NPO', 'NPR', 'OAD', 'OLA', 'OT1', 'OT2', 'PIO', 'PIP', 'RAD', 'RBN', 'REG', 'RG+', 'RTO', 'SDH', 'TAD', 'TRA', 'TRN', 'AAB', 'FLB', 'FLP', 'FLU', 'IFP', 'WRP', 'FRP', 'LRP', 'PSP', 'TNP', 'CIN','OPM')
      AND dwl.LOCATION_CD in ('2007', '2016', '2037', '2038', '2040', '2052', '2054', '2915', '2058', '2067', '2071', '2917', 'GGM', 'GGR', 'GPR', 'VSPT')
 )

@@ -1,3 +1,58 @@
+--potential view for MDV:
+SELECT   --date('#CURRENT_DATE_DB2#') - (date_part('dow', date '#CURRENT_DATE_DB2#')- 0) KPI_DATE,
+         dwl.FISCAL_WEEK_ID KPI_DATE,
+         3 division_id,
+         case
+              when dwl.LOCATION_CD = '6922' then '069'
+              when dwl.LOCATION_CD = '6924' then '070'
+              when dwl.LOCATION_CD = '6927' then '027'
+              when dwl.LOCATION_CD = '6929' then '029'
+              when dwl.LOCATION_CD = '6933' then '033'
+              when dwl.LOCATION_CD = '6938' then '038'
+              when dwl.LOCATION_CD = '6939' then '039'
+              when dwl.LOCATION_CD = 'S6924' then '070'
+              else '999'
+         end facility_id,
+         hd.OPERATING_UNIT_CD,
+         dwl.LOCATION_CD,
+         hl.LOCATION_DESC,
+         hl.S_DIVISION_CD,
+         hl.S_REGION_CD,
+         hl.S_DISTRICT_CD,
+         hl.S_BANNER_CD,
+         dwl.DEPT_ID,
+         hd.DEPT_DESC, rt.METRIC_INFO_CD, rt.LABOR_TYPE_CD,
+         hd.S_GL_DEPT_ID,
+         hd.S_GL_DEPT_ID_DESC,
+         dwl.EARNINGS_CD,
+         he.EARNINGS_DESC, epx.PAY_TYPE_CD,
+         dwl.PAY_GROUP_CD,
+         dwl.JOB_CD,
+         hj.JOB_CD_DESC,
+         case
+              when dwl.OVERTIME_HRS_QTY <> 0 then 'OT'
+              else 'RG'
+         end overtime,
+         dwl.EARNINGS_AMT,
+         dwl.HRS_QTY,
+         dwl.OVERTIME_HRS_QTY
+FROM     WH_OWNER.DCLBR_WK_LOC dwl
+         inner join WH_OWNER.PS_HR_LOCATION hl on dwl.LOCATION_CD = hl.LOCATION_CD
+         inner join WH_OWNER.PS_HR_DEPT hd on dwl.DEPT_ID = hd.DEPT_ID
+         inner join WH_OWNER.PS_HR_JOB hj on dwl.JOB_CD = hj.JOB_CD
+         inner join WH_OWNER.PS_HR_EARNINGS he on dwl.EARNINGS_CD = he.EARNINGS_CD
+         inner join WH_OWNER.EARN_PAY_TYPE_XREF epx on epx.EARNINGS_CD = dwl.EARNINGS_CD
+         inner join WH_OWNER.MDV_RPT_TREE rt on rt.DEPT_ID = dwl.DEPT_ID
+         inner join WH_OWNER.FISCAL_WEEK fw on dwl.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID AND dwl.FISCAL_WEEK_ID between 202001 and 202025 --(fw.START_DT >= date(date('#CURRENT_DATE_DB2#') - (date_part('dow', date '#CURRENT_DATE_DB2#')+6)) And fw.END_DT <= date(date('#CURRENT_DATE_DB2#') - (date_part('dow', date '#CURRENT_DATE_DB2#')- 0)))
+WHERE    (hd.S_GL_DEPT_ID in ('8100')
+--     AND dwl.PAY_GROUP_CD <> 'MSN'
+--     AND dwl.PAY_GROUP_CD = 'MSN'
+     AND dwl.EARNINGS_CD not in ('AAB', 'AIP', 'BON', 'CCR', 'DTP', 'DVD', 'MVG', 'NET', 'RST', 'SHO', 'WCI')
+     AND hd.OPERATING_UNIT_CD not in ('606905', '606909')
+     AND dwl.LOCATION_CD in ('6922', '6924', '6927', '6929', '6933', '6938', '6939', 'S6924'))
+;
+
+
 --netezza
 --total labor dollars
 SELECT   'distribution' SCORECARD_TYPE,

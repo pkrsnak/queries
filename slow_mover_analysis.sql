@@ -155,10 +155,154 @@ GROUP BY --fd.FISCAL_WEEK_ID,
 ) x
 ;
 
-SELECT   FACILITYID || ITEM_NBR_HS lookup,
-         FACILITYID,
-         ITEM_NBR_HS,
-         GTIN, UPC_CASE, UPC_UNIT, SHIPPING_CASE_HEIGHT, SHIPPING_CASE_WIDTH, SHIPPING_CASE_WIDTH, SHIPPING_CASE_WEIGHT, VENDOR_TIE, VENDOR_TIER, WHSE_TIE, WHSE_TIER
-FROM     CRMADMIN.T_WHSE_ITEM
-WHERE    FACILITYID not in ('002', '005', '071')
-AND      trim(GTIN) not in ('0', '00000000000000000')
+SELECT   i.FACILITYID,
+         i.STOCK_FAC,
+         i.FULFILL_FACILITYID, 
+         i.FULFILL_DC_AREA_ID,
+         v.VENDOR_NBR,
+         v.VENDOR_NAME,
+         v.MASTER_VENDOR,
+         v.MASTER_VENDOR_DESC, 
+         v.CURRENT_BKT_NUMBER, 
+         v.CURRENT_BKT_TYPE,
+         v.CURRENT_BKT_QUANTITY, 
+         v.BKT_TYPE,
+         v.BKT_QUANTITY,
+         v.BKT_TYPE_2,
+         v.BKT_QUANTITY_2,
+         v.BKT_TYPE_3,
+         v.BKT_QUANTITY_3,
+         v.BKT_TYPE_4,
+         v.BKT_QUANTITY_4,
+         v.BKT_TYPE_5,
+         v.BKT_QUANTITY_5,
+         v.BKT_TYPE_6,
+         v.BKT_QUANTITY_6,
+         v.BKT_TYPE_7,
+         v.BKT_QUANTITY_7, 
+         v.LEAD_TIME_STATED_WEEKS, 
+         v.LEAD_TIME_AVERAGE_WEEKS, 
+         i.ORDER_INTERVAL_WEEKS, 
+         i.CASES_PER_WEEK FORECAST_CASES_PER_WEEK,
+         (ceiling((nvl(case when nvl(i.ORDER_INTERVAL_WEEKS, 0) = 0 then 1 else nvl(i.ORDER_INTERVAL_WEEKS, 0) end, 0) * 7) * (double(nvl(i.CASES_PER_WEEK, 0)) / 7))) order_point,
+         mh.DEPT_GRP_CODE, 
+         mh.DEPT_GRP_CODE_DESC, 
+         mh.DEPT_CODE, 
+         mh.DEPT_CODE_DESC, 
+         mh.MDSE_GRP_CODE, 
+         mh.MDSE_GRP_CODE_DESC, 
+         mh.MDSE_CAT_CODE, 
+         mh.MDSE_CAT_CODE_DESC, 
+         mh.MDSE_CLS_CODE, 
+         mh.MDSE_CLS_CODE_DESC, 
+         i.ITEM_NBR_HS, 
+         i.ROOT_ITEM_NBR, 
+         i.ROOT_DESC,
+         i.LV_ITEM_NBR,
+         i.GTIN, 
+         i.UPC_CASE, 
+         i.UPC_UNIT, 
+         i.ITEM_SIZE, 
+         i.ITEM_SIZE_UOM, 
+         i.MASTER_PACK,
+         i.RETAIL_PACK, 
+         i.PACK_CASE,
+         i.MASTER_CASE_LENGTH, 
+         i.MASTER_CASE_WIDTH, 
+         i.MASTER_CASE_HEIGHT, 
+         i.MASTER_CASE_WEIGHT, 
+         i.MASTER_CASE_CUBE,
+         i.SHIPPING_CASE_LENGTH, 
+         i.SHIPPING_CASE_WIDTH, 
+         i.SHIPPING_CASE_HEIGHT, 
+         i.SHIPPING_CASE_WEIGHT, 
+         i.SHIPPING_CASE_CUBE,
+         i.VENDOR_TIE, 
+         i.VENDOR_TIER, 
+         i.WHSE_TIE, 
+         i.WHSE_TIER, 
+         i.PURCH_STATUS, 
+         i.BILLING_STATUS_BACKSCREEN,
+         i.SHIP_UNIT_CD,
+         i.ITEM_RES28, 
+         i.SERVICE_LEVEL_CODE, 
+         i.INVENTORY_TOTAL, 
+         i.INVENTORY_TURN, 
+         i.INVENTORY_PROMOTION, 
+         i.INVENTORY_FWD_BUY, 
+         i.SAFETY_STOCK, 
+         i.SHELF_LIFE, 
+         i.DISTRESS_DAYS, 
+         case when i.LV_DESC is null then 0 else (CASE WHEN left(i.LV_DESC, 3) = 'I/O' OR left(i.LV_DESC, 3) = 'SS ' OR left(i.LV_DESC, 3) = 'BTS' OR left(i.LV_DESC, 2) = 'C-' OR left(i.LV_DESC, 2) = 'H-' OR left(i.LV_DESC, 2) = 'V-' OR left(i.LV_DESC, 2) = 'E-' OR left(i.LV_DESC, 3) = 'S/O' THEN 1 ELSE 0 END) end I_O_FLAG,
+         CASE 
+              WHEN i.VENDOR_PALLET_FACTOR = 'C' THEN nvl(i.SAFETY_STOCK, 0) 
+              WHEN i.VENDOR_PALLET_FACTOR = 'L' THEN nvl(i.WHSE_TIE, 0) 
+              WHEN i.VENDOR_PALLET_FACTOR = 'N' THEN 0 
+              WHEN i.VENDOR_PALLET_FACTOR = 'P' THEN nvl(i.VENDOR_TIE, 0) * nvl(i.VENDOR_TIER, 0) 
+              WHEN i.VENDOR_PALLET_FACTOR = 'T' THEN nvl(i.VENDOR_TIE, 0) 
+              WHEN i.VENDOR_PALLET_FACTOR = 'U' THEN 1 
+              WHEN i.VENDOR_PALLET_FACTOR = 'W' THEN nvl(i.WHSE_TIE, 0) * nvl(i.WHSE_TIER, 0) 
+              ELSE -99 
+         END mfg_min_order_qty
+FROM     CRMADMIN.T_WHSE_ITEM i
+         inner join CRMADMIN.T_WHSE_VENDOR v on i.FACILITYID = v.FACILITYID and i.VENDOR_NBR = v.VENDOR_NBR
+         inner join ETLADMIN.V_MDM_MDSE_HIERARCHY mh on i.MERCH_CLASS = mh.MDSE_CLS_CODE
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on i.FACILITYID = dx.SWAT_ID
+WHERE    dx.PROCESS_ACTIVE_FLAG = 'Y'
+--AND      trim(i.GTIN) not in ('0', '00000000000000000')
+
+;
+
+
+SELECT   fd.FISCAL_WEEK_ID,
+--         fd.SALES_DT,
+         dsh.FACILITY_ID,
+         ds.FACILITY_NAME DS_FACILITY,
+         dsh.SHIP_FACILITY_ID,
+         us.FACILITY_NAME US_FACILITY,
+         dsh.WHSE_CMDTY_ID,
+         dsh.ITEM_NBR,
+         count(distinct dsh.CUSTOMER_NBR) cust_count,
+         sum(dsh.ORDERED_QTY) ext_ordered_cases,
+         sum(dsh.SHIPPED_QTY) ext_shipped_cases,
+         sum(dsh.EXT_CASE_COST_AMT) ext_cost,
+         sum(dsh.TOTAL_SALES_AMT) ext_sales
+FROM     WH_OWNER.DC_SALES_HST dsh 
+         inner join WH_OWNER.DC_FACILITY ds on dsh.FACILITY_ID = ds.FACILITY_ID 
+         inner join WH_OWNER.DC_FACILITY us on dsh.SHIP_FACILITY_ID = us.FACILITY_ID 
+         inner join WH_OWNER.DC_CUSTOMER cust on dsh.FACILITY_ID = cust.FACILITY_ID and dsh.CUSTOMER_NBR = cust.CUSTOMER_NBR 
+         inner join WH_OWNER.DC_CORPORATION corp on cust.CORPORATION_ID = corp.CORPORATION_ID 
+         inner join WH_OWNER.FISCAL_DAY fd on dsh.TRANSACTION_DATE = fd.SALES_DT 
+WHERE    dsh.TRANSACTION_DATE between '02-25-2018' and '02-22-2020'
+AND      dsh.FACILITY_ID not in (2, 5, 71)
+GROUP BY fd.FISCAL_WEEK_ID,
+--         fd.SALES_DT,
+         dsh.FACILITY_ID,
+         ds.FACILITY_NAME,
+         dsh.SHIP_FACILITY_ID,
+         us.FACILITY_NAME,
+         dsh.WHSE_CMDTY_ID,
+         dsh.ITEM_NBR
+;
+
+SELECT   FACILITYID,
+         SCHED_LIKE_DC_AREA_ID,
+         CUSTOMER_NBR_STND,
+         DUE_IN_TIMESTAMP_UTC,
+         DUE_IN_DATE,
+         DUE_IN_TIME,
+         DELIVERY_DATE
+FROM     CRMADMIN.V_WEB_ORDERS_DELIVSCHED
+--where CUSTOMER_NBR_STND = 3253
+;
+
+
+--parent/child
+SELECT   ip.FACILITYID_CHILD, 
+         ip.ITEM_NBR_HS_CHILD,
+         ip.FACILITYID_PARENT,
+         ip.ITEM_NBR_HS_PARENT
+FROM     CRMADMIN.T_WHSE_ITEM_PARENTCHILD ip 
+ORDER BY ip.FACILITYID_CHILD, ip.ITEM_NBR_HS_CHILD
+;
+ 

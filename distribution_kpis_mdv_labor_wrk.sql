@@ -169,7 +169,7 @@ group by 1, 2, 3
 left outer join
  
 (
-SELECT   case when msd.DEPT_CD in (87, 89, 84, 88, 90) then 33 else 29 end facilityid,
+SELECT   case when msd.DEPT_CD in (87, 89, 84, 88, 90) then 29 else 33 end facilityid,
          sum(msd.SHIP_CASE_QTY) total_cases,
          sum(case when msd.DEPT_CD not in (80, 90) then msd.SHIP_CASE_QTY else 0 end) split_cases
 FROM     WH_OWNER.MDV_WHSE_SHIP_DTL msd

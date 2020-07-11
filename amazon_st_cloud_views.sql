@@ -1365,14 +1365,11 @@ AND      case i.CORP_RES when lpad(trim(cic.CORP_SWAT),3,'0') then 'Y' when '000
 UNION ALL
 
 --newcomerstown
-SELECT   case cic.FACILITYID 
-              when '085' then 'SPD30' 
-              else cic.FACILITYID 
-         end FACILITYID,
+SELECT   cic.FACILITYID,
          i.STOCK_FAC,
          cic.CUSTOMER_NBR_STND,
          case cic.FACILITYID 
-              when '058' then 'F3SPA' 
+              when '085' then 'SPD30' 
               else cic.FACILITYID 
          end vendor_code,
          current timestamp catalog_effective_date_time,

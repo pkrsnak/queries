@@ -31,79 +31,6 @@ FROM     CRMADMIN.T_WHSE_ITEM i
 WHERE    i.ITEM_RES28 in ('A', 'C')
 AND      i.FACILITYID = '054'
 ;
---------------------------------------------------
--- Create View CRMADMIN.V_AMZ_INVENTORY_FEED
---------------------------------------------------
---drop view CRMADMIN.V_AMZ_INVENTORY_FEED;
-create or replace view CRMADMIN.V_AMZ_INVENTORY_FEED as   
-;
-SELECT   FACILITYID,
-         INVENTORY_EFFECTIVE_DATETIME,
-         ASIN,
-         UPC_UNIT_CD,
-         AVAILABLE_QTY_UOM,
-         AVAILABLE_QTY_TO_AMZ,
-         AVAILABLE_ORDERABLE_QTY_UOM,
-         AVAILABLE_ORDERABLE_QTY,
-         AMZ_SPECIFIC_UPC,
-         RECEIPT_DT,
-         SHRINK_DATE_TIME,
-         EXPIRATION_DATE_TIME,
-         FACILITYID_HOME,
-         FACILITYID_STOCK,
-         ITEM_DEPT,
-         ITEM_NBR_HS_HOME,
-         ITEM_NBR_HS_STOCK,
-         ITEM_DESCRIP,
-         PACK_CASE,
-         INVENTORY_TOTAL,
-         SN_UNITS_AVAIL,
-         SN_CASES_AVAIL,
-         RESERVE_COMMITTED,
-         RESERVE_UNCOMMITTED,
-         STORAGE_COMMITTED,
-         STORAGE_UNCOMMITTED,
-         FORECAST,
-         IN_PROCESS_REGULAR,
-         POQ_QUANTITY,
-         SHELF_LIFE,
-         DISTRESS_DAYS,
-         CODE_DATE_FLAG
-FROM     CRMADMIN.V_AMZ_INVENTORY_FEED_DS
-UNION all 
-SELECT   FACILITYID,
-         INVENTORY_EFFECTIVE_DATETIME,
-         ASIN,
-         UPC_UNIT_CD,
-         AVAILABLE_QTY_UOM,
-         AVAILABLE_QTY_TO_AMZ,
-         AVAILABLE_ORDERABLE_QTY_UOM,
-         AVAILABLE_ORDERABLE_QTY,
-         AMZ_SPECIFIC_UPC,
-         RECEIPT_DT,
-         SHRINK_DATE_TIME,
-         EXPIRATION_DATE_TIME,
-         FACILITYID_HOME,
-         FACILITYID_STOCK,
-         ITEM_DEPT,
-         ITEM_NBR_HS_HOME,
-         ITEM_NBR_HS_STOCK,
-         ITEM_DESCRIP,
-         PACK_CASE,
-         INVENTORY_TOTAL,
-         SN_UNITS_AVAIL,
-         SN_CASES_AVAIL,
-         RESERVE_COMMITTED,
-         RESERVE_UNCOMMITTED,
-         STORAGE_COMMITTED,
-         STORAGE_UNCOMMITTED,
-         FORECAST,
-         IN_PROCESS_REGULAR,
-         POQ_QUANTITY,
-         SHELF_LIFE,
-         DISTRESS_DAYS,
-         CODE_DATE_FLAG
-FROM     CRMADMIN.V_AMZ_INVENTORY_FEED_US;
 
 --------------------------------------------------
 -- Grant Authorities for CRMADMIN.V_AMZ_INVENTORY_FEED
@@ -190,7 +117,6 @@ grant select on CRMADMIN.V_AMZ_INVENTORY_FEED to user WEB;
 --------------------------------------------------
 --drop view CRMADMIN.V_AMZ_INVENTORY_FEED_DS;
 create or replace view CRMADMIN.V_AMZ_INVENTORY_FEED_DS as       
-;
 SELECT   case i.FACILITYID 
 --     when '054' then 'F3SPB' 
      when '040' then 'F3SPB' 
@@ -358,8 +284,7 @@ grant select on CRMADMIN.V_AMZ_INVENTORY_FEED_DS to user WEB;
 -- Create View CRMADMIN.V_AMZ_INVENTORY_FEED_US
 --------------------------------------------------
 --drop view CRMADMIN.V_AMZ_INVENTORY_FEED_US;
-create or replace view CRMADMIN.V_AMZ_INVENTORY_FEED_US as   
-;    
+create or replace view CRMADMIN.V_AMZ_INVENTORY_FEED_US as      
 SELECT   case i.FACILITYID 
      when '040' then 'F3SPB' 
      when '058' then 'F3SPA' 
@@ -439,18 +364,12 @@ FROM     CRMADMIN.T_WHSE_ITEM i
          inner join CRMADMIN.T_WHSE_ITEM_PARENTCHILD ipc on i.FACILITYID = ipc.FACILITYID_CHILD and i.ITEM_NBR_HS = ipc.ITEM_NBR_HS_CHILD 
          inner join CRMADMIN.T_WHSE_ITEM vi on ipc.FACILITYID_PARENT = vi.FACILITYID and ipc.ITEM_NBR_HS_PARENT = vi.ITEM_NBR_HS 
          inner join CRMADMIN.T_WHSE_DIV_XREF dx on i.FACILITYID = dx.SWAT_ID 
-         inner join (SELECT dx.FACILITYID_UPSTREAM, count(*) TOTAL_STORES FROM CRMADMIN.T_WHSE_CUST_GRP cg 
-         inner join CRMADMIN.T_WHSE_DIV_XREF dx on cg.FACILITYID = dx.SWAT_ID 
-         inner join CRMADMIN.T_WHSE_CUST c on cg.FACILITYID = c.FACILITYID and cg.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and c.STATUS_CD not in ('P', 'D', 'Z') and c.CUSTOMER_BILLABLE_FLAG = 'Y' WHERE cg.CUSTOMER_GRP_TYPE = '75' AND cg.FACILITYID not in ('054') AND current date > cg.START_DATE AND (current date < cg.END_DATE OR cg.END_DATE is null) GROUP BY dx.FACILITYID_UPSTREAM) ts on dx.FACILITYID_UPSTREAM = ts.FACILITYID_UPSTREAM 
-         inner join (SELECT dx.SWAT_ID FACILITYID, count(*) DC_STORES FROM CRMADMIN.T_WHSE_CUST_GRP cg 
-         inner join CRMADMIN.T_WHSE_DIV_XREF dx on cg.FACILITYID = dx.SWAT_ID 
-         inner join CRMADMIN.T_WHSE_CUST c on cg.FACILITYID = c.FACILITYID and cg.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and c.STATUS_CD not in ('P', 'D', 'Z') and c.CUSTOMER_BILLABLE_FLAG = 'Y' WHERE cg.CUSTOMER_GRP_TYPE = '75' AND cg.FACILITYID not in ('054') AND current date > cg.START_DATE AND (current date < cg.END_DATE OR cg.END_DATE is null) GROUP BY dx.SWAT_ID) ds on i.FACILITYID = ds.FACILITYID 
+         inner join (SELECT dx.FACILITYID_UPSTREAM, count(*) TOTAL_STORES FROM CRMADMIN.V_WEB_CUSTOMER_FAC vwcf inner join CRMADMIN.T_WHSE_DIV_XREF dx on vwcf.FACILITYID = dx.SWAT_ID WHERE vwcf.CORP_CODE = 634001 AND vwcf.FACILITYID_PRIMARY = 'Y' AND dx.FACILITYID_UPSTREAM in ('002', '071') GROUP BY dx.FACILITYID_UPSTREAM) ts on dx.FACILITYID_UPSTREAM = ts.FACILITYID_UPSTREAM 
+         inner join (SELECT vwcf.FACILITYID, count(*) DC_STORES FROM CRMADMIN.V_WEB_CUSTOMER_FAC vwcf inner join CRMADMIN.T_WHSE_DIV_XREF dx on vwcf.FACILITYID = dx.SWAT_ID WHERE vwcf.CORP_CODE = 634001 AND vwcf.FACILITYID_PRIMARY = 'Y' AND dx.FACILITYID_UPSTREAM in ('002', '071') GROUP BY vwcf.FACILITYID) ds on i.FACILITYID = ds.FACILITYID 
          inner join (SELECT vi.FACILITYID, vi.ITEM_NBR_HS, count(*) num_relationships FROM CRMADMIN.T_WHSE_ITEM i 
          inner join CRMADMIN.T_WHSE_ITEM_PARENTCHILD ipc on i.FACILITYID = ipc.FACILITYID_CHILD and i.ITEM_NBR_HS = ipc.ITEM_NBR_HS_CHILD 
          inner join CRMADMIN.T_WHSE_ITEM vi on ipc.FACILITYID_PARENT = vi.FACILITYID and ipc.ITEM_NBR_HS_PARENT = vi.ITEM_NBR_HS 
-         inner join (SELECT dx.SWAT_ID FACILITYID, count(*) DC_STORES FROM CRMADMIN.T_WHSE_CUST_GRP cg 
-         inner join CRMADMIN.T_WHSE_DIV_XREF dx on cg.FACILITYID = dx.SWAT_ID 
-         inner join CRMADMIN.T_WHSE_CUST c on cg.FACILITYID = c.FACILITYID and cg.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and c.STATUS_CD not in ('P', 'D', 'Z') and c.CUSTOMER_BILLABLE_FLAG = 'Y' WHERE cg.CUSTOMER_GRP_TYPE = '75' AND cg.FACILITYID not in ('054') AND current date > cg.START_DATE AND (current date < cg.END_DATE OR cg.END_DATE is null) GROUP BY dx.SWAT_ID) ds on i.FACILITYID = ds.FACILITYID WHERE i.ITEM_RES28 in ('A', 'C') GROUP BY vi.FACILITYID, vi.ITEM_NBR_HS) ir on dx.FACILITYID_UPSTREAM = ir.FACILITYID and vi.ITEM_NBR_HS = ir.ITEM_NBR_HS 
+         inner join (SELECT vwcf.FACILITYID, count(*) DC_STORES FROM CRMADMIN.V_WEB_CUSTOMER_FAC vwcf inner join CRMADMIN.T_WHSE_DIV_XREF dx on vwcf.FACILITYID = dx.SWAT_ID WHERE vwcf.CORP_CODE = 634001 AND vwcf.FACILITYID_PRIMARY = 'Y' AND dx.FACILITYID_UPSTREAM in ('002', '071') GROUP BY vwcf.FACILITYID) ds on i.FACILITYID = ds.FACILITYID WHERE i.ITEM_RES28 in ('A', 'C') GROUP BY vi.FACILITYID, vi.ITEM_NBR_HS) ir on dx.FACILITYID_UPSTREAM = ir.FACILITYID and vi.ITEM_NBR_HS = ir.ITEM_NBR_HS 
          left outer join CRMADMIN.V_AMZ_ASIN tu on i.ROOT_ITEM_NBR = tu.ROOT_ITEM_NBR and i.LV_ITEM_NBR = tu.LV_ITEM_NBR 
          left outer join (SELECT FACILITYID, ITEM_NBR_HS, CDE_DT, max(date(RECEIPT_DTIM)) receipt_dt, sum(PROD_QTY) PROD_QTY FROM CRMADMIN.T_WHSE_EXE_INV_DTL where STATUS not in ('D') GROUP BY FACILITYID, ITEM_NBR_HS, CDE_DT) eid on eid.FACILITYID = vi.FACILITYID and eid.ITEM_NBR_HS = vi.ITEM_NBR_HS 
          left outer join (select FACILITYID, ITEM_NBR, sum(PROMO_QTY) POQ_QTY from CRMADMIN.V_WHSE_DEAL where PROMO_QTY > 0 and DATE_DEAL_ARRIVE between current date and current date + 28 days group by FACILITYID, ITEM_NBR) poq on vi.BICEPS_DC = poq.FACILITYID and vi.ITEM_NBR = poq.ITEM_NBR
@@ -548,8 +467,7 @@ grant select on CRMADMIN.V_AMZ_INVENTORY_FEED_US to user WEB;
 -- Create View CRMADMIN.V_AMZ_INVENTORY_FEED_NFD
 --------------------------------------------------
 --drop view CRMADMIN.V_AMZ_INVENTORY_FEED_NFD;
-create or replace view CRMADMIN.V_AMZ_INVENTORY_FEED_NFD as       
-;
+create or replace view CRMADMIN.V_AMZ_INVENTORY_FEED_NFD as
 SELECT   case i.FACILITYID_HOME 
      when '040' then 'F3SPB' 
      when '008' then 'SPD2Z' 
@@ -598,7 +516,7 @@ end facilityid,
          (i.ON_ORDER_TOTAL * i.PACK_CASE) ON_ORDER_TOTAL_UNITS,
          i.ON_ORDER_TOTAL,
          i.FACILITYID FACILITYID_HOME,
-         i.FACILITYID FACILITYID_STOCK,
+         i.FACILITYID_STOCK FACILITYID_STOCK,
          i.ITEM_DEPT,
          i.ITEM_NBR_HS_HOME,
          i.ITEM_NBR_HS_STOCK,
@@ -627,19 +545,137 @@ FROM     CRMADMIN.V_AMZ_ITEM_NFD i
 --         inner join CRMADMIN.T_WHSE_ITEM vi on ipc.FACILITYID_PARENT = vi.FACILITYID and ipc.ITEM_NBR_HS_PARENT = vi.ITEM_NBR_HS 
          inner join CRMADMIN.T_WHSE_DIV_XREF dx on i.FACILITYID_HOME = dx.SWAT_ID 
 
-         inner join (SELECT dx.FACILITYID_UPSTREAM, count(*) TOTAL_STORES FROM CRMADMIN.T_WHSE_CUST_GRP cg 
-         inner join CRMADMIN.T_WHSE_DIV_XREF dx on cg.FACILITYID = dx.SWAT_ID 
-         inner join CRMADMIN.T_WHSE_CUST c on cg.FACILITYID = c.FACILITYID and cg.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and c.STATUS_CD not in ('P', 'D', 'Z') and c.CUSTOMER_BILLABLE_FLAG = 'Y' WHERE cg.CUSTOMER_GRP_TYPE = '75' AND cg.FACILITYID not in ('054') AND current date > cg.START_DATE AND (current date < cg.END_DATE OR cg.END_DATE is null) GROUP BY dx.FACILITYID_UPSTREAM) ts on dx.FACILITYID_UPSTREAM = ts.FACILITYID_UPSTREAM 
+         inner join (SELECT dx.FACILITYID_UPSTREAM, count(*) TOTAL_STORES FROM CRMADMIN.V_WEB_CUSTOMER_FAC vwcf inner join CRMADMIN.T_WHSE_DIV_XREF dx on vwcf.FACILITYID = dx.SWAT_ID WHERE vwcf.CORP_CODE = 634001 AND vwcf.FACILITYID_PRIMARY = 'Y' AND dx.FACILITYID_UPSTREAM in ('002', '071') GROUP BY dx.FACILITYID_UPSTREAM) ts on dx.FACILITYID_UPSTREAM = ts.FACILITYID_UPSTREAM 
 
-         inner join (SELECT dx.SWAT_ID FACILITYID, count(*) DC_STORES FROM CRMADMIN.T_WHSE_CUST_GRP cg 
-         inner join CRMADMIN.T_WHSE_DIV_XREF dx on cg.FACILITYID = dx.SWAT_ID 
-         inner join CRMADMIN.T_WHSE_CUST c on cg.FACILITYID = c.FACILITYID and cg.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and c.STATUS_CD not in ('P', 'D', 'Z') and c.CUSTOMER_BILLABLE_FLAG = 'Y' WHERE cg.CUSTOMER_GRP_TYPE = '75' AND cg.FACILITYID not in ('054') AND current date > cg.START_DATE AND (current date < cg.END_DATE OR cg.END_DATE is null) GROUP BY dx.SWAT_ID) ds on i.FACILITYID_HOME = ds.FACILITYID 
+         inner join (SELECT vwcf.FACILITYID, count(*) DC_STORES FROM CRMADMIN.V_WEB_CUSTOMER_FAC vwcf inner join CRMADMIN.T_WHSE_DIV_XREF dx on vwcf.FACILITYID = dx.SWAT_ID WHERE vwcf.CORP_CODE = 634001 AND vwcf.FACILITYID_PRIMARY = 'Y' AND dx.FACILITYID_UPSTREAM in ('002', '071') GROUP BY vwcf.FACILITYID) ds on i.FACILITYID_HOME = ds.FACILITYID 
 
-         inner join (SELECT FACILITYID_STOCK, ITEM_NBR_HS_STOCK, count(*) num_relationships FROM CRMADMIN.V_AMZ_ITEM_NFD inner join (SELECT dx.SWAT_ID FACILITYID, count(*) DC_STORES FROM CRMADMIN.T_WHSE_CUST_GRP cg inner join CRMADMIN.T_WHSE_DIV_XREF dx on cg.FACILITYID = dx.SWAT_ID inner join CRMADMIN.T_WHSE_CUST c on cg.FACILITYID = c.FACILITYID and cg.CUSTOMER_NBR_STND = c.CUSTOMER_NBR_STND and c.STATUS_CD not in ('P', 'D', 'Z') and c.CUSTOMER_BILLABLE_FLAG = 'Y' WHERE cg.CUSTOMER_GRP_TYPE = '75' AND cg.FACILITYID not in ('054') AND current date > cg.START_DATE AND (current date < cg.END_DATE OR cg.END_DATE is null) GROUP BY dx.SWAT_ID) ds on FACILITYID_HOME = ds.FACILITYID GROUP BY FACILITYID_STOCK, ITEM_NBR_HS_STOCK) ir on i.FACILITYID_STOCK = ir.FACILITYID_STOCK and i.ITEM_NBR_HS_STOCK = ir.ITEM_NBR_HS_STOCK 
+         inner join (SELECT FACILITYID_STOCK, ITEM_NBR_HS_STOCK, count(*) num_relationships FROM CRMADMIN.V_AMZ_ITEM_NFD inner join (SELECT vwcf.FACILITYID, count(*) DC_STORES FROM CRMADMIN.V_WEB_CUSTOMER_FAC vwcf inner join CRMADMIN.T_WHSE_DIV_XREF dx on vwcf.FACILITYID = dx.SWAT_ID WHERE vwcf.CORP_CODE = 634001 AND vwcf.FACILITYID_PRIMARY = 'Y' AND dx.FACILITYID_UPSTREAM in ('002', '071') GROUP BY vwcf.FACILITYID) ds on FACILITYID_HOME = ds.FACILITYID GROUP BY FACILITYID_STOCK, ITEM_NBR_HS_STOCK) ir on i.FACILITYID_STOCK = ir.FACILITYID_STOCK and i.ITEM_NBR_HS_STOCK = ir.ITEM_NBR_HS_STOCK 
 
          left outer join (SELECT FACILITYID, ITEM_NBR_HS, CDE_DT, max(date(RECEIPT_DTIM)) receipt_dt, sum(PROD_QTY) PROD_QTY FROM CRMADMIN.T_WHSE_EXE_INV_DTL where STATUS not in ('D') GROUP BY FACILITYID, ITEM_NBR_HS, CDE_DT) eid on eid.FACILITYID = i.FACILITYID_STOCK and eid.ITEM_NBR_HS = i.ITEM_NBR_HS_STOCK 
 WHERE    i.FACILITYID_HOME in (select distinct FACILITYID from CRMADMIN.T_WHSE_CUST_GRP WHERE CUSTOMER_GRP_TYPE = '75'
      AND current date > START_DATE
      AND (current date < END_DATE
         OR  END_DATE is null))
+;
+
+
+--------------------------------------------------
+-- Grant Authorities for CRMADMIN.V_AMZ_INVENTORY_FEED_US
+--------------------------------------------------
+grant select,update,insert,delete on CRMADMIN.V_AMZ_INVENTORY_FEED_NFD to user CRMEXPLN;
+grant select on CRMADMIN.V_AMZ_INVENTORY_FEED_NFD to user DB2CDC;
+grant select on CRMADMIN.V_AMZ_INVENTORY_FEED_NFD to user DBCDC;
+grant control on CRMADMIN.V_AMZ_INVENTORY_FEED_NFD to user ETL;
+grant select,update,insert,delete on CRMADMIN.V_AMZ_INVENTORY_FEED_NFD to user ETL with grant option;
+grant select on CRMADMIN.V_AMZ_INVENTORY_FEED_NFD to user ETLX;
+grant select on CRMADMIN.V_AMZ_INVENTORY_FEED_NFD to user SIUSER;
+grant select on CRMADMIN.V_AMZ_INVENTORY_FEED_NFD to user WEB;
+
+
+--------------------------------------------------
+-- Create View CRMADMIN.V_AMZ_INVENTORY_FEED
+--------------------------------------------------
+--drop view CRMADMIN.V_AMZ_INVENTORY_FEED;
+create or replace view CRMADMIN.V_AMZ_INVENTORY_FEED as   
+SELECT   FACILITYID,
+         INVENTORY_EFFECTIVE_DATETIME,
+         ASIN,
+         UPC_UNIT_CD,
+         AVAILABLE_QTY_UOM,
+         AVAILABLE_QTY_TO_AMZ,
+         AVAILABLE_ORDERABLE_QTY_UOM,
+         AVAILABLE_ORDERABLE_QTY,
+         AMZ_SPECIFIC_UPC,
+         RECEIPT_DT,
+         SHRINK_DATE_TIME,
+         EXPIRATION_DATE_TIME,
+         FACILITYID_HOME,
+         FACILITYID_STOCK,
+         ITEM_DEPT,
+         ITEM_NBR_HS_HOME,
+         ITEM_NBR_HS_STOCK,
+         ITEM_DESCRIP,
+         PACK_CASE,
+         INVENTORY_TOTAL,
+         SN_UNITS_AVAIL,
+         SN_CASES_AVAIL,
+         RESERVE_COMMITTED,
+         RESERVE_UNCOMMITTED,
+         STORAGE_COMMITTED,
+         STORAGE_UNCOMMITTED,
+         FORECAST,
+         IN_PROCESS_REGULAR,
+         POQ_QUANTITY,
+         SHELF_LIFE,
+         DISTRESS_DAYS,
+         CODE_DATE_FLAG
+FROM     CRMADMIN.V_AMZ_INVENTORY_FEED_DS
+UNION all 
+SELECT   FACILITYID,
+         INVENTORY_EFFECTIVE_DATETIME,
+         ASIN,
+         UPC_UNIT_CD,
+         AVAILABLE_QTY_UOM,
+         AVAILABLE_QTY_TO_AMZ,
+         AVAILABLE_ORDERABLE_QTY_UOM,
+         AVAILABLE_ORDERABLE_QTY,
+         AMZ_SPECIFIC_UPC,
+         RECEIPT_DT,
+         SHRINK_DATE_TIME,
+         EXPIRATION_DATE_TIME,
+         FACILITYID_HOME,
+         FACILITYID_STOCK,
+         ITEM_DEPT,
+         ITEM_NBR_HS_HOME,
+         ITEM_NBR_HS_STOCK,
+         ITEM_DESCRIP,
+         PACK_CASE,
+         INVENTORY_TOTAL,
+         SN_UNITS_AVAIL,
+         SN_CASES_AVAIL,
+         RESERVE_COMMITTED,
+         RESERVE_UNCOMMITTED,
+         STORAGE_COMMITTED,
+         STORAGE_UNCOMMITTED,
+         FORECAST,
+         IN_PROCESS_REGULAR,
+         POQ_QUANTITY,
+         SHELF_LIFE,
+         DISTRESS_DAYS,
+         CODE_DATE_FLAG
+FROM     CRMADMIN.V_AMZ_INVENTORY_FEED_US
+UNION all 
+SELECT   FACILITYID,
+         INVENTORY_EFFECTIVE_DATETIME,
+         ASIN,
+         UPC_UNIT_CD,
+         AVAILABLE_QTY_UOM,
+         AVAILABLE_QTY_TO_AMZ,
+         AVAILABLE_ORDERABLE_QTY_UOM,
+         AVAILABLE_ORDERABLE_QTY,
+         AMZ_SPECIFIC_UPC,
+         RECEIPT_DT,
+         SHRINK_DATE_TIME,
+         EXPIRATION_DATE_TIME,
+         FACILITYID_HOME,
+         FACILITYID_STOCK,
+         ITEM_DEPT,
+         ITEM_NBR_HS_HOME,
+         ITEM_NBR_HS_STOCK,
+         ITEM_DESCRIP,
+         PACK_CASE,
+         INVENTORY_TOTAL,
+         SN_UNITS_AVAIL,
+         SN_CASES_AVAIL,
+         RESERVE_COMMITTED,
+         RESERVE_UNCOMMITTED,
+         STORAGE_COMMITTED,
+         STORAGE_UNCOMMITTED,
+         FORECAST,
+         IN_PROCESS_REGULAR,
+         POQ_QUANTITY,
+         SHELF_LIFE,
+         DISTRESS_DAYS,
+         CODE_DATE_FLAG
+FROM     CRMADMIN.V_AMZ_INVENTORY_FEED_NFD
 ;

@@ -119,8 +119,8 @@ SELECT   dwl.KPI_DATE,
          dwl.EARNINGS_AMT,
          dwl.HRS_QTY,
          dwl.OVERTIME_HRS_QTY
-FROM     WH_OWNER.plk_test_2 dwl
-WHERE    dwl.KPI_DATE = 202027
+FROM     WH_OWNER.KPI_MDV_WK_LBR_VW dwl
+WHERE    dwl.KPI_DATE = 202029
 AND      dwl.PAY_GROUP_CD <> 'MSN'
 AND      dwl.PAY_TYPE_CD not in ('Benefit', 'Reimburse')
  
@@ -157,8 +157,8 @@ SELECT   dwl.KPI_DATE,
          dwl.EARNINGS_AMT,
          dwl.HRS_QTY,
          dwl.OVERTIME_HRS_QTY
-FROM     WH_OWNER.plk_test_2 dwl
-WHERE    dwl.KPI_DATE = 202027
+FROM     WH_OWNER.KPI_MDV_WK_LBR_VW dwl
+WHERE    dwl.KPI_DATE = 202029
 AND      dwl.PAY_GROUP_CD <> 'MSN'
 AND      dwl.PAY_TYPE_CD not in ('Benefit', 'Reimburse')
 AND      dwl.LOCATION_CD in ('6929', '6933')
@@ -174,7 +174,7 @@ SELECT   case when msd.DEPT_CD in (87, 89, 84, 88, 90) then 29 else 33 end facil
          sum(case when msd.DEPT_CD not in (80, 90) then msd.SHIP_CASE_QTY else 0 end) split_cases
 FROM     WH_OWNER.MDV_WHSE_SHIP_DTL msd
          join WH_OWNER.fiscal_day fd on (msd.SHIP_DATE = fd.SALES_DT)
-         join WH_OWNER.fiscal_week fw on (fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID) AND fd.FISCAL_WEEK_ID = 202027
+         join WH_OWNER.fiscal_week fw on (fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID) AND fd.FISCAL_WEEK_ID = 202029
 WHERE     msd.DEPT_CD in (87, 89, 84, 88, 77, 79, 78, 80, 90)
 GROUP BY 1
  
@@ -185,7 +185,7 @@ SELECT   case when msd.DEPT_CD in (87, 89, 84, 88, 90) then 90 else 80 end facil
          sum(case when msd.DEPT_CD in (80, 90) then msd.SHIP_CASE_QTY else 0 end) split_cases
 FROM     WH_OWNER.MDV_WHSE_SHIP_DTL msd
          join WH_OWNER.fiscal_day fd on (msd.SHIP_DATE = fd.SALES_DT)
-         join WH_OWNER.fiscal_week fw on (fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID) AND fd.FISCAL_WEEK_ID = 202027
+         join WH_OWNER.fiscal_week fw on (fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID) AND fd.FISCAL_WEEK_ID = 202029
 WHERE    msd.DEPT_CD in (87, 89, 84, 88, 77, 79, 78, 80, 90)
 GROUP BY 1
 ) cases
@@ -196,7 +196,7 @@ union all
 
 --salary labor
 SELECT   'SALARY' WORKER_TYPE,
-         202027 KPI_DATE,
+         202029 KPI_DATE,
          case 
               when dwl.OPERATING_UNIT_CD = '202920' then 2 
               when dwl.OPERATING_UNIT_CD = '202921' then 2 
@@ -210,15 +210,14 @@ SELECT   'SALARY' WORKER_TYPE,
          sum(dwl.EARNINGS_AMT / 2) EARNINGS_TOT,
          sum((dwl.HRS_QTY + dwl.OVERTIME_HRS_QTY) / 2) TOTAL_HRS,
          sum(dwl.OVERTIME_HRS_QTY / 2) OVERTIME_HRS_TOT
-FROM     WH_OWNER.plk_test_2 dwl
-WHERE    dwl.KPI_DATE between 202027 and 202028
+FROM     WH_OWNER.KPI_MDV_WK_LBR_VW dwl
+WHERE    dwl.KPI_DATE between 202029 and 202030
 AND      dwl.PAY_GROUP_CD = 'MSN'
 AND      dwl.PAY_TYPE_CD not in ('Reimburse')
 GROUP BY 1, 2, 3, 4
 ) y
 group by 1,2,3,4,5,6,7 --,8
 ;
-
 
 /*  oolldd stuff
 --netezza

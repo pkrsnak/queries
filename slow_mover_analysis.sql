@@ -253,7 +253,7 @@ WHERE    dx.PROCESS_ACTIVE_FLAG = 'Y'
 
 ;
 
-
+select count(*) from (
 SELECT   fd.FISCAL_WEEK_ID,
 --         fd.SALES_DT,
          dsh.FACILITY_ID,
@@ -261,6 +261,7 @@ SELECT   fd.FISCAL_WEEK_ID,
          dsh.SHIP_FACILITY_ID,
          us.FACILITY_NAME US_FACILITY,
          dsh.WHSE_CMDTY_ID,
+         dsh.CUSTOMER_NBR,
          dsh.ITEM_NBR,
          count(distinct dsh.CUSTOMER_NBR) cust_count,
          sum(dsh.ORDERED_QTY) ext_ordered_cases,
@@ -273,7 +274,7 @@ FROM     WH_OWNER.DC_SALES_HST dsh
          inner join WH_OWNER.DC_CUSTOMER cust on dsh.FACILITY_ID = cust.FACILITY_ID and dsh.CUSTOMER_NBR = cust.CUSTOMER_NBR 
          inner join WH_OWNER.DC_CORPORATION corp on cust.CORPORATION_ID = corp.CORPORATION_ID 
          inner join WH_OWNER.FISCAL_DAY fd on dsh.TRANSACTION_DATE = fd.SALES_DT 
-WHERE    dsh.TRANSACTION_DATE between '02-25-2018' and '02-22-2020'
+WHERE    dsh.TRANSACTION_DATE between '12-30-2018' and '12-28-2019'
 AND      dsh.FACILITY_ID not in (2, 5, 71)
 GROUP BY fd.FISCAL_WEEK_ID,
 --         fd.SALES_DT,
@@ -282,8 +283,49 @@ GROUP BY fd.FISCAL_WEEK_ID,
          dsh.SHIP_FACILITY_ID,
          us.FACILITY_NAME,
          dsh.WHSE_CMDTY_ID,
+         dsh.CUSTOMER_NBR,
          dsh.ITEM_NBR
-;
+--;
+) x;
+
+--snowflake version
+select count(*) from (
+SELECT   fd.FISCAL_WEEK_ID,
+--         fd.SALES_DT,
+         dsh.FACILITY_ID,
+         ds.FACILITY_NAME DS_FACILITY,
+         dsh.SHIP_FACILITY_ID,
+         us.FACILITY_NAME US_FACILITY,
+         dsh.WHSE_CMDTY_ID,
+         dsh.CUSTOMER_NBR,
+         dsh.ITEM_NBR,
+         count(distinct dsh.CUSTOMER_NBR) cust_count,
+         sum(dsh.ORDERED_QTY) ext_ordered_cases,
+         sum(dsh.SHIPPED_QTY) ext_shipped_cases,
+         sum(dsh.EXT_CASE_COST_AMT) ext_cost,
+         sum(dsh.TOTAL_SALES_AMT) ext_sales
+FROM     SBX_IT.PATRICK_KRSNAK.DC_SALES_HST dsh 
+         INNER JOIN SBX_IT.PATRICK_KRSNAK.T_TEMP_FAC_ITEM tfi ON tfi.FACILITYID  = dsh.FACILITY_ID  AND tfi.ITEM_NBR  = dsh.ITEM_NBR 
+         inner join SBX_IT.PATRICK_KRSNAK.DC_FACILITY ds on dsh.FACILITY_ID = ds.FACILITY_ID 
+         inner join SBX_IT.PATRICK_KRSNAK.DC_FACILITY us on dsh.SHIP_FACILITY_ID = us.FACILITY_ID 
+         inner join SBX_IT.PATRICK_KRSNAK.DC_CUSTOMER cust on dsh.FACILITY_ID = cust.FACILITY_ID and dsh.CUSTOMER_NBR = cust.CUSTOMER_NBR 
+         inner join SBX_IT.PATRICK_KRSNAK.DC_CORPORATION corp on cust.CORPORATION_ID = corp.CORPORATION_ID 
+         inner join SBX_IT.PATRICK_KRSNAK.FISCAL_DAY fd on dsh.TRANSACTION_DATE = fd.SALES_DT 
+WHERE    dsh.TRANSACTION_DATE between '2018-12-30' and '2019-12-28'
+AND      dsh.FACILITY_ID not in (2, 5, 71)
+GROUP BY fd.FISCAL_WEEK_ID,
+--         fd.SALES_DT,
+         dsh.FACILITY_ID,
+         ds.FACILITY_NAME,
+         dsh.SHIP_FACILITY_ID,
+         us.FACILITY_NAME,
+         dsh.WHSE_CMDTY_ID,
+         dsh.CUSTOMER_NBR,
+         dsh.ITEM_NBR
+--;
+) x;
+
+SELECT count(*) FROM SBX_IT.PATRICK_KRSNAK.T_TEMP_FAC_ITEM
 
 SELECT   FACILITYID,
          SCHED_LIKE_DC_AREA_ID,

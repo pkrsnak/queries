@@ -1,13 +1,17 @@
 create or replace view CRMADMIN.V_AMZ_ITEM_NFD
 as
-SELECT   dx.SWAT_ID FACILITYID,
+SELECT   i.FACILITYID,
+         dx.SWAT_ID FACILITYID_HOME,
+         i.ITEM_NBR ITEM_NBR_HOME,
+         i.ITEM_NBR_HS ITEM_NBR_HS_HOME,
          i.FACILITYID FACILITYID_STOCK,
-         i.BICEPS_DC,
+         i.ITEM_NBR ITEM_NBR_STOCK,
+         i.ITEM_NBR_HS ITEM_NBR_HS_STOCK,
          i.ROOT_ITEM_NBR,
          i.LV_ITEM_NBR,
-         i.ITEM_NBR_HS,
-         i.ITEM_NBR,
+         tu.LU_CODE ASIN,
          i.UPC_UNIT_CD,
+         i.UPC_CASE_CD,
          i.ITEM_DESCRIP,
          i.INVENTORY_TOTAL,
          i.ITEM_RES28,
@@ -18,16 +22,19 @@ SELECT   dx.SWAT_ID FACILITYID,
          i.RESERVE_UNCOMMITTED,
          i.CASES_PER_WEEK,
          i.IN_PROCESS_REGULAR,
+         integer(value(poq.POQ_QTY, 0)) as POQ_QTY,
          i.ITEM_DEPT,
          i.CODE_DATE_FLAG,
-         i.DISTRESS_DAYS,
          i.SHELF_LIFE,
+         i.DISTRESS_DAYS,
+         i.ON_ORDER_TURN,
          i.ON_ORDER_TOTAL
 FROM     CRMADMIN.T_WHSE_ITEM i 
-         inner join CRMADMIN.T_WHSE_DIV_XREF dx on dx.REGION = 'MIDWEST' and dx.SWAT_ID in (select distinct FACILITYID from CRMADMIN.T_WHSE_CUST_GRP WHERE CUSTOMER_GRP_TYPE = '75' AND FACILITYID <> '054' AND current date > START_DATE AND (current date < END_DATE OR END_DATE is null))
-WHERE    FACILITYID = '054'
-AND      i.ITEM_RES28 in ('A', 'C')
-;
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on dx.FACILITYID_UPSTREAM = '002' and dx.PROCESS_ACTIVE_FLAG = 'Y' 
+         left outer join CRMADMIN.V_AMZ_ASIN tu on i.ROOT_ITEM_NBR = tu.ROOT_ITEM_NBR and i.LV_ITEM_NBR = tu.LV_ITEM_NBR 
+         left outer join (select FACILITYID, ITEM_NBR, sum(PROMO_QTY) POQ_QTY from CRMADMIN.V_WHSE_DEAL where PROMO_QTY > 0 and DATE_DEAL_ARRIVE between current date and current date + 28 days group by FACILITYID, ITEM_NBR) poq on i.BICEPS_DC = poq.FACILITYID and i.ITEM_NBR = poq.ITEM_NBR
+WHERE    i.ITEM_RES28 in ('A', 'C')
+AND      i.FACILITYID = '054';
 
 
 --nfd upstream logic

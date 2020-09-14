@@ -2,19 +2,51 @@
 --source:  CRM
 SELECT   'distribution' SCORECARD_TYPE,
          'miles_total' KPI_TYPE,
-         '2019-10-12' DATE_VALUE,  --need end date, not weekid
+         '2020-08-08' DATE_VALUE,
          dx.ENTERPRISE_KEY + case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 0 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 0 else 1 end DIVISION_ID,
-         case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 90 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 80 when (crh.SITEID = 95) then 40 when (crh.SITEID = 9) then 40 else crh.SITEID end KEY_VALUE,
+         case 
+              when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 90 
+              when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 80 
+              when (crh.SITEID = 95) then 40 
+              when (crh.SITEID = 9) then 40 
+              else crh.SITEID 
+         end KEY_VALUE,
          sum(crh.DISTANCE) DATA_VALUE,
          'F' DATA_GRANULARITY,
          'W' TIME_GRANULARITY
-FROM     TRANSPORT.T_TMS_COM_ROUTE_HISTORY crh
-         inner join CRMADMIN.T_WHSE_DIV_XREF dx on crh.SITEID = dx.SWAT_ID
-         inner join TRANSPORT.T_TRA_ACT_ACCOUNTS ta on ta.ACCT_ENTITY_ID = crh.ACCT_ENTITY_ID and ta.REG_ENTITY_ID = crh.REG_ENTITY_ID
+FROM     TRANSPORT.T_TMS_COM_ROUTE_HISTORY crh 
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on crh.SITEID = dx.SWAT_ID 
+         inner join TRANSPORT.T_TRA_ACT_ACCOUNTS ta on ta.ACCT_ENTITY_ID = crh.ACCT_ENTITY_ID and ta.REG_ENTITY_ID = crh.REG_ENTITY_ID 
          inner join TRANSPORT.T_TRA_ACT_ACCOUNTS_CATEGORY tac on tac.REG_ENTITY_ID = ta.REG_ENTITY_ID and tac.ACCT_CTGY_ENTITY_ID = ta.ACCT_CTGY_ENTITY_ID
-WHERE    crh.ROUTE_END_TIME between '2020-05-31' and '2020-06-06'
+WHERE    crh.ROUTE_END_TIME between '2020-08-09' and '2020-08-16'  --subquery on facility, routeid
 AND      crh.STATUS = 'COMPLETE'
-GROUP BY dx.ENTERPRISE_KEY + case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 0 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 0 else 1 end, case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 90 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 80 when (crh.SITEID = 95) then 40 when (crh.SITEID = 9) then 40 else crh.SITEID end
+AND      crh.SITEID not in (1,58)
+GROUP BY          dx.ENTERPRISE_KEY + case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 0 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 0 else 1 end, 
+         case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 90 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 80 when (crh.SITEID = 95) then 40 when (crh.SITEID = 9) then 40 else crh.SITEID end
+
+union all
+
+SELECT   'distribution' SCORECARD_TYPE,
+         'miles_total' KPI_TYPE,
+         '2020-08-08' DATE_VALUE,
+         dx.ENTERPRISE_KEY + case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 0 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 0 else 1 end DIVISION_ID,
+         case 
+              when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 90 
+              when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 80 
+              when (crh.SITEID = 95) then 40 
+              when (crh.SITEID = 9) then 40 
+              else crh.SITEID 
+         end KEY_VALUE,
+         sum(crh.DISTANCE) DATA_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     TRANSPORT.T_TMS_COM_ROUTE_HISTORY crh 
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on crh.SITEID = dx.SWAT_ID 
+         inner join TRANSPORT.T_TRA_ACT_ACCOUNTS ta on ta.ACCT_ENTITY_ID = crh.ACCT_ENTITY_ID and ta.REG_ENTITY_ID = crh.REG_ENTITY_ID 
+         inner join TRANSPORT.T_TRA_ACT_ACCOUNTS_CATEGORY tac on tac.REG_ENTITY_ID = ta.REG_ENTITY_ID and tac.ACCT_CTGY_ENTITY_ID = ta.ACCT_CTGY_ENTITY_ID
+WHERE (crh.SITEID, crh.ROUTEID) in (SELECT SITEID, ROUTEID FROM TRANSPORT.T_TMS_COM_ROUTE_HISTORY WHERE SITEID in (1, 58) AND STOP_TYPE = 'DC' AND STATUS = 'COMPLETE' GROUP BY SITEID, ROUTEID HAVING max(arrive_time) between '2020-08-09' and '2020-08-16')   
+GROUP BY          dx.ENTERPRISE_KEY + case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 0 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 0 else 1 end, 
+         case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 90 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 80 when (crh.SITEID = 95) then 40 when (crh.SITEID = 9) then 40 else crh.SITEID end
 ;
 
 
@@ -32,8 +64,26 @@ FROM     TRANSPORT.T_TMS_COM_ROUTE_HISTORY crh
          inner join CRMADMIN.T_WHSE_DIV_XREF dx on crh.SITEID = dx.SWAT_ID
          inner join TRANSPORT.T_TRA_ACT_ACCOUNTS ta on ta.ACCT_ENTITY_ID = crh.ACCT_ENTITY_ID and ta.REG_ENTITY_ID = crh.REG_ENTITY_ID
          inner join TRANSPORT.T_TRA_ACT_ACCOUNTS_CATEGORY tac on tac.REG_ENTITY_ID = ta.REG_ENTITY_ID and tac.ACCT_CTGY_ENTITY_ID = ta.ACCT_CTGY_ENTITY_ID
-WHERE    crh.ROUTE_END_TIME between '2020-05-31' and '2020-06-06'
+WHERE    crh.ROUTE_END_TIME between '2020-08-09' and '2020-08-16'
+AND      crh.SITEID not in (1,58)
 AND      crh.STATUS = 'COMPLETE'
+GROUP BY dx.ENTERPRISE_KEY + case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 0 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 0 else 1 end, case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 90 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 80 when (crh.SITEID = 95) then 40 when (crh.SITEID = 9) then 40 else crh.SITEID end
+
+union all
+
+SELECT   'distribution' SCORECARD_TYPE,
+         'miles_planned' KPI_TYPE,
+         '2019-10-12' DATE_VALUE,  --need end date, not weekid
+         dx.ENTERPRISE_KEY + case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 0 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 0 else 1 end DIVISION_ID,
+         case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 90 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 80 when (crh.SITEID = 95) then 40 when (crh.SITEID = 9) then 40 else crh.SITEID end KEY_VALUE,
+         sum(crh.DISPATCHED_DISTANCE_PLAN) DATA_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     TRANSPORT.T_TMS_COM_ROUTE_HISTORY crh
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on crh.SITEID = dx.SWAT_ID
+         inner join TRANSPORT.T_TRA_ACT_ACCOUNTS ta on ta.ACCT_ENTITY_ID = crh.ACCT_ENTITY_ID and ta.REG_ENTITY_ID = crh.REG_ENTITY_ID
+         inner join TRANSPORT.T_TRA_ACT_ACCOUNTS_CATEGORY tac on tac.REG_ENTITY_ID = ta.REG_ENTITY_ID and tac.ACCT_CTGY_ENTITY_ID = ta.ACCT_CTGY_ENTITY_ID
+WHERE (crh.SITEID, crh.ROUTEID) in (SELECT SITEID, ROUTEID FROM TRANSPORT.T_TMS_COM_ROUTE_HISTORY WHERE SITEID in (1, 58) AND STOP_TYPE = 'DC' AND STATUS = 'COMPLETE' GROUP BY SITEID, ROUTEID HAVING max(arrive_time) between '2020-08-09' and '2020-08-16')   
 GROUP BY dx.ENTERPRISE_KEY + case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 0 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 0 else 1 end, case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 90 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 80 when (crh.SITEID = 95) then 40 when (crh.SITEID = 9) then 40 else crh.SITEID end
 ;
 
@@ -51,8 +101,26 @@ FROM     TRANSPORT.T_TMS_COM_ROUTE_HISTORY crh
          inner join CRMADMIN.T_WHSE_DIV_XREF dx on crh.SITEID = dx.SWAT_ID
          inner join TRANSPORT.T_TRA_ACT_ACCOUNTS ta on ta.ACCT_ENTITY_ID = crh.ACCT_ENTITY_ID and ta.REG_ENTITY_ID = crh.REG_ENTITY_ID
          inner join TRANSPORT.T_TRA_ACT_ACCOUNTS_CATEGORY tac on tac.REG_ENTITY_ID = ta.REG_ENTITY_ID and tac.ACCT_CTGY_ENTITY_ID = ta.ACCT_CTGY_ENTITY_ID
-WHERE    crh.ROUTE_END_TIME between '2020-05-31' and '2020-06-06'
+WHERE    crh.ROUTE_END_TIME between '2020-08-09' and '2020-08-16'
+AND      crh.SITEID not in (1,58)
 AND      crh.STATUS = 'COMPLETE'
+GROUP BY dx.ENTERPRISE_KEY + case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 0 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 0 else 1 end, case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 90 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 80 when (crh.SITEID = 95) then 40 when (crh.SITEID = 9) then 40 else crh.SITEID end
+
+union all
+
+SELECT   'distribution' SCORECARD_TYPE,
+         'routes_total' KPI_TYPE,
+         '2019-10-12' DATE_VALUE,  --need end date, not weekid
+         dx.ENTERPRISE_KEY + case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 0 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 0 else 1 end DIVISION_ID,
+         case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 90 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 80 when (crh.SITEID = 95) then 40 when (crh.SITEID = 9) then 40 else crh.SITEID end KEY_VALUE,
+         count(distinct crh.ROUTEID) DATA_VALUE, -- add departure time to make unique?
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     TRANSPORT.T_TMS_COM_ROUTE_HISTORY crh
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on crh.SITEID = dx.SWAT_ID
+         inner join TRANSPORT.T_TRA_ACT_ACCOUNTS ta on ta.ACCT_ENTITY_ID = crh.ACCT_ENTITY_ID and ta.REG_ENTITY_ID = crh.REG_ENTITY_ID
+         inner join TRANSPORT.T_TRA_ACT_ACCOUNTS_CATEGORY tac on tac.REG_ENTITY_ID = ta.REG_ENTITY_ID and tac.ACCT_CTGY_ENTITY_ID = ta.ACCT_CTGY_ENTITY_ID
+WHERE (crh.SITEID, crh.ROUTEID) in (SELECT SITEID, ROUTEID FROM TRANSPORT.T_TMS_COM_ROUTE_HISTORY WHERE SITEID in (1, 58) AND STOP_TYPE = 'DC' AND STATUS = 'COMPLETE' GROUP BY SITEID, ROUTEID HAVING max(arrive_time) between '2020-08-09' and '2020-08-16')   
 GROUP BY dx.ENTERPRISE_KEY + case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 0 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 0 else 1 end, case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 90 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 80 when (crh.SITEID = 95) then 40 when (crh.SITEID = 9) then 40 else crh.SITEID end
 ;
 
@@ -71,8 +139,28 @@ FROM     TRANSPORT.T_TMS_COM_ROUTE_HISTORY crh
          inner join TRANSPORT.T_TRA_ACT_ACCOUNTS ta on ta.ACCT_ENTITY_ID = crh.ACCT_ENTITY_ID and ta.REG_ENTITY_ID = crh.REG_ENTITY_ID
          inner join TRANSPORT.T_TRA_ACT_ACCOUNTS_CATEGORY tac on tac.REG_ENTITY_ID = ta.REG_ENTITY_ID and tac.ACCT_CTGY_ENTITY_ID = ta.ACCT_CTGY_ENTITY_ID
 WHERE    crh.ROUTE_END_TIME between '2020-05-31' and '2020-06-06'
+AND      crh.SITEID not in (1,58)
 AND      crh.DEPART_TIME > crh.DISPATCHED_DEPARTTIME_PLAN
 AND      crh.STATUS = 'COMPLETE'
+AND      crh.STOP_NUMBER = 0
+GROUP BY dx.ENTERPRISE_KEY + case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 0 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 0 else 1 end, case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 90 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 80 when (crh.SITEID = 95) then 40 when (crh.SITEID = 9) then 40 else crh.SITEID end
+
+union all
+
+SELECT   'distribution' SCORECARD_TYPE,
+         'routes_late_dock_out' KPI_TYPE,
+         '2019-10-12' DATE_VALUE,  --need end date, not weekid
+         dx.ENTERPRISE_KEY + case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 0 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 0 else 1 end DIVISION_ID,
+         case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 90 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 80 when (crh.SITEID = 95) then 40 when (crh.SITEID = 9) then 40 else crh.SITEID end KEY_VALUE,
+         count(distinct crh.ROUTEID) DATA_VALUE,  -- add departure time to make unique?
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     TRANSPORT.T_TMS_COM_ROUTE_HISTORY crh
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on crh.SITEID = dx.SWAT_ID
+         inner join TRANSPORT.T_TRA_ACT_ACCOUNTS ta on ta.ACCT_ENTITY_ID = crh.ACCT_ENTITY_ID and ta.REG_ENTITY_ID = crh.REG_ENTITY_ID
+         inner join TRANSPORT.T_TRA_ACT_ACCOUNTS_CATEGORY tac on tac.REG_ENTITY_ID = ta.REG_ENTITY_ID and tac.ACCT_CTGY_ENTITY_ID = ta.ACCT_CTGY_ENTITY_ID
+WHERE (crh.SITEID, crh.ROUTEID) in (SELECT SITEID, ROUTEID FROM TRANSPORT.T_TMS_COM_ROUTE_HISTORY WHERE SITEID in (1, 58) AND STOP_TYPE = 'DC' AND STATUS = 'COMPLETE' GROUP BY SITEID, ROUTEID HAVING max(arrive_time) between '2020-08-09' and '2020-08-16')   
+AND      crh.DEPART_TIME > crh.DISPATCHED_DEPARTTIME_PLAN
 AND      crh.STOP_NUMBER = 0
 GROUP BY dx.ENTERPRISE_KEY + case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 0 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 0 else 1 end, case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 90 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 80 when (crh.SITEID = 95) then 40 when (crh.SITEID = 9) then 40 else crh.SITEID end
 ;
@@ -91,9 +179,27 @@ FROM     TRANSPORT.T_TMS_COM_ROUTE_HISTORY crh
          inner join CRMADMIN.T_WHSE_DIV_XREF dx on crh.SITEID = dx.SWAT_ID
          inner join TRANSPORT.T_TRA_ACT_ACCOUNTS ta on ta.ACCT_ENTITY_ID = crh.ACCT_ENTITY_ID and ta.REG_ENTITY_ID = crh.REG_ENTITY_ID
          inner join TRANSPORT.T_TRA_ACT_ACCOUNTS_CATEGORY tac on tac.REG_ENTITY_ID = ta.REG_ENTITY_ID and tac.ACCT_CTGY_ENTITY_ID = ta.ACCT_CTGY_ENTITY_ID
-WHERE    crh.ROUTE_END_TIME between '2020-05-31' and '2020-06-06'
+WHERE    crh.ROUTE_END_TIME between '2020-08-09' and '2020-08-16'
+AND      crh.SITEID not in (1,58)
 AND      crh.STATUS = 'COMPLETE'
 AND      crh.SITEID not in (9, 95)
+GROUP BY dx.ENTERPRISE_KEY + case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 0 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 0 else 1 end, case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 90 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 80 when (crh.SITEID = 95) then 40 when (crh.SITEID = 9) then 40 else crh.SITEID end
+
+union all
+
+SELECT   'distribution' SCORECARD_TYPE,
+         'cube_total' KPI_TYPE,
+         '2019-10-12' DATE_VALUE,  --need end date, not weekid
+         dx.ENTERPRISE_KEY + case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 0 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 0 else 1 end DIVISION_ID,
+         case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 90 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 80 when (crh.SITEID = 95) then 40 when (crh.SITEID = 9) then 40 else crh.SITEID end KEY_VALUE,
+         sum(crh.ROUTED_CUBE) DATA_VALUE,
+         'F' DATA_GRANULARITY,
+         'W' TIME_GRANULARITY
+FROM     TRANSPORT.T_TMS_COM_ROUTE_HISTORY crh
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on crh.SITEID = dx.SWAT_ID
+         inner join TRANSPORT.T_TRA_ACT_ACCOUNTS ta on ta.ACCT_ENTITY_ID = crh.ACCT_ENTITY_ID and ta.REG_ENTITY_ID = crh.REG_ENTITY_ID
+         inner join TRANSPORT.T_TRA_ACT_ACCOUNTS_CATEGORY tac on tac.REG_ENTITY_ID = ta.REG_ENTITY_ID and tac.ACCT_CTGY_ENTITY_ID = ta.ACCT_CTGY_ENTITY_ID
+WHERE (crh.SITEID, crh.ROUTEID) in (SELECT SITEID, ROUTEID FROM TRANSPORT.T_TMS_COM_ROUTE_HISTORY WHERE SITEID in (1, 58) AND STOP_TYPE = 'DC' AND STATUS = 'COMPLETE' GROUP BY SITEID, ROUTEID HAVING max(arrive_time) between '2020-08-09' and '2020-08-16')   
 GROUP BY dx.ENTERPRISE_KEY + case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 0 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 0 else 1 end, case when (crh.SITEID = 29 and tac.ACCT_CTGY_CD = 'DG') then 90 when (crh.SITEID = 33 and tac.ACCT_CTGY_CD = 'DG') then 80 when (crh.SITEID = 95) then 40 when (crh.SITEID = 9) then 40 else crh.SITEID end
 ;
 

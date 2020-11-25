@@ -405,21 +405,21 @@ SELECT   i.FACILITYID,
          i.ITEM_TYPE_CD,
          i.PURCH_STATUS,
          i.BILLING_STATUS_BACKSCREEN,
-         value(cm.QTY_SHIPPED, 0) twelve_week_mvmt_actual,
+--         value(cm.QTY_SHIPPED, 0) twelve_week_mvmt_actual,
          i.CASES_PER_WEEK,
          i.CASES_PER_WEEK_DESEASONED,
          lc.PO_RECEIPT_DTE,
          sum(lc.INVENTORY_TURN) turn_inventory,
-         sum((lc.INVENTORY_TURN) * ((case when (lc.CORRECT_NET_COST <> 0) then lc.CORRECT_NET_COST else lc.NET_COST_PER_CASE end) * (case when i.RAND_WGT_CD = 'R' then i.AVERAGE_WEIGHT else 1 end ))) turn_inventory_value,
-         sum(case when value(i.CASES_PER_WEEK, 0) = 0 then 0 else lc.INVENTORY_TURN / value(i.CASES_PER_WEEK, 0) end)  turn_inventory_woh,
+         sum((lc.INVENTORY_TURN) * ((case when (lc.CORRECT_NET_COST <> 0) then lc.CORRECT_NET_COST else lc.NET_COST_PER_CASE end) * (case when lc.RAND_WGT_CD = 'R' then value(lc.SHIPPING_CASE_WEIGHT,0) else 1 end ))) turn_inventory_value,
+         sum(case when value(i.CASES_PER_WEEK, 0) = 0 then 0 else lc.INVENTORY_TURN / value(i.CASES_PER_WEEK, 0) end) turn_inventory_woh,
          sum(lc.INVENTORY_PROMOTION) promo_inventory,
-         sum((lc.INVENTORY_PROMOTION) * ((case when (lc.CORRECT_NET_COST <> 0) then lc.CORRECT_NET_COST else lc.NET_COST_PER_CASE end) * (case when i.RAND_WGT_CD = 'R' then i.AVERAGE_WEIGHT else 1 end ))) promo_inventory_value,
+         sum((lc.INVENTORY_PROMOTION) * ((case when (lc.CORRECT_NET_COST <> 0) then lc.CORRECT_NET_COST else lc.NET_COST_PER_CASE end) * (case when lc.RAND_WGT_CD = 'R' then value(lc.SHIPPING_CASE_WEIGHT,0) else 1 end ))) promo_inventory_value,
          sum(case when value(i.CASES_PER_WEEK, 0) = 0 then 0 else lc.INVENTORY_PROMOTION / value(i.CASES_PER_WEEK, 0) end) promo_inventory_woh,
          sum(lc.INVENTORY_FWD_BUY) fwd_buy_inventory,
-         sum((lc.INVENTORY_FWD_BUY) * ((case when (lc.CORRECT_NET_COST <> 0) then lc.CORRECT_NET_COST else lc.NET_COST_PER_CASE end) * (case when i.RAND_WGT_CD = 'R' then i.AVERAGE_WEIGHT else 1 end ))) fwd_buy_inventory_value,
+         sum((lc.INVENTORY_FWD_BUY) * ((case when (lc.CORRECT_NET_COST <> 0) then lc.CORRECT_NET_COST else lc.NET_COST_PER_CASE end) * (case when lc.RAND_WGT_CD = 'R' then value(lc.SHIPPING_CASE_WEIGHT,0) else 1 end ))) fwd_buy_inventory_value,
          sum(case when value(i.CASES_PER_WEEK, 0) = 0 then 0 else lc.INVENTORY_FWD_BUY / value(i.CASES_PER_WEEK, 0) end) fwd_buy_inventory_woh,
          sum(lc.INVENTORY_TURN + lc.INVENTORY_PROMOTION + lc.INVENTORY_FWD_BUY) total_inventory,
-         sum((lc.INVENTORY_TURN + lc.INVENTORY_PROMOTION + lc.INVENTORY_FWD_BUY) * ((case when (lc.CORRECT_NET_COST <> 0) then lc.CORRECT_NET_COST else lc.NET_COST_PER_CASE end) * (case when i.RAND_WGT_CD = 'R' then i.AVERAGE_WEIGHT else 1 end ))) total_inventory_value,
+         sum((lc.INVENTORY_TURN + lc.INVENTORY_PROMOTION + lc.INVENTORY_FWD_BUY) * ((case when (lc.CORRECT_NET_COST <> 0) then lc.CORRECT_NET_COST else lc.NET_COST_PER_CASE end) * (case when lc.RAND_WGT_CD = 'R' then value(lc.SHIPPING_CASE_WEIGHT,0) else 1 end ))) total_inventory_value,
          sum(case when value(i.CASES_PER_WEEK, 0) = 0 then 0 else (lc.INVENTORY_TURN + lc.INVENTORY_PROMOTION + lc.INVENTORY_FWD_BUY) / value(i.CASES_PER_WEEK, 0) end ) total_inventory_woh
 FROM     CRMADMIN.T_WHSE_ITEM i 
          inner join CRMADMIN.T_WHSE_LAYER_CURRENT lc on lc.FACILITYID = i.FACILITYID AND lc.ITEM_NBR_HS = i.ITEM_NBR_HS 
@@ -428,7 +428,8 @@ FROM     CRMADMIN.T_WHSE_ITEM i
          inner join CRMADMIN.V_FISCAL_CALENDAR d on shd.BILLING_DATE = d.DATE_KEY WHERE d.FISCAL_WEEK between d.FISCAL_WEEK_CURRENT - 12 and d.FISCAL_WEEK_CURRENT - 1 group by shd.FACILITYID, shd.ITEM_NBR_HS) cm on lc.FACILITYID = cm.FACILITYID and lc.ITEM_NBR_HS = cm.ITEM_NBR_HS
 GROUP BY i.FACILITYID, i.WAREHOUSE_CODE, wc.WAREHOUSE_CODE_DESC, 
          i.ITEM_NBR_HS, i.ITEM_DESCRIP, i.ITEM_TYPE_CD, i.PURCH_STATUS, 
-         i.BILLING_STATUS_BACKSCREEN, cm.QTY_SHIPPED, i.CASES_PER_WEEK, 
+         i.BILLING_STATUS_BACKSCREEN --, cm.QTY_SHIPPED
+, i.CASES_PER_WEEK, 
          i.CASES_PER_WEEK_DESEASONED, lc.PO_RECEIPT_DTE
 HAVING   sum(lc.INVENTORY_TURN + lc.INVENTORY_PROMOTION + lc.INVENTORY_FWD_BUY) <> 0
 ;

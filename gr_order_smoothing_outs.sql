@@ -22,7 +22,7 @@ group by dc,
          outCode
 ;
 
-
+--GR ORDER SMOOTHING--------------------------------------------------------------------------------------
 --run this!
 SET SQL_BIG_SELECTS=1;
 
@@ -40,7 +40,38 @@ FROM     lineitem li inner join dcorder o on li.rtlOrderId = o.rtlOrderId and li
 WHERE    li.outCode in (149)
 AND      li.dc = 'G'
 --AND      waveDate >= '2020-03-21'
-AND      li.deliveryDate between '2020-11-08' and '2020-11-14'
+AND      li.deliveryDate between '2020-11-22' and '2020-11-28'
+;
+group by li.dc,
+         li.waveDate,
+         li.deliveryDate,
+         li.dcItemId,
+         o.invoiceNum,
+         li.storeNum,
+         li.outCode
+;
+
+
+--GR ORDER CANCELLED--------------------------------------------------------------------------------------
+--run this!
+SET SQL_BIG_SELECTS=1;
+
+SELECT   li.dc,
+         li.waveDate,
+         li.deliveryDate,
+         li.dcItemId,
+         li.storeNum,
+         li.rtlOrderId,
+         li.dcOrderId,
+         li.outCode,
+         li.reqQty,
+         li.netQty,
+         li.shipQty
+FROM     lineitem li 
+         inner join dcorder o on li.rtlOrderId = o.rtlOrderId and li.dcOrderId = o.dcOrderId
+WHERE    li.orderStatus = ('Cancelled')
+AND      li.dc = 'G'
+AND      li.deliveryDate between '2020-11-01' and '2020-11-28'
 ;
 group by li.dc,
          li.waveDate,

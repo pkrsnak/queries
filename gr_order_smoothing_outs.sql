@@ -40,7 +40,7 @@ FROM     lineitem li inner join dcorder o on li.rtlOrderId = o.rtlOrderId and li
 WHERE    li.outCode in (149)
 AND      li.dc = 'G'
 --AND      waveDate >= '2020-03-21'
-AND      li.deliveryDate between '2020-11-22' and '2020-11-28'
+AND      li.deliveryDate between '2020-11-29' and '2020-12-05'
 ;
 group by li.dc,
          li.waveDate,
@@ -71,7 +71,7 @@ FROM     lineitem li
          inner join dcorder o on li.rtlOrderId = o.rtlOrderId and li.dcOrderId = o.dcOrderId
 WHERE    li.orderStatus = ('Cancelled')
 AND      li.dc = 'G'
-AND      li.deliveryDate between '2020-11-01' and '2020-11-28'
+AND      li.deliveryDate between '2020-11-29' and '2020-12-05'
 ;
 group by li.dc,
          li.waveDate,

@@ -22,21 +22,22 @@ SELECT   --fd.FISCAL_WEEK_ID,
          ds.FACILITY_NAME DS_FACILITY,
          dsh.SHIP_FACILITY_ID,
          us.FACILITY_NAME US_FACILITY,
+         dsh.customer_nbr,
          v.VENDOR_NBR,
          v.VENDOR_NAME,
          v.MSTR_VENDOR_NBR,
          v.MSTR_VENDOR_NAME,
          dsh.WHSE_CMDTY_ID,
-         mdg.DEPT_GRP_KEY,
-         mdg.DEPT_GRP_NAME,
-         md.DEPT_KEY,
-         md.DEPT_NAME,
-         mgrp.MDSE_GRP_KEY,
-         mgrp.MDSE_GRP_NAME,
-         mctg.MDSE_CATGY_KEY,
-         mctg.MDSE_CATGY_NAME,
-         dsh.MDSE_CLASS_KEY,
-         mcl.MDSE_CLASS_NAME,
+--         mdg.DEPT_GRP_KEY,
+--         mdg.DEPT_GRP_NAME,
+--         md.DEPT_KEY,
+--         md.DEPT_NAME,
+--         mgrp.MDSE_GRP_KEY,
+--         mgrp.MDSE_GRP_NAME,
+--         mctg.MDSE_CATGY_KEY,
+--         mctg.MDSE_CATGY_NAME,
+--         dsh.MDSE_CLASS_KEY,
+--         mcl.MDSE_CLASS_NAME,
          i.ITEM_RANK_CD,
          i.SHIP_UNIT_CD,
          i.ITEM_RES28_CD,
@@ -125,38 +126,33 @@ SELECT   --fd.FISCAL_WEEK_ID,
          sum(case when fd.FISCAL_WEEK_ID = 202046 then dsh.SHIPPED_QTY else 0 end) cases_202046,
          sum(case when fd.FISCAL_WEEK_ID = 202047 then dsh.SHIPPED_QTY else 0 end) cases_202047,
          sum(case when fd.FISCAL_WEEK_ID = 202048 then dsh.SHIPPED_QTY else 0 end) cases_202048
-FROM     WH_OWNER.DC_SALES_HST dsh
-         inner join WH_OWNER.DC_FACILITY ds on dsh.FACILITY_ID = ds.FACILITY_ID 
-         inner join WH_OWNER.DC_FACILITY us on dsh.SHIP_FACILITY_ID = us.FACILITY_ID 
-         inner join WH_OWNER.DC_ITEM i on dsh.FACILITY_ID = i.FACILITY_ID and dsh.ITEM_NBR = i.ITEM_NBR 
-         inner join WH_OWNER.DC_VENDOR v on i.VENDOR_NBR = v.VENDOR_NBR and i.FACILITY_ID = v.FACILITY_ID
-         inner join WH_OWNER.DC_CUSTOMER cust on dsh.FACILITY_ID = cust.FACILITY_ID and dsh.CUSTOMER_NBR = cust.CUSTOMER_NBR 
-         inner join WH_OWNER.DC_CORPORATION corp on cust.CORPORATION_ID = corp.CORPORATION_ID 
-         inner join WH_OWNER.FISCAL_DAY fd on dsh.TRANSACTION_DATE = fd.SALES_DT 
-         inner join wh_owner.MDSE_CLASS mcl on dsh.MDSE_CLASS_KEY = mcl.MDSE_CLASS_KEY 
-         inner join wh_owner.MDSE_CATEGORY mctg on mcl.MDSE_CATGY_KEY = mctg.MDSE_CATGY_KEY 
-         inner join WH_OWNER.MDSE_GROUP mgrp on mctg.MDSE_GRP_KEY = mgrp.MDSE_GRP_KEY 
-         inner join wh_owner.DEPARTMENT md on mgrp.DEPT_KEY = md.DEPT_KEY 
-         inner join WH_OWNER.DEPARTMENT_GROUP mdg on md.DEPT_GRP_KEY = mdg.DEPT_GRP_KEY
+FROM     dssprd.WH_OWNER.DC_SALES_HST dsh
+         inner join dssprd.WH_OWNER.DC_FACILITY ds on dsh.FACILITY_ID = ds.FACILITY_ID 
+         inner join dssprd.WH_OWNER.DC_FACILITY us on dsh.SHIP_FACILITY_ID = us.FACILITY_ID 
+         inner join dssprd.WH_OWNER.DC_ITEM i on dsh.FACILITY_ID = i.FACILITY_ID and dsh.ITEM_NBR = i.ITEM_NBR 
+         inner join T_TEMP_UPC tu on tu.UPC_NBR =  i.UNIT_UPC_NBR
+         inner join dssprd.WH_OWNER.DC_VENDOR v on i.VENDOR_NBR = v.VENDOR_NBR and i.FACILITY_ID = v.FACILITY_ID
+         inner join dssprd.WH_OWNER.DC_CUSTOMER cust on dsh.FACILITY_ID = cust.FACILITY_ID and dsh.CUSTOMER_NBR = cust.CUSTOMER_NBR 
+         inner join dssprd.WH_OWNER.DC_CORPORATION corp on cust.CORPORATION_ID = corp.CORPORATION_ID 
+         inner join dssprd.WH_OWNER.FISCAL_DAY fd on dsh.TRANSACTION_DATE = fd.SALES_DT 
+--         inner join dssprd.wh_owner.MDSE_CLASS mcl on dsh.MDSE_CLASS_KEY = mcl.MDSE_CLASS_KEY 
+--         inner join dssprd.wh_owner.MDSE_CATEGORY mctg on mcl.MDSE_CATGY_KEY = mctg.MDSE_CATGY_KEY 
+--         inner join dssprd.WH_OWNER.MDSE_GROUP mgrp on mctg.MDSE_GRP_KEY = mgrp.MDSE_GRP_KEY 
+--         inner join dssprd.wh_owner.DEPARTMENT md on mgrp.DEPT_KEY = md.DEPT_KEY 
+--         inner join dssprd.WH_OWNER.DEPARTMENT_GROUP mdg on md.DEPT_GRP_KEY = mdg.DEPT_GRP_KEY
 WHERE    dsh.TRANSACTION_DATE between '10-06-2019' and '12-01-2020'
 AND      dsh.FACILITY_ID not in (2, 5, 71)
 AND      dsh.WHSE_CMDTY_ID in (10, 40, 5, 6)
+--AND      dsh.FACILITY_ID = 1
+--AND      dsh.ITEM_NBR = 629220
 GROUP BY --fd.FISCAL_WEEK_ID,
          dsh.FACILITY_ID,
          ds.FACILITY_NAME,
          dsh.SHIP_FACILITY_ID,
+         dsh.customer_nbr,
          us.FACILITY_NAME, v.VENDOR_NBR, v.VENDOR_NAME, v.MSTR_VENDOR_NBR, v.MSTR_VENDOR_NAME, 
          dsh.WHSE_CMDTY_ID,
-         mdg.DEPT_GRP_KEY,
-         mdg.DEPT_GRP_NAME,
-         md.DEPT_KEY,
-         md.DEPT_NAME,
-         mgrp.MDSE_GRP_KEY,
-         mgrp.MDSE_GRP_NAME,
-         mctg.MDSE_CATGY_KEY,
-         mctg.MDSE_CATGY_NAME,
-         dsh.MDSE_CLASS_KEY,
-         mcl.MDSE_CLASS_NAME, 
+--         mdg.DEPT_GRP_KEY, mdg.DEPT_GRP_NAME, md.DEPT_KEY, md.DEPT_NAME, mgrp.MDSE_GRP_KEY, mgrp.MDSE_GRP_NAME, mctg.MDSE_CATGY_KEY, mctg.MDSE_CATGY_NAME, dsh.MDSE_CLASS_KEY, mcl.MDSE_CLASS_NAME, 
          i.ITEM_RANK_CD, i.SHIP_UNIT_CD, i.ITEM_RES28_CD, 
          dsh.ITEM_NBR,
          i.CASE_UPC_NBR,
@@ -196,7 +192,7 @@ select count(*) from (
 ;
 SELECT   i.DEPT_CD,
          d.DEPT_DESC,
-         d.DIVISION_CD,
+         d.DIVISION_CD, sls.CUSTOMER_NBR, sls.SHIP_TO_ID, 
          d.COMMODITY_CD,
          i.CASE_UPC_CD,
          i.VENDOR_ID,
@@ -204,8 +200,8 @@ SELECT   i.DEPT_CD,
          i.ITEM_DESC,
          i.ITEM_PACK_QTY,
          i.ITEM_SIZE_DESC,
-         i.PRIVATE_LABEL_ID,
-         i.PRODUCT_GROUP_ID,
+--         i.PRIVATE_LABEL_ID,
+--         i.PRODUCT_GROUP_ID,
          i.LBS_MSR,
          i.NET_MSR,
          i.CUBE_MSR,
@@ -216,7 +212,7 @@ SELECT   i.DEPT_CD,
          i.SELL_PRICE_AMT,
          i.FEE_AMT,
          i.FEE_METHOD_CD,
-         i.ITEM_RANK_CD,
+--         i.ITEM_RANK_CD,
 --         sls.SHIP_QTY,
          count(distinct sls.CUSTOMER_NBR) cust_count,
          sum(case when fd.FISCAL_WEEK_ID = 201941 then sls.SHIP_QTY else 0 end) cases_201941,
@@ -279,15 +275,16 @@ SELECT   i.DEPT_CD,
          sum(case when fd.FISCAL_WEEK_ID = 202046 then sls.SHIP_QTY else 0 end) cases_202046,
          sum(case when fd.FISCAL_WEEK_ID = 202047 then sls.SHIP_QTY else 0 end) cases_202047,
          sum(case when fd.FISCAL_WEEK_ID = 202048 then sls.SHIP_QTY else 0 end) cases_202048
-FROM     WH_OWNER.MDVSLS_DY_CUST_ITM sls 
+FROM     dssprd.WH_OWNER.MDVSLS_DY_CUST_ITM sls 
          inner join WH_OWNER.MDV_ITEM i on sls.DEPT_CD = i.DEPT_CD and sls.CASE_UPC_CD = i.CASE_UPC_CD 
-         inner join WH_OWNER.MDV_VENDOR v on v.VENDOR_ID = i.VENDOR_ID 
-         inner join WH_OWNER.FISCAL_DAY fd on sls.SHIP_DATE = fd.SALES_DT 
-         inner join WH_OWNER.MDV_DEPT d on d.DEPT_CD = sls.DEPT_CD
+         inner join T_TEMP_UPC tu on tu.UPC_NBR =  i.ITEM_UPC_CD
+         inner join dssprd.WH_OWNER.MDV_VENDOR v on v.VENDOR_ID = i.VENDOR_ID 
+         inner join dssprd.WH_OWNER.FISCAL_DAY fd on sls.SHIP_DATE = fd.SALES_DT 
+         inner join dssprd.WH_OWNER.MDV_DEPT d on d.DEPT_CD = sls.DEPT_CD
 WHERE    sls.SHIP_DATE between '10-06-2019' and '12-01-2020'
 group by i.DEPT_CD,
          d.DEPT_DESC,
-         d.DIVISION_CD,
+         d.DIVISION_CD, sls.CUSTOMER_NBR, sls.SHIP_TO_ID, 
          d.COMMODITY_CD,
          i.CASE_UPC_CD,
          i.VENDOR_ID,
@@ -295,8 +292,8 @@ group by i.DEPT_CD,
          i.ITEM_DESC,
          i.ITEM_PACK_QTY,
          i.ITEM_SIZE_DESC,
-         i.PRIVATE_LABEL_ID,
-         i.PRODUCT_GROUP_ID,
+--         i.PRIVATE_LABEL_ID,
+--         i.PRODUCT_GROUP_ID,
          i.LBS_MSR,
          i.NET_MSR,
          i.CUBE_MSR,
@@ -306,8 +303,8 @@ group by i.DEPT_CD,
          i.CASE_COST_AMT,
          i.SELL_PRICE_AMT,
          i.FEE_AMT,
-         i.FEE_METHOD_CD,
-         i.ITEM_RANK_CD
+         i.FEE_METHOD_CD --,
+--         i.ITEM_RANK_CD
 ;
 ) x
 ;

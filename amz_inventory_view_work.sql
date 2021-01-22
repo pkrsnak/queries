@@ -13,7 +13,10 @@ SELECT   i.FACILITYID,
          i.INVENTORY_TOTAL,
          i.ITEM_RES28,
          i.PACK_CASE,
-         case i.INVENTORY_TOTAL when 0 then 0 else decimal((i.INVENTORY_TOTAL - (value(i.STORAGE_COMMITTED, 0) + value(i.RESERVE_COMMITTED, 0))), 11, 3) / decimal(i.INVENTORY_TOTAL, 11, 3) end as INVENTORY_PERCENT,
+         case i.INVENTORY_TOTAL 
+              when 0 then 0 
+              else decimal((i.INVENTORY_TOTAL - (value(i.STORAGE_COMMITTED, 0) + value(i.RESERVE_COMMITTED, 0))), 11, 3) / decimal(i.INVENTORY_TOTAL, 11, 3) 
+         end as INVENTORY_PERCENT,
          value(i.RESERVE_COMMITTED, 0) RESERVE_COMMITTED,
          value(i.RESERVE_UNCOMMITTED, 0) RESERVE_UNCOMMITTED,
          value(i.STORAGE_COMMITTED, 0) STORAGE_COMMITTED,
@@ -29,10 +32,106 @@ SELECT   i.FACILITYID,
          i.BILLING_STATUS_BACKSCREEN,
          dx.FACILITYID_UPSTREAM
 FROM     CRMADMIN.T_WHSE_ITEM i 
-         inner join CRMADMIN.T_WHSE_DIV_XREF dx on i.FACILITYID = dx.SWAT_ID --AND dx.SWAT_ID in (select distinct FACILITYID from CRMADMIN.T_WHSE_CUST_GRP WHERE CUSTOMER_GRP_TYPE = '75' AND current date > START_DATE AND (current date < END_DATE OR END_DATE is null) AND FACILITYID <> '054') 
-         left outer join CRMADMIN.V_AMZ_ASIN tu on i.ROOT_ITEM_NBR = tu.ROOT_ITEM_NBR and i.LV_ITEM_NBR = tu.LV_ITEM_NBR 
-WHERE    i.ITEM_RES28 in ('A', 'C')
-;
+         inner join CRMADMIN.T_WHSE_DIV_XREF dx on i.FACILITYID = dx.SWAT_ID 
+         left outer join CRMADMIN.V_AMZ_ASIN tu on i.ROOT_ITEM_NBR = tu.ROOT_ITEM_NBR and i.LV_ITEM_NBR = tu.LV_ITEM_NBR
+WHERE    i.ITEM_RES28 in ('A', 'C');
+
+grant select,update,insert,delete on CRMADMIN.V_AMZ_ITEM_CORE to user CRMEXPLN;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB002687;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB033016;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB038712;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB038866;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB065023;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB075216;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB075781;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB076602;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB077382;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB079572;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB081868;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB082673;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB096486;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB099260;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB100026;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB102019;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB103416;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB103570;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB103712;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB103724;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB105018;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB105281;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB105703;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB106139;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB106453;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB108245;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB126235;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB142672;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB146729;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB148781;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB151483;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB153050;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB154428;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB159999;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB160831;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB161042;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB162511;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB172084;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB172087;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB175453;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB177494;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB178908;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB181352;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB184961;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB186096;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB188771;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB189061;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB189628;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB203809;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB209501;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB210344;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB210958;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB211038;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB212676;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB213711;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB221580;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB222356;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB227847;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB228400;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB228405;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB228662;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB235955;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB237127;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB237310;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB237361;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB237844;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB238600;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB238608;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB238609;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB240787;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB241504;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB241793;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB242206;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB243870;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DB2CDC;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user DBCDC;
+grant control on CRMADMIN.V_AMZ_ITEM_CORE to user ETL;
+grant select,update,insert,delete on CRMADMIN.V_AMZ_ITEM_CORE to user ETL with grant option;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user ETLX;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user SIUSER;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user VSINDIVY;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user VSINKART;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user VSINKAVI;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user VSINMANI;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user VSINMRIN;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user VSINNAIR;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user VSINNITH;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user VSINPAUL;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user VSINPRAS;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user VSINRAJ;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user VSINRAME;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user VSINROAN;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user VSINTAYA;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user VSINTHIY;
+grant select on CRMADMIN.V_AMZ_ITEM_CORE to user WEB;
 
 --------------------------------------------------
 -- Create View CRMADMIN.V_AMZ_ITEM_NFD
@@ -54,7 +153,10 @@ SELECT   i.FACILITYID,
          i.INVENTORY_TOTAL,
          i.ITEM_RES28,
          i.PACK_CASE,
-         case i.INVENTORY_TOTAL when 0 then 0 else decimal((i.INVENTORY_TOTAL - (value(i.STORAGE_COMMITTED, 0) + value(i.RESERVE_COMMITTED, 0))), 11, 3) / decimal(i.INVENTORY_TOTAL, 11, 3) end as INVENTORY_PERCENT,
+         case i.INVENTORY_TOTAL 
+              when 0 then 0 
+              else decimal((i.INVENTORY_TOTAL - (value(i.STORAGE_COMMITTED, 0) + value(i.RESERVE_COMMITTED, 0))), 11, 3) / decimal(i.INVENTORY_TOTAL, 11, 3) 
+         end as INVENTORY_PERCENT,
          value(i.RESERVE_COMMITTED, 0) RESERVE_COMMITTED,
          value(i.RESERVE_UNCOMMITTED, 0) RESERVE_UNCOMMITTED,
          value(i.STORAGE_COMMITTED, 0) STORAGE_COMMITTED,
@@ -71,17 +173,112 @@ SELECT   i.FACILITYID,
          i.BILLING_STATUS_BACKSCREEN
 FROM     CRMADMIN.T_WHSE_ITEM i 
          inner join CRMADMIN.T_WHSE_DIV_XREF dx on dx.FACILITYID_UPSTREAM = '002' and dx.PROCESS_ACTIVE_FLAG = 'Y' 
-         left outer join CRMADMIN.V_AMZ_ASIN tu on i.ROOT_ITEM_NBR = tu.ROOT_ITEM_NBR and i.LV_ITEM_NBR = tu.LV_ITEM_NBR 
---         left outer join (select FACILITYID, ITEM_NBR, sum(PROMO_QTY) POQ_QTY from CRMADMIN.V_WHSE_DEAL where PROMO_QTY > 0 and DATE_DEAL_ARRIVE between current date and current date + 28 days group by FACILITYID, ITEM_NBR) poq on i.BICEPS_DC = poq.FACILITYID and i.ITEM_NBR = poq.ITEM_NBR
+         left outer join CRMADMIN.V_AMZ_ASIN tu on i.ROOT_ITEM_NBR = tu.ROOT_ITEM_NBR and i.LV_ITEM_NBR = tu.LV_ITEM_NBR
 WHERE    i.ITEM_RES28 in ('A', 'C')
 AND      i.FACILITYID = '054';
+
+grant select,update,insert,delete on CRMADMIN.V_AMZ_ITEM_NFD to user CRMEXPLN;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB002687;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB033016;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB038712;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB038866;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB065023;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB075216;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB075781;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB076602;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB077382;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB079572;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB081868;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB082673;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB096486;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB099260;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB100026;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB102019;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB103416;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB103570;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB103712;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB103724;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB105018;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB105281;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB105703;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB106139;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB106453;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB108245;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB126235;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB142672;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB146729;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB148781;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB151483;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB153050;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB154428;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB159999;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB160831;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB161042;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB162511;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB172084;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB172087;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB175453;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB177494;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB178908;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB181352;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB184961;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB186096;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB188771;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB189061;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB189628;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB203809;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB209501;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB210344;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB210958;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB211038;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB212676;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB213711;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB221580;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB222356;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB227847;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB228400;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB228405;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB228662;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB235955;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB237127;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB237310;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB237361;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB237844;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB238600;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB238608;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB238609;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB240787;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB241504;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB241793;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB242206;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB243870;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DB2CDC;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user DBCDC;
+grant control on CRMADMIN.V_AMZ_ITEM_NFD to user ETL;
+grant select,update,insert,delete on CRMADMIN.V_AMZ_ITEM_NFD to user ETL with grant option;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user ETLX;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user SIUSER;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user VSINDIVY;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user VSINKART;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user VSINKAVI;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user VSINMANI;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user VSINMRIN;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user VSINNAIR;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user VSINNITH;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user VSINPAUL;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user VSINPRAS;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user VSINRAJ;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user VSINRAME;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user VSINROAN;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user VSINTAYA;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user VSINTHIY;
+grant select on CRMADMIN.V_AMZ_ITEM_NFD to user WEB;
 
 --------------------------------------------------
 -- Create View CRMADMIN.V_AMZ_INVENTORY_FEED_DS
 --------------------------------------------------
 create or replace view CRMADMIN.V_AMZ_INVENTORY_FEED_DS 
 as
-;
 SELECT   case i.FACILITYID 
      when '040' then 'F3SPB' 
      when '058' then 'F3SPA' 
@@ -136,7 +333,6 @@ FROM     CRMADMIN.V_AMZ_ITEM_CORE i
          left outer join (SELECT FACILITYID, ITEM_NBR_HS, CDE_DT, max(date(RECEIPT_DTIM)) receipt_dt, sum(PROD_QTY) PROD_QTY FROM CRMADMIN.T_WHSE_EXE_INV_DTL where STATUS = 'A' AND FACILITYID in (select distinct FACILITYID from CRMADMIN.T_WHSE_CUST_GRP WHERE CUSTOMER_GRP_TYPE = '75' AND current date > START_DATE AND (current date < END_DATE OR END_DATE is null) AND FACILITYID <> '054') GROUP BY FACILITYID, ITEM_NBR_HS, CDE_DT) eid on eid.FACILITYID = i.FACILITYID and eid.ITEM_NBR_HS = i.ITEM_NBR_HS
 AND      right(i.FACILITYID,2) = i.STOCK_FAC
 AND      i.BILLING_STATUS_BACKSCREEN not in ('D', 'Z')
-
 ;
 
 --------------------------------------------------
@@ -244,7 +440,6 @@ grant select on CRMADMIN.V_AMZ_INVENTORY_FEED_DS to user WEB;
 --------------------------------------------------
 create or replace view CRMADMIN.V_AMZ_INVENTORY_FEED_NFD 
 as
-;
 SELECT   case i.FACILITYID_HOME 
      when '040' then 'F3SPB' 
      when '008' then 'SPD2Z' 
@@ -396,7 +591,6 @@ grant select on CRMADMIN.V_AMZ_INVENTORY_FEED_NFD to user WEB;
 --------------------------------------------------
 create or replace view CRMADMIN.V_AMZ_INVENTORY_FEED_US 
 as 
-;
 SELECT   case i.FACILITYID 
      when '040' then 'F3SPB' 
      when '058' then 'F3SPA' 

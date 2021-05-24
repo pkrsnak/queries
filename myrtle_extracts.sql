@@ -216,6 +216,7 @@ FROM     whmgr.mdv_ship_to
 ;
 
 /*      Location - Demand History FD                 (check if we need to multiply the qty by pack)                        */
+--select count(*) from (
 SELECT   S.INVOICE_NBR,
          LPAD(s.FACILITY_ID,3,0) Facility,
          LPAD(NVL(s.SHIP_FACILITY_ID,0),3,0) Stock_facility,
@@ -238,14 +239,25 @@ FROM     WH_OWNER.DC_SALES_HST S
          inner join WH_OWNER.DC_ITEM i on s.FACILITY_ID = i.FACILITY_ID and s.ITEM_NBR = i.ITEM_NBR
 WHERE    TRANSACTION_DATE between '2018-12-29' and '2021-01-02'
 --WHERE    TRANSACTION_DATE between '2021-04-14' and '2021-04-14'
-AND      s.FACILITY_ID not in (80, 90)
+AND      s.FACILITY_ID in (80, 90)
 --and (s.CUSTOMER_NBR = 29190 and s.FACILITY_ID = 15 and s.INVOICE_NBR = 1625199)
 GROUP BY S.INVOICE_NBR, s.FACILITY_ID, s.SHIP_FACILITY_ID, s.ITEM_NBR, 
          s.CUSTOMER_NBR, s.TRANSACTION_DATE, S.DELIVERY_DATE, D.FISCAL_WEEK_ID, 
          i.CASE_PACK_QTY, s.OUT_REASON_CD, S.NET_PRICE_AMT
-
+--) x
 ;
 
+SELECT   transaction_date,
+         facility_id,
+         customer_nbr,
+         invoice_nbr,
+         item_nbr,
+         ship_error_cd,
+         not_ship_case_qty
+FROM     whmgr.dc_bill_error_dtl
+WHERE    TRANSACTION_DATE between '12-29-2018' and '01-02-2021'
+AND      facility_id = 1  
+;
 
 
 /*      Location - Demand History FD                 (check if we need to multiply the qty by pack)                        */

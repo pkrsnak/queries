@@ -55,29 +55,33 @@ FROM     CRMADMIN.T_WHSE_ITEM i
          left outer join (SELECT d.FACILITYID, d.ITEM_NBR, sum(d.PROMO_QTY) POQ_QTY FROM CRMADMIN.T_WHSE_DEAL d WHERE current date between d.DATE_DEAL_ARRIVE + 2 days and d.DATE_DEAL_ARRIVE + 23 days AND d.PROMO_QTY <> 0 GROUP BY d.FACILITYID, d.ITEM_NBR) poq_curr on i.FACILITYID = poq_curr.FACILITYID and i.ITEM_NBR_CD = poq_curr.ITEM_NBR
 WHERE    i.PURCH_STATUS not in 'Z'
 ;
-
-
 --poq 
 SELECT   d.FACILITYID,
          d.ITEM_NBR,
-         asin.LU_CODE asin, 
---         case i.ITEM_RES28 when 'A' then (if left(trim(d.REMRK, 6)) = 'AMAZON' then Y else N end) else 'N' end) 
---         else 'N'
---         end amz_related,
-
---d.REMRK_3
+         asin.LU_CODE asin,
+         d.DATE_DEAL_ARRIVE,
          sum(d.PROMO_QTY) POQ_QTY
 FROM     CRMADMIN.T_WHSE_DEAL d 
          inner join CRMADMIN.T_WHSE_ITEM i on d.FACILITYID = i.FACILITYID and d.ITEM_NBR = i.ITEM_NBR_HS 
          inner join CRMADMIN.V_AMZ_ASIN asin on asin.ROOT_ITEM_NBR = i.ROOT_ITEM_NBR and asin.LV_ITEM_NBR = i.LV_ITEM_NBR
 WHERE    d.DATE_DEAL_ARRIVE + 2 days between current date and (current_date + 30 DAY)
 AND      d.PROMO_QTY <> 0
-and      (left(trim(d.REMRK), 6) = 'AMAZON'
-or       left(trim(d.REMRK), 3) = 'AMZ'
-or       left(trim(d.REMRK), 3) = 'AMZ'
+AND      ((i.ITEM_RES28 = 'A'
+     AND (left(trim(case when trim(d.REMRK) = '' then d.REMRK_3 else d.REMRK end), 6) = 'AMAZON'
+        OR  left(trim(case when trim(d.REMRK) = '' then d.REMRK_3 else d.REMRK end), 3) = 'AMZ'
+        OR  left(trim(case when trim(d.REMRK) = '' then d.REMRK_3 else d.REMRK end), 4) = 'AMZN'
+        OR  left(trim(case when trim(d.REMRK) = '' then d.REMRK_3 else d.REMRK end), 4) = 'MEND'
+        OR  left(trim(case when trim(d.REMRK) = '' then d.REMRK_3 else d.REMRK end), 8) = 'ITEM ADD'
+        OR  left(trim(case when trim(d.REMRK) = '' then d.REMRK_3 else d.REMRK end), 8) = 'NEW ITEM'))
+or (i.ITEM_RES28 <> 'A'
+     AND (left(trim(case when trim(d.REMRK) = '' then d.REMRK_3 else d.REMRK end), 6) = 'AMAZON'
+        OR  left(trim(case when trim(d.REMRK) = '' then d.REMRK_3 else d.REMRK end), 3) = 'AMZ'
+        OR  left(trim(case when trim(d.REMRK) = '' then d.REMRK_3 else d.REMRK end), 4) = 'AMZN'
+        OR  left(trim(case when trim(d.REMRK) = '' then d.REMRK_3 else d.REMRK end), 4) = 'MEND'))
 )
-GROUP BY d.FACILITYID, d.ITEM_NBR, asin.LU_CODE 
+GROUP BY d.FACILITYID, d.ITEM_NBR, asin.LU_CODE, d.DATE_DEAL_ARRIVE
 ;
+
 
 If ‘REMRK’ is blank, default to ‘REMRK_3’
 A Remark that qualifies a POQ on an “A” Flagged (RES_28) AMZ item contains either “AMAZON”, “AMZ”, “AMZN”, “MEND”, “ITEM ADD”, or “NEW ITEM”

@@ -40,12 +40,15 @@ SELECT   i.FACILITYID,
          pod.QUANTITY order_qty,
          pod.RECEIVED received_qty,
          pod.LIST_COST,
-         pod.CORRECTED_LIST_COST
+         pod.CORRECTED_LIST_COST,
+         pod.TURN,
+         pod.PROMOTION,
+         pod.FORWARD_BUY
 FROM     CRMADMIN.T_WHSE_PO_DTL pod 
          inner join CRMADMIN.T_WHSE_PO_HDR poh on pod.ITEM_FAC = poh.VENDOR_FAC and pod.DATE_ORDERED = poh.DATE_ORDERED and pod.PO_NBR = poh.PO_NBR 
          inner join CRMADMIN.T_WHSE_ITEM i on pod.ITEM_FAC = i.BICEPS_DC and pod.ITEM_NBR = i.ITEM_NBR 
          inner join CRMADMIN.T_WHSE_VENDOR v on i.FACILITYID = v.FACILITYID and i.VENDOR_NBR = v.VENDOR_NBR
-WHERE    pod.DATE_ORDERED > '2018-12-29'
+WHERE    pod.DATE_ORDERED > '2020-01-01'
 --AND      pod.ITEM_FAC = '01'
 --) 5,204,567 records
 ;
@@ -181,40 +184,6 @@ where active_flg = 'True' and natl_acct_flg = 'False'
 ;
  
 
-
-
-/*      Location - Vendor FD                                                 */
-
- 
-
-Select lpad(VENDOR_NBR,6,0) VENDOR_NBR , VENDOR_NAME , LPAD(FACILITY_ID,3,0) FACILITY_ID , STREET_1_ADDR , STREET_2_ADDR , CITY_NAME , STATE_CD , ZIP_CD , VENDOR_STATUS_CD 
-from WH_OWNER.DC_VENDOR
---where VENDOR_STATUS_CD <> 'D' 
-
-/*      Location - Vendor MDV                                                */
-
-SELECT   vendor_cd,
-         vendor_name,
-         street_1_addr,
-         street_2_addr,
-         city_name,
-         state_cd,
-         zip_cd
-FROM     whmgr.mdv_vendor
-;
-
-;
-/*      Location - Customer FD                                               */
-select LPAD(FACILITY_ID,3,0) FACILITY , LPAD(CUSTOMER_NBR,6,0) CUSTOMER_NBR , CUSTOMER_NAME , CUST_ST1_ADDR , CUST_ST2_ADDR , CUST_STATE_CD , CUST_ZIP_CD , CUST_STATUS_CD 
-from WH_OWNER.DC_CUSTOMER
-where CUST_STATUS_CD <> 'Z'
-;
-
-/*      Location - Customer MDV                                              */
-SELECT   ship_to_id, ship_to_name , street_1_addr , street_2_addr , city_name , state_cd , zip_cd , export_flg 
-FROM     whmgr.mdv_ship_to
-;
-
 /*      Location - Demand History FD                 (check if we need to multiply the qty by pack)                        */
 --select count(*) from (
 SELECT   S.INVOICE_NBR,
@@ -230,14 +199,15 @@ SELECT   S.INVOICE_NBR,
          sum(s.ORDERED_QTY) as ORIG_ORD_QTY,
          sum(s.ADJUSTED_QTY) as ADJ_ORD_QTY,
          sum(s.SHIPPED_QTY) as UNITS_SOLD,
-         sum(s.EXT_NET_PRICE_AMT) SALES_AMT,
+--         sum(s.EXT_NET_PRICE_AMT) SALES_AMT,
+         sum(case when s.FACILITY_ID in (80, 90) then S.EXT_WHSE_SALES_AMT else s.EXT_NET_PRICE_AMT end) SALES_AMT,
          sum(s.ORDERED_QTY - s.SHIPPED_QTY) as ORIG_LOST_SALES_QTY,
          sum((s.ORDERED_QTY - s.SHIPPED_QTY) * S.NET_PRICE_AMT) as ORIG_LOST_SALES_CALC_AMT,
          sum(S.EXT_LOST_SALES_AMT) LOST_SALES
 FROM     WH_OWNER.DC_SALES_HST S 
          inner join WH_OWNER.FISCAL_DAY D on D.SALES_DT = S.TRANSACTION_DATE 
          inner join WH_OWNER.DC_ITEM i on s.FACILITY_ID = i.FACILITY_ID and s.ITEM_NBR = i.ITEM_NBR
-WHERE    TRANSACTION_DATE between '2018-12-29' and '2021-01-02'
+WHERE    TRANSACTION_DATE between '2020-01-01' and '2021-06-12'
 --WHERE    TRANSACTION_DATE between '2021-04-14' and '2021-04-14'
 AND      s.FACILITY_ID in (80, 90)
 --and (s.CUSTOMER_NBR = 29190 and s.FACILITY_ID = 15 and s.INVOICE_NBR = 1625199)
@@ -334,6 +304,8 @@ SELECT   case d.division_cd
               when 'CSG' then '033' 
               when 'BLM' then '038' 
               when 'OKA' then '039' 
+     when 'CSZ' then '080' 
+     when 'SAZ' then '090' 
               else '999' 
          end FACILITY,
          d.division_cd, poh.deliver_to_whse_id, 
@@ -355,8 +327,8 @@ FROM     whmgr.mdv_po_dtl pod
          inner join whmgr.mdv_item i on pod.dept_cd = i.dept_cd and pod.case_upc_cd = i.case_upc_cd 
          inner join whmgr.mdv_dept d on i.dept_cd = d.dept_cd 
          inner join whmgr.mdv_vendor v on i.vendor_id = v.vendor_cd
-WHERE    (poh.receive_date between '12-29-2018' and '01-02-2021')
-and      d.division_cd in ('NOR', 'BAL', 'PNS', 'SAT', 'CSG', 'BLM', 'OKA')
+WHERE    (poh.receive_date between '01-01-2020' and '06-19-2021')
+AND      d.division_cd in ('NOR', 'BAL', 'PNS', 'SAT', 'CSG', 'BLM', 'OKA', 'CSZ', 'SAZ')
 --)
 ;
 
@@ -396,10 +368,13 @@ SELECT   FACILITYID,
          FWD_BUY_FACTOR_2,
          PICKUP_POINT_CITY,
          PICKUP_POINT_STATE,
-         PICKUP_POINT_ZIPCODE
+         PICKUP_POINT_ZIPCODE,
+         LOAD_NBR
 FROM     CRMADMIN.T_WHSE_PO_HDR
-WHERE    DATE_ORDERED >= '2021-03-01'
+WHERE    DATE_ORDERED >= '2020-01-01'
 ;
+
+
 SELECT   case d.division_cd 
      when 'NOR' then '070' 
      when 'BAL' then '069' 
@@ -408,6 +383,8 @@ SELECT   case d.division_cd
      when 'CSG' then '033' 
      when 'BLM' then '038' 
      when 'OKA' then '039' 
+     when 'CSZ' then '080' 
+     when 'SAZ' then '090' 
      else '999' 
 end FACILITY,
          d.division_cd,
@@ -464,10 +441,9 @@ end FACILITY,
          poh.ap_vendor_id
 FROM     whmgr.mdv_po_hdr poh 
          inner join whmgr.mdv_dept d on poh.warehouse_id = d.dept_cd
-WHERE    (poh.receive_date between '12-29-2018' and '01-02-2021')
-AND      d.division_cd in ('NOR', 'BAL', 'PNS', 'SAT', 'CSG', 'BLM', 'OKA')
+WHERE    (poh.receive_date between '01-01-2020' and '06-19-2021')
+AND      d.division_cd in ('NOR', 'BAL', 'PNS', 'SAT', 'CSG', 'BLM', 'OKA', 'CSZ', 'SAZ')
 ;
-
 
 MDV_00000000023577330
 MDV_00000004200087346
@@ -475,47 +451,11 @@ MDV_00000007562072715
 
 ;
 
-
-/*      Product Master                                                       */
-Select (LPAD(I.FACILITY_ID,3,0) || LPAD(I.ITEM_NBR,7,0)) KEY,
-LPAD(I.FACILITY_ID,3,0) Facility, LPAD(NVL(I.SHIP_FACILITY_ID,0),3,0) SHIP_FACILITY, LPAD(I.ITEM_NBR,7,0) as SKU, I.CASE_UPC_NBR, I.UNIT_UPC_NBR, I.ROOT_ITEM_DESC, DG.DEPT_GRP_NAME SKU_TYPE, 
-CASE WHEN DG.DEPT_GRP_KEY in (20,30,60,90,110) THEN MG.MDSE_GRP_NAME ELSE 'NOT-FRESH' END FRESH_TYPE, MG.MDSE_GRP_NAME CAT, MCL.MDSE_CLASS_NAME SUB_CAT,
-DG.DEPT_GRP_KEY, DG.DEPT_GRP_NAME, D.DEPT_KEY, D.DEPT_NAME, MG.MDSE_GRP_KEY, MG.MDSE_GRP_NAME, MC.MDSE_CATGY_KEY, MC.MDSE_CATGY_NAME, MCL.MDSE_CLASS_KEY, MCL.MDSE_CLASS_NAME, 
-(I.WHSE_TIE_MSR * I.WHSE_TIER_MSR) PALLET_SIZE, '' LOT_SIZE, I.ITEM_SIZE_MSR, I.ITEM_SIZE_UOM_CD,  I.ITEM_ADDED_DATE, I.AVAILABILITY_DATE, I.BILLING_STATUS_DATE , I.SHELF_LIFE_QTY, I.SHIP_CASE_CUBE_MSR, I.SHIP_CASE_WGHT_MSR, I.ITEM_RANK_CD, I.CASE_PACK_QTY, I.MASTER_PACK_QTY, I.RETAIL_PACK_QTY, I.CATALOG_PRICE_AMT
-       
-from WH_OWNER.DEPARTMENT_GROUP DG 
-	join WH_OWNER.DEPARTMENT D on D.DEPT_GRP_KEY = DG.DEPT_GRP_KEY 
-	join WH_OWNER.MDSE_GROUP MG on MG.DEPT_KEY = D.DEPT_KEY
-    join WH_OWNER.MDSE_CATEGORY MC on MC.MDSE_GRP_KEY = MG.MDSE_GRP_KEY
-    join WH_OWNER.MDSE_CLASS MCL on MCL.MDSE_CATGY_KEY = MC.MDSE_CATGY_KEY
-    join WH_OWNER.DC_ITEM I on I.MDSE_CLASS_KEY = MCL.MDSE_CLASS_KEY
-Where I.PURCH_STATUS_CD <> 'Z' and I.BILLING_STATUS_CD <>'Z' 
-and i.facility_id = 66
-;
-
-
-
 /*      Location - Facility     (Not from NETEZZA anymore, from CRM now                                         */
 
 Select LPAD(FACILITY_ID,3,0) FACILITY, FACILITY_NAME, UPSTREAM_DC_CD, BILLING_SYSTEM_CD
  from WH_OWNER.DC_FACILITY
 ;
-
-
-/*      Location - Vendor                                                    */
-
-Select lpad(VENDOR_NBR,6,0) VENDOR_NBR , VENDOR_NAME , LPAD(FACILITY_ID,3,0) FACILITY , STREET_1_ADDR , STREET_2_ADDR , CITY_NAME , STATE_CD , ZIP_CD , VENDOR_STATUS_CD 
-from WH_OWNER.DC_VENDOR
---where VENDOR_STATUS_CD <> 'D' 
-
-;
-/*      Location - Customer                                                  */
-select LPAD(FACILITY_ID,3,0) FACILITY , LPAD(CUSTOMER_NBR,6,0) CUSTOMER_NBR , CUSTOMER_NAME , CUST_ST1_ADDR , CUST_ST2_ADDR , CUST_STATE_CD , CUST_ZIP_CD , CUST_STATUS_CD 
-from WH_OWNER.DC_CUSTOMER
-where CUST_STATUS_CD <> 'Z'
-
-;
-
 
 
 /*      Location - Demand History                    (check if we need to multiply the qty by pack)                        */
@@ -525,76 +465,7 @@ from WH_OWNER.DC_SALES_HST S join WH_OWNER.FISCAL_DAY D on D.SALES_DT = S.TRANSA
 where TRANSACTION_DATE > '2018-12-29'
 group by LPAD(FACILITY_ID,3,0) , LPAD(NVL(SHIP_FACILITY_ID,0),3,0), LPAD(ITEM_NBR,7,0) , LPAD(CUSTOMER_NBR,6,0) , TRANSACTION_DATE, D.FISCAL_WEEK_ID
 having UNITS_SOLD > 0
-
 ;
-SELECT   case d.division_cd 
-     when 'NOR' then '070' 
-     when 'BAL' then '069' 
-     when 'PNS' then '027' 
-     when 'SAT' then '029' 
-     when 'CSG' then '033' 
-     when 'BLM' then '038' 
-     when 'OKA' then '039' 
-     else '999' 
-end FACILITY,
-         d.division_cd,
-         i.DEPT_CD,
-         i.CASE_UPC_CD,
-         i.VENDOR_ID,
-         i.AP_VENDOR_ID,
-         i.ITEM_DESC,
-         i.ITEM_PACK_QTY,
-         i.ITEM_SIZE_DESC,
-         i.PROD_GROUP_CD,
-         i.COMMODITY_CD,
-         i.LBS_MSR,
-         i.NET_MSR,
-         i.CUBE_MSR,
-         i.MASTER_PACK_FLG,
-         i.ITEM_STATUS_CD,
-         i.PURCHASE_RANK_CD,
-         i.UOM_CD,
-         i.CATCH_WGT_FLG,
-         i.CASE_COST_AMT,
-         i.SELL_PRICE_AMT,
-         i.FEE_AMT,
-         i.FEE_METHOD_CD,
-         i.BIRTH_DATE,
-         i.LAST_SALE_DATE,
-         i.LAST_PO_DATE,
-         i.DECA_PHS_DATE,
-         i.LAST_RECEIPT_DATE,
-         i.ITEM_UPC_CD,
-         i.EXPANDED_UPC_CD,
-         i.SHIPPING_GTIN_NBR,
-         i.ITEM_GTIN_NBR,
-         i.PURCHASE_GTIN_NBR,
-         i.SEASON_CD,
-         i.UPSTREAM_FLG,
-         i.ABC_CLASS_CD,
-         i.PO_RESTRICT_CD,
-         i.CODE_DATE_FLG,
-         i.ECON_ORDER_QTY,
-         i.LEAD_TIME_ID,
-         i.EFF_ECON_ORDER_QTY,
-         i.CUSTOMER_GRP_NBR,
-         i.EXP_PO_UPC_CD,
-         i.EXP_BILL_UPC_CD,
-         i.STD_PROD_COST_AMT,
-         i.STD_ITEM_COST_AMT,
-         i.STD_ITEM_SELL_AMT,
-         i.ITEM_DELETE_FLG,
-         i.BUYER_DELETE_FLG,
-         i.PS_PROD_CD,
-         i.PRIVATE_LABEL_DESC,
-         i.SHELF_LIFE_NBR,
-         i.ORDER_POINT_QTY,
-         i.MIN_LAYERS_QTY
-FROM     WH_OWNER.MDV_ITEM_ODS i 
-         inner join whmgr.mdv_dept d on i.DEPT_CD = d.dept_cd
-;
-
-
 
 select   
      --a11.BILLING_DATE  SALES_DT,
@@ -757,4 +628,520 @@ FROM     WH_OWNER.DC_SALES_HST dsh
 WHERE    dsh.FACILITY_ID = 1
 AND      dsh.TRANSACTION_DATE between '12-29-2019' and '01-02-2021'
 GROUP BY dsh.FACILITY_ID, fd.FISCAL_PERIOD_ID
+;
+
+
+--Victor's SQL
+select count(*) from (
+;
+SELECT   L.ITEM_NBR_HS,
+         L.UPC_CASE,
+         L.UPC_UNIT,
+         L.FACILITYID,
+         L.PO_NBR,
+         SUM(( INVENTORY_TURN + INVENTORY_PROMOTION + INVENTORY_FWD_BUY)* (CASE WHEN L.RAND_WGT_CD = 'R' THEN L.SHIPPING_CASE_WEIGHT ELSE COALESCE(L.STORE_PACK,0) END) ) QTY_UNIT,
+         SUM( L.INVENTORY_TURN + L.INVENTORY_PROMOTION + L.INVENTORY_FWD_BUY) QTY_CASE,
+         SUM((L.INVENTORY_TURN + L.INVENTORY_PROMOTION + L.INVENTORY_FWD_BUY) * ((case when L.CORRECT_NET_COST <> 0 then L.CORRECT_NET_COST else L.NET_COST_PER_CASE end) * case when dx.ENTERPRISE_KEY = 1 then (case when L.RAND_WGT_CD = 'R' then L.SHIPPING_CASE_WEIGHT else 1 end) else 1 end)) EXT_CASE_COST,
+         sum(L.INVENTORY_TURN) as INVENTORY_TURN,
+         sum(L.INVENTORY_PROMOTION) as INVENTORY_PROMOTION,
+         SUM(L.INVENTORY_FWD_BUY) as INVENTORY_FWD_BUY,
+         L.LAYER_FILE_DTE,
+         L.RAND_WGT_CD,
+         L.SHIPPING_CASE_WEIGHT,
+         L.STORE_PACK,
+         L.SHIPPING_CASE_WEIGHT
+FROM     CRMADMIN.T_WHSE_LAYER_HISTORY L 
+         join CRMADMIN.T_DATE D on D.DATE_KEY = l.LAYER_FILE_DTE --and d.DAY_OF_WEEK_ID = 7 
+         join CRMADMIN.T_WHSE_DIV_XREF dx on L.FACILITYID = dx.SWAT_ID
+--WHERE    L.LAYER_FILE_DTE between '2018-12-30' and '2021-01-02'
+--WHERE    (D.COMPANY_YEAR_ID = 2020 and D.COMPANY_QUARTER_ID = 1)
+--WHERE    (D.COMPANY_YEAR_ID = 2020 and D.COMPANY_QUARTER_ID = 2)
+--WHERE    (D.COMPANY_YEAR_ID = 2020 and D.COMPANY_QUARTER_ID = 3)
+--WHERE    (D.COMPANY_YEAR_ID = 2020 and D.COMPANY_QUARTER_ID = 4)
+--WHERE    (D.COMPANY_YEAR_ID = 2021 and D.COMPANY_QUARTER_ID = 1)
+WHERE    (D.COMPANY_YEAR_ID = 2021 and D.COMPANY_QUARTER_ID = 2)
+GROUP BY L.ITEM_NBR_HS, L.UPC_CASE, L.UPC_UNIT, L.FACILITYID, L.PO_NBR, 
+         LPAD(STOCK_FAC,3,0), L.LAYER_FILE_DTE, L.RAND_WGT_CD, 
+         L.SHIPPING_CASE_WEIGHT, L.STORE_PACK, 
+         ( INVENTORY_TURN + INVENTORY_PROMOTION + INVENTORY_FWD_BUY), 
+         L.SHIPPING_CASE_WEIGHT
+HAVING   SUM( INVENTORY_TURN + INVENTORY_PROMOTION + INVENTORY_FWD_BUY) >0
+;
+)
+;
+
+
+
+
+ 
+
+
+-- Minimum Order Quantity needs to be combined with results from query above(Product Master)
+Select (FACILITYID|| ITEM_NBR_HS) KEY, FACILITYID, ITEM_NBR_HS, MFG_MIN_ORDER_QTY, LIST_COST
+from KPIADMIN.V_KPI_ITEM_FACTORS 
+order by FACILITYID, ITEM_NBR_HS
+;
+
+ 
+;
+--==================================================================================================================================================================================================
+--==================================================================================================================================================================================================
+
+ 
+/*      Location - Vendor FD                                                 */
+
+SELECT   lpad(VENDOR_NBR,6,0) VENDOR_NBR,
+         VENDOR_NAME,
+         LPAD(FACILITY_ID,3,0) FACILITY_ID,
+         STREET_1_ADDR,
+         STREET_2_ADDR,
+         CITY_NAME,
+         STATE_CD,
+         ZIP_CD,
+         VENDOR_STATUS_CD
+FROM     WH_OWNER.DC_VENDOR
+--where VENDOR_STATUS_CD <> 'D' 
+;
+
+
+/*      Location - Vendor MDV                                                */
+
+SELECT   vendor_cd,
+         vendor_name,
+         street_1_addr,
+         street_2_addr,
+         city_name,
+         state_cd,
+         zip_cd
+FROM     whmgr.mdv_vendor
+;
+
+
+/*      Product Master                                                       */
+--select count(*) from (
+SELECT
+	I.FACILITYID || I.ITEM_NBR_HS KEY,
+	I.FACILITYID Facility,
+	I.STOCK_FAC SHIP_FACILITY,
+	I.ITEM_NBR_HS SKU,
+	I.UPC_CASE CASE_UPC_NBR,
+	I.UPC_UNIT UNIT_UPC_NBR,
+	I.ROOT_DESC ROOT_ITEM_DESC,
+	mds.DEPT_GRP_CODE_DESC SKU_TYPE,
+	CASE
+		WHEN mds.DEPT_GRP_CODE IN (20, 30, 60, 90, 110) THEN mds.MDSE_GRP_CODE_DESC
+		ELSE 'NOT-FRESH'
+	END FRESH_TYPE,
+	mds.MDSE_GRP_CODE_DESC CAT,
+	mds.MDSE_CLS_CODE_DESC SUB_CAT,
+	mds.DEPT_GRP_CODE DEPT_GRP_KEY,
+	mds.DEPT_GRP_CODE_DESC DEPT_GRP_NAME,
+	mds.DEPT_CODE DEPT_KEY,
+	mds.DEPT_CODE_DESC DEPT_NAME,
+	mds.MDSE_GRP_CODE MDSE_GRP_KEY,
+	mds.MDSE_GRP_CODE_DESC MDSE_GRP_NAME,
+	mds.MDSE_CAT_CODE MDSE_CATGY_KEY,
+	mds.MDSE_CAT_CODE_DESC MDSE_CATGY_NAME,
+	mds.MDSE_CLS_CODE MDSE_CLASS_KEY,
+	mds.MDSE_CLS_CODE_DESC MDSE_CLASS_NAME,
+	(I.WHSE_TIE * I.WHSE_TIER) PALLET_SIZE,
+	'' LOT_SIZE,
+	I.ITEM_SIZE ITEM_SIZE_MSR,
+	I.ITEM_SIZE_UOM ITEM_SIZE_UOM_CD,
+	I.ITEM_ADDED_DATE ITEM_ADDED_DATE,
+	I.AVAILABILITY_DATE AVAILABILITY_DATE,
+	I.BILLING_STATUS_DATE BILLING_STATUS_DATE,
+	I.SHELF_LIFE SHELF_LIFE_QTY,
+	i.SHIPPING_CASE_CUBE SHIP_CASE_CUBE_MSR,
+	i.SHIPPING_CASE_WEIGHT SHIP_CASE_WGHT_MSR,
+	CASE
+		WHEN I.SERVICE_LEVEL_CODE IN ('A', 'B', 'C', 'D', 'E') THEN I.SERVICE_LEVEL_CODE
+		ELSE 'U'
+	END ITEM_RANK_CD,
+	I.PACK_CASE CASE_PACK_QTY,
+	I.MASTER_PACK MASTER_PACK_QTY,
+	I.RETAIL_PACK RETAIL_PACK_QTY,
+	I.CATALOG_PRICE CATALOG_PRICE_AMT,
+	I.CODE_DATE_FLAG,
+	I.CODE_DATE_MIN,
+	I.CODE_DATE_MAX,
+	i.WAREHOUSE_CODE,
+	wc.WAREHOUSE_CODE_DESC_FAC,
+	wc.WAREHOUSE_CODE_TEMP_ZONE, 
+    i.RAND_WGT_CD, 
+    i.ITEM_RES33
+FROM
+	CRMADMIN.T_WHSE_ITEM I
+inner join ETLADMIN.V_MDM_MDSE_HIERARCHY mds ON
+	mds.MDSE_CLS_CODE = i.MERCH_CLASS
+inner join CRMADMIN.T_WHSE_WAREHOUSE_CODE wc ON
+	wc.FACILITYID = i.FACILITYID
+	AND wc.WAREHOUSE_CODE = i.WAREHOUSE_CODE
+WHERE
+	I.PURCH_STATUS <> 'Z'
+	AND I.BILLING_STATUS_BACKSCREEN <> 'Z' 
+
+union all
+
+SELECT
+	'080' || I.ITEM_NBR_HS KEY,
+	'080' Facility,
+	'080' SHIP_FACILITY,
+	I.ITEM_NBR_HS SKU,
+	I.UPC_CASE CASE_UPC_NBR,
+	I.UPC_UNIT UNIT_UPC_NBR,
+	I.ROOT_DESC ROOT_ITEM_DESC,
+	mds.DEPT_GRP_CODE_DESC SKU_TYPE,
+	CASE
+		WHEN mds.DEPT_GRP_CODE IN (20, 30, 60, 90, 110) THEN mds.MDSE_GRP_CODE_DESC
+		ELSE 'NOT-FRESH'
+	END FRESH_TYPE,
+	mds.MDSE_GRP_CODE_DESC CAT,
+	mds.MDSE_CLS_CODE_DESC SUB_CAT,
+	mds.DEPT_GRP_CODE DEPT_GRP_KEY,
+	mds.DEPT_GRP_CODE_DESC DEPT_GRP_NAME,
+	mds.DEPT_CODE DEPT_KEY,
+	mds.DEPT_CODE_DESC DEPT_NAME,
+	mds.MDSE_GRP_CODE MDSE_GRP_KEY,
+	mds.MDSE_GRP_CODE_DESC MDSE_GRP_NAME,
+	mds.MDSE_CAT_CODE MDSE_CATGY_KEY,
+	mds.MDSE_CAT_CODE_DESC MDSE_CATGY_NAME,
+	mds.MDSE_CLS_CODE MDSE_CLASS_KEY,
+	mds.MDSE_CLS_CODE_DESC MDSE_CLASS_NAME,
+	(I.WHSE_TIE * I.WHSE_TIER) PALLET_SIZE,
+	'' LOT_SIZE,
+	I.ITEM_SIZE ITEM_SIZE_MSR,
+	I.ITEM_SIZE_UOM ITEM_SIZE_UOM_CD,
+	I.ITEM_ADDED_DATE ITEM_ADDED_DATE,
+	I.AVAILABILITY_DATE AVAILABILITY_DATE,
+	I.BILLING_STATUS_DATE BILLING_STATUS_DATE,
+	I.SHELF_LIFE SHELF_LIFE_QTY,
+	i.SHIPPING_CASE_CUBE SHIP_CASE_CUBE_MSR,
+	i.SHIPPING_CASE_WEIGHT SHIP_CASE_WGHT_MSR,
+	CASE
+		WHEN I.SERVICE_LEVEL_CODE IN ('A', 'B', 'C', 'D', 'E') THEN I.SERVICE_LEVEL_CODE
+		ELSE 'U'
+	END ITEM_RANK_CD,
+	I.PACK_CASE CASE_PACK_QTY,
+	I.MASTER_PACK MASTER_PACK_QTY,
+	I.RETAIL_PACK RETAIL_PACK_QTY,
+	I.CATALOG_PRICE CATALOG_PRICE_AMT,
+	I.CODE_DATE_FLAG,
+	I.CODE_DATE_MIN,
+	I.CODE_DATE_MAX,
+	i.WAREHOUSE_CODE,
+	wc.WAREHOUSE_CODE_DESC_FAC,
+	wc.WAREHOUSE_CODE_TEMP_ZONE, 
+    i.RAND_WGT_CD, 
+    i.ITEM_RES33
+FROM
+	CRMADMIN.T_WHSE_ITEM I
+inner join ETLADMIN.V_MDM_MDSE_HIERARCHY mds ON
+	mds.MDSE_CLS_CODE = i.MERCH_CLASS
+inner join CRMADMIN.T_WHSE_WAREHOUSE_CODE wc ON
+	wc.FACILITYID = i.FACILITYID
+	AND wc.WAREHOUSE_CODE = i.WAREHOUSE_CODE
+WHERE
+	I.PURCH_STATUS <> 'Z'
+	AND I.BILLING_STATUS_BACKSCREEN <> 'Z' 
+    AND i.FACILITYID = '061'
+
+union all
+
+SELECT
+	'090' || I.ITEM_NBR_HS KEY,
+	'090' Facility,
+	'090' SHIP_FACILITY,
+	I.ITEM_NBR_HS SKU,
+	I.UPC_CASE CASE_UPC_NBR,
+	I.UPC_UNIT UNIT_UPC_NBR,
+	I.ROOT_DESC ROOT_ITEM_DESC,
+	mds.DEPT_GRP_CODE_DESC SKU_TYPE,
+	CASE
+		WHEN mds.DEPT_GRP_CODE IN (20, 30, 60, 90, 110) THEN mds.MDSE_GRP_CODE_DESC
+		ELSE 'NOT-FRESH'
+	END FRESH_TYPE,
+	mds.MDSE_GRP_CODE_DESC CAT,
+	mds.MDSE_CLS_CODE_DESC SUB_CAT,
+	mds.DEPT_GRP_CODE DEPT_GRP_KEY,
+	mds.DEPT_GRP_CODE_DESC DEPT_GRP_NAME,
+	mds.DEPT_CODE DEPT_KEY,
+	mds.DEPT_CODE_DESC DEPT_NAME,
+	mds.MDSE_GRP_CODE MDSE_GRP_KEY,
+	mds.MDSE_GRP_CODE_DESC MDSE_GRP_NAME,
+	mds.MDSE_CAT_CODE MDSE_CATGY_KEY,
+	mds.MDSE_CAT_CODE_DESC MDSE_CATGY_NAME,
+	mds.MDSE_CLS_CODE MDSE_CLASS_KEY,
+	mds.MDSE_CLS_CODE_DESC MDSE_CLASS_NAME,
+	(I.WHSE_TIE * I.WHSE_TIER) PALLET_SIZE,
+	'' LOT_SIZE,
+	I.ITEM_SIZE ITEM_SIZE_MSR,
+	I.ITEM_SIZE_UOM ITEM_SIZE_UOM_CD,
+	I.ITEM_ADDED_DATE ITEM_ADDED_DATE,
+	I.AVAILABILITY_DATE AVAILABILITY_DATE,
+	I.BILLING_STATUS_DATE BILLING_STATUS_DATE,
+	I.SHELF_LIFE SHELF_LIFE_QTY,
+	i.SHIPPING_CASE_CUBE SHIP_CASE_CUBE_MSR,
+	i.SHIPPING_CASE_WEIGHT SHIP_CASE_WGHT_MSR,
+	CASE
+		WHEN I.SERVICE_LEVEL_CODE IN ('A', 'B', 'C', 'D', 'E') THEN I.SERVICE_LEVEL_CODE
+		ELSE 'U'
+	END ITEM_RANK_CD,
+	I.PACK_CASE CASE_PACK_QTY,
+	I.MASTER_PACK MASTER_PACK_QTY,
+	I.RETAIL_PACK RETAIL_PACK_QTY,
+	I.CATALOG_PRICE CATALOG_PRICE_AMT,
+	I.CODE_DATE_FLAG,
+	I.CODE_DATE_MIN,
+	I.CODE_DATE_MAX,
+	i.WAREHOUSE_CODE,
+	wc.WAREHOUSE_CODE_DESC_FAC,
+	wc.WAREHOUSE_CODE_TEMP_ZONE, 
+    i.RAND_WGT_CD, 
+    i.ITEM_RES33
+FROM
+	CRMADMIN.T_WHSE_ITEM I
+inner join ETLADMIN.V_MDM_MDSE_HIERARCHY mds ON
+	mds.MDSE_CLS_CODE = i.MERCH_CLASS
+inner join CRMADMIN.T_WHSE_WAREHOUSE_CODE wc ON
+	wc.FACILITYID = i.FACILITYID
+	AND wc.WAREHOUSE_CODE = i.WAREHOUSE_CODE
+WHERE
+	I.PURCH_STATUS <> 'Z'
+	AND I.BILLING_STATUS_BACKSCREEN <> 'Z' 
+    AND i.FACILITYID = '061'
+--);
+
+;
+
+SELECT   case d.division_cd 
+     when 'NOR' then '070' 
+     when 'BAL' then '069' 
+     when 'PNS' then '027' 
+     when 'SAT' then '029' 
+     when 'CSG' then '033' 
+     when 'BLM' then '038' 
+     when 'OKA' then '039' 
+     else '999' 
+end FACILITY,
+         d.division_cd,
+         i.DEPT_CD, 
+         d.DEPT_DESC,
+         i.CASE_UPC_CD,
+         i.VENDOR_ID,
+         i.AP_VENDOR_ID,
+         i.ITEM_DESC,
+         i.ITEM_PACK_QTY,
+         i.ITEM_SIZE_DESC,
+         i.PROD_GROUP_CD,
+         i.COMMODITY_CD,
+         i.LBS_MSR,
+         i.NET_MSR,
+         i.CUBE_MSR,
+         i.MASTER_PACK_FLG,
+         i.ITEM_STATUS_CD,
+         i.PURCHASE_RANK_CD,
+         i.UOM_CD,
+         i.CATCH_WGT_FLG,
+         i.CASE_COST_AMT,
+         i.SELL_PRICE_AMT,
+         i.FEE_AMT,
+         i.FEE_METHOD_CD,
+         i.BIRTH_DATE,
+         i.LAST_SALE_DATE,
+         i.LAST_PO_DATE,
+         i.DECA_PHS_DATE,
+         i.LAST_RECEIPT_DATE,
+         i.ITEM_UPC_CD,
+         i.EXPANDED_UPC_CD,
+         i.SHIPPING_GTIN_NBR,
+         i.ITEM_GTIN_NBR,
+         i.PURCHASE_GTIN_NBR,
+         i.SEASON_CD,
+         i.UPSTREAM_FLG,
+         i.ABC_CLASS_CD,
+         i.PO_RESTRICT_CD,
+         i.CODE_DATE_FLG,
+         i.ECON_ORDER_QTY,
+         i.LEAD_TIME_ID,
+         i.EFF_ECON_ORDER_QTY,
+         i.CUSTOMER_GRP_NBR,
+         i.EXP_PO_UPC_CD,
+         i.EXP_BILL_UPC_CD,
+         i.STD_PROD_COST_AMT,
+         i.STD_ITEM_COST_AMT,
+         i.STD_ITEM_SELL_AMT,
+         i.ITEM_DELETE_FLG,
+         i.BUYER_DELETE_FLG,
+         i.PS_PROD_CD,
+         i.PRIVATE_LABEL_DESC,
+         i.SHELF_LIFE_NBR,
+         i.ORDER_POINT_QTY,
+         i.MIN_LAYERS_QTY
+FROM     WH_OWNER.MDV_ITEM_ODS i 
+         inner join wh_owner.mdv_dept d on i.DEPT_CD = d.dept_cd
+;
+
+
+--CRM
+/*      Location - Customer                                                  */
+SELECT   cust.FACILITYID,
+         LPAD(cust.CUSTOMER_NBR_STND, 6, 0) CUSTOMER_NBR,
+         cust.NAME CUSTOMER_NAME,
+         cust.ADDRESS1 CUST_ST1_ADDR,
+         cust.ADDRES2 CUST_ST2_ADDR,
+         cust.STATE_CD CUST_STATE_CD,
+         cust.ZIP_CD CUST_ZIP_CD,
+         cust.ADDRESS3 CITY,
+         cust.STATUS_CD CUST_STATUS_CD,
+         cust.HOME_BRANCH FACILITYID_PRIMARY,
+         corp.CORP_CODE,
+         corp.CORP_NAME,
+         cust.MEMBERSHIP_KEY,
+         cust.MEMBERSHIP_DESC,
+         cust.CUST_CLASS_KEY,
+         cust.CUST_CLASS_DESC
+FROM     CRMADMIN.T_WHSE_CUST cust 
+         inner join CRMADMIN.T_WHSE_CORPORATION_MDM corp on corp.CUSTOMER_NBR_STND = cust.CUSTOMER_NBR_STND AND corp.ACTIVE = 'Y'
+         inner join CRMADMIN.V_WEB_FACILITY dx on cust.FACILITYID = dx.FACILITYID
+
+union all
+
+SELECT   '080' FACILITYID,
+         LPAD(cust.CUSTOMER_NBR_STND, 6, 0) CUSTOMER_NBR,
+         cust.NAME CUSTOMER_NAME,
+         cust.ADDRESS1 CUST_ST1_ADDR,
+         cust.ADDRES2 CUST_ST2_ADDR,
+         cust.STATE_CD CUST_STATE_CD,
+         cust.ZIP_CD CUST_ZIP_CD,
+         cust.ADDRESS3 CITY,
+         cust.STATUS_CD CUST_STATUS_CD,
+         '080' FACILITYID_PRIMARY,
+         corp.CORP_CODE,
+         corp.CORP_NAME,
+         cust.MEMBERSHIP_KEY,
+         cust.MEMBERSHIP_DESC,
+         cust.CUST_CLASS_KEY,
+         cust.CUST_CLASS_DESC
+FROM     CRMADMIN.T_WHSE_CUST cust 
+         inner join CRMADMIN.T_WHSE_CORPORATION_MDM corp on corp.CUSTOMER_NBR_STND = cust.CUSTOMER_NBR_STND AND corp.ACTIVE = 'Y'
+WHERE    cust.FACILITYID = '061'
+
+union all
+
+SELECT   '090' FACILITYID,
+         LPAD(cust.CUSTOMER_NBR_STND, 6, 0) CUSTOMER_NBR,
+         cust.NAME CUSTOMER_NAME,
+         cust.ADDRESS1 CUST_ST1_ADDR,
+         cust.ADDRES2 CUST_ST2_ADDR,
+         cust.STATE_CD CUST_STATE_CD,
+         cust.ZIP_CD CUST_ZIP_CD,
+         cust.ADDRESS3 CITY,
+         cust.STATUS_CD CUST_STATUS_CD,
+         '090' FACILITYID_PRIMARY,
+         corp.CORP_CODE,
+         corp.CORP_NAME,
+         cust.MEMBERSHIP_KEY,
+         cust.MEMBERSHIP_DESC,
+         cust.CUST_CLASS_KEY,
+         cust.CUST_CLASS_DESC
+FROM     CRMADMIN.T_WHSE_CUST cust 
+         inner join CRMADMIN.T_WHSE_CORPORATION_MDM corp on corp.CUSTOMER_NBR_STND = cust.CUSTOMER_NBR_STND AND corp.ACTIVE = 'Y'
+WHERE    cust.FACILITYID = '061'
+;
+
+/*      Location - Customer MDV                                              */
+SELECT   ship_to_id,
+         ship_to_name,
+         street_1_addr,
+         street_2_addr,
+         city_name,
+         state_cd,
+         zip_cd,
+         export_flg,
+         base_type_cd
+FROM     whmgr.mdv_ship_to;
+
+--==================================================================================================================================================================================================
+--CAITO
+--==================================================================================================================================================================================================
+
+--Caito sales 
+SELECT   s.DOCUMENT_NBR,
+         LPAD(s.FACILITY_ID,3,0) Facility,
+         s.ITEM_2_NBR as SKU_UNQ,
+         s.CUSTOMER_NBR,
+         s.INVOICE_DT,
+         s.ACTUAL_SHIP_DT,
+         D.FISCAL_WEEK_ID,
+         s.REASON_CD,
+         s.UNIT_COST_AMT,
+         sum(s.ORDER_UNIT_QTY) as ORIG_ORD_QTY,
+         sum(s.SHIP_UNIT_QTY) as UNITS_SOLD,
+         sum(s.EXT_PRICE_AMT) SALES_AMT,
+         0 as ORIG_LOST_SALES_QTY,
+         0 as ORIG_LOST_SALES_CALC_AMT,
+         0 LOST_SALES
+FROM     WH_OWNER.CAITO_SALES_HST s 
+         inner join WH_OWNER.FISCAL_DAY D on D.SALES_DT = s.INVOICE_DT
+where s.INVOICE_DT between '01-01-2020' and '06-12-2021'
+GROUP BY s.DOCUMENT_NBR, s.FACILITY_ID, s.ITEM_2_NBR, s.CUSTOMER_NBR, 
+         s.INVOICE_DT, s.ACTUAL_SHIP_DT, D.FISCAL_WEEK_ID, s.REASON_CD, 
+         s.UNIT_COST_AMT
+;
+
+--Caito product
+SELECT   item_2_nbr,
+         item_3_nbr,
+         item_desc,
+         item_line_desc,
+         search_txt,
+         cmprss_search_txt,
+         sls_family_cd,
+         sls_section_cd,
+         sls_catgy_3_cd,
+         sls_catgy_4_cd,
+         cmdty_class_cd,
+         cmdty_subclass_cd,
+         mstr_plan_fam_cd,
+         whse_prcs_grp_2_cd,
+         whse_prcs_grp_3_cd,
+         item_pool_cd,
+         buyer_nbr,
+         primary_uom_cd,
+         secondary_uom_cd,
+         purch_uom_cd,
+         pricing_uom_cd,
+         ship_uom_cd,
+         production_uom_cd,
+         compnt_uom_cd,
+         weight_uom_cd,
+         volumne_uom_cd,
+         vol_or_wght_uom_cd,
+         cycle_cnt_catgy_cd,
+         gl_catgy_cd
+FROM     whmgr.caito_item
+;
+
+--Caito customer
+SELECT   customer_nbr,
+         customer_desc,
+         customer_nm,
+         comprssd_cust_nm,
+         search_type_cd,
+         empl_type_cd,
+         mstr_customer_nbr,
+         payer_nbr,
+         account_mgr_nbr
+FROM     whmgr.caito_customer
+;
+
+--Caito vendor
+SELECT   vendor_nbr,
+         vendor_desc,
+         vendor_name,
+         comprssd_vndr_nm,
+         search_type_cd,
+         empl_type_cd
+FROM     whmgr.caito_vendor
 ;

@@ -320,6 +320,7 @@ grant select on CRMADMIN.V_AMZ_ITEM_NFD to user VSINTHIY;
 grant select on CRMADMIN.V_AMZ_ITEM_NFD to user VSSWAPNA;
 grant select on CRMADMIN.V_AMZ_ITEM_NFD to user WEB;
 
+/*
 --------------------------------------------------
 -- Create View CRMADMIN.V_AMZ_CATALOG_FEED
 --------------------------------------------------
@@ -1113,6 +1114,7 @@ grant select on CRMADMIN.V_AMZ_CATALOG_FEED to user VSINRAME;
 grant select on CRMADMIN.V_AMZ_CATALOG_FEED to user VSINTHIY;
 grant select on CRMADMIN.V_AMZ_CATALOG_FEED to user VSSWAPNA;
 grant select on CRMADMIN.V_AMZ_CATALOG_FEED to user WEB;
+*/
 
 --------------------------------------------------
 -- Create View CRMADMIN.V_AMZ_INVENTORY_FEED_DS
@@ -1133,12 +1135,14 @@ end facilityid,
          i.ASIN,
          i.UPC_UNIT_CD,
          'EA' available_qty_uom,
-         case i.ITEM_RES28 
+--         case i.ITEM_RES28 
+         case 'A'  --force 100% inventory pass-through per business request
               when 'A' then value(eid.PROD_QTY, 0) 
               else int(round((value(eid.PROD_QTY, 0) * i.INVENTORY_PERCENT))) 
          end Available_Qty_To_Amz,
          'CA' AVAILABLE_ORDERABLE_QTY_UOM,
-         case i.ITEM_RES28 
+--         case i.ITEM_RES28 
+         case 'A'  --force 100% inventory pass-through per business request
               when 'A' then (value(eid.PROD_QTY, 0) / i.PACK_CASE) 
               else int(round(((value(eid.PROD_QTY, 0)) / i.PACK_CASE) * i.INVENTORY_PERCENT)) 
          end AVAILABLE_ORDERABLE_QTY,
@@ -1177,7 +1181,8 @@ end facilityid,
          i.FACILITYID_UPSTREAM
 FROM     CRMADMIN.V_AMZ_ITEM_CORE i 
          inner join CRMADMIN.T_WHSE_DIV_XREF dx on i.FACILITYID = dx.SWAT_ID and dx.PROCESS_ACTIVE_FLAG = 'Y' AND i.FACILITYID in (select distinct FACILITYID from CRMADMIN.T_WHSE_CUST_GRP WHERE CUSTOMER_GRP_TYPE = '75' AND current date > START_DATE AND (current date < END_DATE OR END_DATE is null) AND FACILITYID <> '054') 
-         left outer join (SELECT FACILITYID, ITEM_NBR_HS, CDE_DT, max(date(RECEIPT_DTIM)) receipt_dt, sum(PROD_QTY) PROD_QTY FROM CRMADMIN.T_WHSE_EXE_INV_DTL where STATUS = 'A' AND FACILITYID in (select distinct FACILITYID from CRMADMIN.T_WHSE_CUST_GRP WHERE CUSTOMER_GRP_TYPE = '75' AND current date > START_DATE AND (current date < END_DATE OR END_DATE is null) AND FACILITYID <> '054') GROUP BY FACILITYID, ITEM_NBR_HS, CDE_DT) eid on eid.FACILITYID = i.FACILITYID and eid.ITEM_NBR_HS = i.ITEM_NBR_HS AND right(i.FACILITYID,2) = i.STOCK_FAC AND i.BILLING_STATUS_BACKSCREEN not in ('D', 'Z');
+         left outer join (SELECT FACILITYID, ITEM_NBR_HS, CDE_DT, max(date(RECEIPT_DTIM)) receipt_dt, sum(PROD_QTY) PROD_QTY FROM CRMADMIN.T_WHSE_EXE_INV_DTL where STATUS = 'A' AND FACILITYID in (select distinct FACILITYID from CRMADMIN.T_WHSE_CUST_GRP WHERE CUSTOMER_GRP_TYPE = '75' AND current date > START_DATE AND (current date < END_DATE OR END_DATE is null) AND FACILITYID <> '054') GROUP BY FACILITYID, ITEM_NBR_HS, CDE_DT) eid on eid.FACILITYID = i.FACILITYID and eid.ITEM_NBR_HS = i.ITEM_NBR_HS AND right(i.FACILITYID,2) = i.STOCK_FAC AND i.BILLING_STATUS_BACKSCREEN not in ('D', 'Z')
+;
 
 --------------------------------------------------
 -- Grant Authorities for CRMADMIN.V_AMZ_INVENTORY_FEED_DS
@@ -1305,9 +1310,18 @@ end facilityid,
          i.ASIN,
          i.UPC_UNIT_CD,
          'EA' available_qty_uom,
-         int(round(case i.INVENTORY_TOTAL when 0 then 0 else (case i.ITEM_RES28 when 'A' then (eid.PROD_QTY ) else int(round((eid.PROD_QTY * i.INVENTORY_PERCENT))) end) * (case ir.num_relationships when 1 then decimal(1.00, 9, 3) else (decimal(value(ds.DC_STORES, 0),9,3) / decimal(value(ts.TOTAL_STORES, 0),9,3)) end) end)) Available_Qty_To_Amz,
+         int(round(case i.INVENTORY_TOTAL when 0 then 0 else (
+--         case i.ITEM_RES28 
+         case 'A'  --force 100% inventory pass-through per business request
+                when 'A' 
+                then (eid.PROD_QTY ) 
+                else int(round((eid.PROD_QTY * i.INVENTORY_PERCENT))) end) * (case ir.num_relationships when 1 then decimal(1.00, 9, 3) else (decimal(value(ds.DC_STORES, 0),9,3) / decimal(value(ts.TOTAL_STORES, 0),9,3)) end) end)) Available_Qty_To_Amz,
          'CA' AVAILABLE_ORDERABLE_QTY_UOM,
-         int(round(case i.INVENTORY_TOTAL when 0 then 0 else integer(round((case i.ITEM_RES28 when 'A' then (eid.PROD_QTY / i.PACK_CASE) else int(round(((eid.PROD_QTY / i.PACK_CASE)* i.INVENTORY_PERCENT))) end) * (case ir.num_relationships when 1 then decimal(1.00, 9, 3) else (decimal(value(ds.DC_STORES, 0),9,3) / decimal(value(ts.TOTAL_STORES, 0),9,3)) end))) end)) AVAILABLE_ORDERABLE_QTY,
+         int(round(case i.INVENTORY_TOTAL when 0 then 0 else integer(round((
+--         case i.ITEM_RES28 
+         case 'A'  --force 100% inventory pass-through per business request
+              when 'A' 
+              then (eid.PROD_QTY / i.PACK_CASE) else int(round(((eid.PROD_QTY / i.PACK_CASE)* i.INVENTORY_PERCENT))) end) * (case ir.num_relationships when 1 then decimal(1.00, 9, 3) else (decimal(value(ds.DC_STORES, 0),9,3) / decimal(value(ts.TOTAL_STORES, 0),9,3)) end))) end)) AVAILABLE_ORDERABLE_QTY,
          case i.ITEM_RES28 
               when 'A' then 'YES' 
               else 'NO' 
@@ -1475,7 +1489,8 @@ end facilityid,
          'EA' available_qty_uom,
          case vi.INVENTORY_TOTAL 
               when 0 then 0 
-              else integer(round((case vi.ITEM_RES28 
+              else integer(round((--case vi.ITEM_RES28 
+                                  case 'A'  --force 100% inventory pass-through per business request
                                        when 'A' then (eid.PROD_QTY / vi.PACK_CASE) 
                                        else int(round((eid.PROD_QTY * vi.INVENTORY_PERCENT))) end) * (case ir.num_relationships 
                                                                                                            when 1 then decimal(1.00, 9, 3) 
@@ -1484,7 +1499,8 @@ end facilityid,
          'CA' AVAILABLE_ORDERABLE_QTY_UOM,
          case vi.INVENTORY_TOTAL 
               when 0 then 0 
-              else integer(round((case vi.ITEM_RES28 
+              else integer(round((--case vi.ITEM_RES28 
+                                  case 'A'  --force 100% inventory pass-through per business request
                                        when 'A' then (eid.PROD_QTY / vi.PACK_CASE) 
                                        else int(round(((eid.PROD_QTY / vi.PACK_CASE)* vi.INVENTORY_PERCENT))) end) * (case ir.num_relationships 
                                                                                                                            when 1 then decimal(1.00, 9, 3) 
@@ -1888,24 +1904,126 @@ grant select on CRMADMIN.V_AMZ_INVENTORY_FEED to user WEB;
 --drop view CRMADMIN.V_AMZ_MFG_FILL_RATE_FEED_DS;
 create or replace view CRMADMIN.V_AMZ_MFG_FILL_RATE_FEED_DS 
 as   
-SELECT pod.FACILITYID AS STOCK_FAC, i.FACILITYID, CASE i.FACILITYID WHEN '054' THEN 'F3SPB' WHEN '040' THEN 'F3SPB' WHEN '058' THEN 'F3SPA' WHEN '015' THEN 'F3SPC' WHEN '008' then 'SPD2Z' WHEN '085' then 'SPD30' WHEN '086' then 'SPDPD' ELSE i.FACILITYID END AS VENDOR_CODE, CURRENT date AS SNAPSHOT_DATE, poh.PO_NBR AS PO_NUMBER, poh.VENDOR_NAME AS SUPPLIER_NAME, az.LU_CODE AS ASIN, i.ITEM_NBR_HS AS VENDOR_SKU, i.UPC_UNIT_CD, i.UPC_CASE_CD, i.ITEM_DESCRIP, pod.PACK AS CASE_PACK_QTY, 'EA' AS CASE_QTY_UOM, CASE i.ITEM_RES28 WHEN 'A' THEN 'YES' ELSE 'NO' END AS AMZ_SPECIFIC_UPC, decimal(round((pod.LIST_COST / pod.PACK), 2), 9, 3) AS ITEM_COST_PRICE, decimal(round((pod.AMOUNT_OFF_INVOICE / pod.PACK), 3), 9, 3) AS ITEM_COST_ALLOW, pod.LIST_COST AS CASE_PACK_COST_PRICE, pod.AMOUNT_OFF_INVOICE AS CASE_PACK_COST_ALLOW, CASE pod.LINE_STATUS WHEN 'D' THEN 'RECEIVED' ELSE 'OPEN' END AS STATUS, pod.DATE_ORDERED AS ORDERED_DATE, poh.PO_ORIGINAL_DLVRY_DATE AS ORIG_REQ_DEL_DATE, poh.BUYER_ARRIVAL_DATE AS ADJ_REQ_DEL_DATE, poh.DATE_ARRIVAL AS APPOINTMENT_DATE, pod.EXE_FIRST_RECVD_TIMESTAMP AS RECEIVED_DTIME, CASE pod.ORIGINAL_QUANTITY WHEN 0 THEN pod.QUANTITY * pod.PACK ELSE pod.ORIGINAL_QUANTITY * pod.PACK END AS TOTAL_UNITS_ORDERED, pod.RECEIVED * pod.PACK AS TOTAL_UNITS_RECEIVED, pod.TURN * pod.PACK AS TURN_UNITS_ORDERED, CASE pod.LINE_STATUS WHEN 'D' THEN INTEGER(pod.RECEIVED * (pod.TURN / pod.QUANTITY)) * pod.PACK ELSE 0 END AS TURN_UNITS_RECEIVED, CASE WHEN (integer(round((CASE i.ITEM_RES28 WHEN 'A' THEN pod.QUANTITY ELSE (integer(round((pod.TURN * ((i.ON_ORDER_TURN - ((i.CASES_PER_WEEK * (CASE WHEN i.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / i.ON_ORDER_TURN))))) END))) * pod.PACK) <0 THEN 0 ELSE (integer(round((CASE i.ITEM_RES28 WHEN 'A' THEN pod.QUANTITY ELSE (integer(round((pod.TURN * ((i.ON_ORDER_TURN - ((i.CASES_PER_WEEK * (CASE WHEN i.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / i.ON_ORDER_TURN))))) END))) * pod.PACK) END AS AMZ_UNITS_ORDERED, CASE WHEN (CASE pod.LINE_STATUS WHEN 'D' THEN integer(round((CASE i.ITEM_RES28 WHEN 'A' THEN pod.RECEIVED ELSE (integer(round((INTEGER(pod.RECEIVED * (pod.TURN / pod.QUANTITY)))) * ((i.ON_ORDER_TURN - ((i.CASES_PER_WEEK * (CASE WHEN i.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / i.ON_ORDER_TURN))) END))) * pod.PACK ELSE 0 END)<0 THEN 0 ELSE CASE pod.LINE_STATUS WHEN 'D' THEN integer(round((CASE i.ITEM_RES28 WHEN 'A' THEN pod.RECEIVED ELSE (integer(round((INTEGER(pod.RECEIVED * (pod.TURN / pod.QUANTITY)))) * ((i.ON_ORDER_TURN - ((i.CASES_PER_WEEK * (CASE WHEN i.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / i.ON_ORDER_TURN))) END))) * pod.PACK ELSE 0 END END AS AMZ_UNITS_RECEIVED 
-
-FROM CRMADMIN.T_WHSE_PO_HDR poh 
-INNER JOIN CRMADMIN.T_WHSE_PO_DTL pod ON poh.VENDOR_FAC = pod.ITEM_FAC AND poh.PO_NBR = pod.PO_NBR AND poh.DATE_ORDERED = pod.DATE_ORDERED 
-INNER JOIN CRMADMIN.T_WHSE_ITEM i ON pod.ITEM_FAC = i.BICEPS_DC AND pod.ITEM_NBR = i.ITEM_NBR INNER JOIN CRMADMIN.T_WHSE_DIV_XREF dx ON i.FACILITYID = dx.SWAT_ID 
-INNER JOIN CRMADMIN.T_WHSE_VENDOR v ON poh.FACILITYID = v.FACILITYID AND poh.VENDOR_NBR = v.VENDOR_NBR 
-INNER JOIN CRMADMIN.V_AMZ_ASIN az ON i.ROOT_ITEM_NBR = az.ROOT_ITEM_NBR AND i.LV_ITEM_NBR = az.LV_ITEM_NBR 
-
-WHERE poh.TYPE NOT IN ('DV') 
-AND ((pod.LINE_STATUS <> 'D' AND pod.DATE_ORDERED >= SYSDATE -60 DAY) 
- OR(pod.LINE_STATUS = 'D' AND pod.DATE_RECEIVED BETWEEN CURRENT DATE -7 DAY AND CURRENT DATE)) 
-AND pod.QUANTITY > 0 
---AND i.ITEM_RES28 IN ('A', 'C') 
-AND i.FACILITYID IN ( SELECT vwcf.FACILITYID FROM CRMADMIN.V_WEB_CUSTOMER_FAC vwcf WHERE vwcf.CORP_CODE = 634001 AND vwcf.FACILITYID not in ('001', '002', '071') GROUP BY vwcf.FACILITYID) 
-AND i.ON_ORDER_TURN <> 0 
-AND v.MASTER_VENDOR 
-NOT IN ('757575', '767676') 
-AND i.FACILITYID <> '054';
+SELECT
+	pod.FACILITYID AS STOCK_FAC,
+	i.FACILITYID,
+	CASE
+		i.FACILITYID WHEN '054' THEN 'F3SPB'
+		WHEN '040' THEN 'F3SPB'
+		WHEN '058' THEN 'F3SPA'
+		WHEN '015' THEN 'F3SPC'
+		WHEN '008' THEN 'SPD2Z'
+		WHEN '085' THEN 'SPD30'
+		WHEN '086' THEN 'SPDPD'
+		ELSE i.FACILITYID
+	END AS VENDOR_CODE,
+	CURRENT date AS SNAPSHOT_DATE,
+	poh.PO_NBR AS PO_NUMBER,
+	poh.VENDOR_NAME AS SUPPLIER_NAME,
+	az.LU_CODE AS ASIN,
+	i.ITEM_NBR_HS AS VENDOR_SKU,
+	i.UPC_UNIT_CD,
+	i.UPC_CASE_CD,
+	i.ITEM_DESCRIP,
+	pod.PACK AS CASE_PACK_QTY,
+	'EA' AS CASE_QTY_UOM,
+	CASE
+		i.ITEM_RES28 WHEN 'A' THEN 'YES'
+		ELSE 'NO'
+	END AS AMZ_SPECIFIC_UPC,
+	decimal(round((pod.LIST_COST / pod.PACK), 2),9,3) AS ITEM_COST_PRICE,
+	decimal(round((pod.AMOUNT_OFF_INVOICE / pod.PACK), 3),9,3) AS ITEM_COST_ALLOW,
+	pod.LIST_COST AS CASE_PACK_COST_PRICE,
+	pod.AMOUNT_OFF_INVOICE AS CASE_PACK_COST_ALLOW,
+	CASE
+		pod.LINE_STATUS WHEN 'D' THEN 'RECEIVED'
+		ELSE 'OPEN'
+	END AS STATUS,
+	pod.DATE_ORDERED AS ORDERED_DATE,
+	poh.PO_ORIGINAL_DLVRY_DATE AS ORIG_REQ_DEL_DATE,
+	poh.BUYER_ARRIVAL_DATE AS ADJ_REQ_DEL_DATE,
+	poh.DATE_ARRIVAL AS APPOINTMENT_DATE,
+	pod.EXE_FIRST_RECVD_TIMESTAMP AS RECEIVED_DTIME,
+	CASE
+		pod.ORIGINAL_QUANTITY WHEN 0 THEN pod.QUANTITY * pod.PACK
+		ELSE pod.ORIGINAL_QUANTITY * pod.PACK
+	END AS TOTAL_UNITS_ORDERED,
+	pod.RECEIVED * pod.PACK AS TOTAL_UNITS_RECEIVED,
+	pod.TURN * pod.PACK AS TURN_UNITS_ORDERED,
+	CASE
+		pod.LINE_STATUS WHEN 'D' THEN INTEGER(pod.RECEIVED * (pod.TURN / pod.QUANTITY)) * pod.PACK
+		ELSE 0
+	END AS TURN_UNITS_RECEIVED,
+	CASE
+		WHEN (integer(round((
+--        CASE i.ITEM_RES28 
+        case 'A'  --force 100% inventory pass-through per business request
+             WHEN 'A' 
+             THEN pod.QUANTITY ELSE (integer(round((pod.TURN * ((i.ON_ORDER_TURN - ((i.CASES_PER_WEEK * (CASE WHEN i.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / i.ON_ORDER_TURN))))) END))) * pod.PACK) <0 THEN 0
+		ELSE (integer(round((
+--        CASE i.ITEM_RES28 
+        case 'A'  --force 100% inventory pass-through per business request
+             WHEN 'A' 
+             THEN pod.QUANTITY ELSE (integer(round((pod.TURN * ((i.ON_ORDER_TURN - ((i.CASES_PER_WEEK * (CASE WHEN i.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / i.ON_ORDER_TURN))))) END))) * pod.PACK)
+	END AS AMZ_UNITS_ORDERED,
+	CASE
+		WHEN
+		(CASE
+			pod.LINE_STATUS WHEN 'D' THEN integer(round((
+--         CASE i.ITEM_RES28 
+         case 'A'  --force 100% inventory pass-through per business request
+              WHEN 'A' 
+              THEN pod.RECEIVED ELSE (integer(round((INTEGER(pod.RECEIVED * (pod.TURN / pod.QUANTITY)))) * ((i.ON_ORDER_TURN - ((i.CASES_PER_WEEK * (CASE WHEN i.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / i.ON_ORDER_TURN))) END))) * pod.PACK
+			ELSE 0
+		END)<0 THEN 0
+		ELSE
+		CASE
+			pod.LINE_STATUS WHEN 'D' THEN integer(round((
+--         CASE i.ITEM_RES28 
+         case 'A'  --force 100% inventory pass-through per business request
+              WHEN 'A' 
+              THEN pod.RECEIVED ELSE (integer(round((INTEGER(pod.RECEIVED * (pod.TURN / pod.QUANTITY)))) * ((i.ON_ORDER_TURN - ((i.CASES_PER_WEEK * (CASE WHEN i.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / i.ON_ORDER_TURN))) END))) * pod.PACK
+			ELSE 0
+		END
+	END AS AMZ_UNITS_RECEIVED
+FROM
+	CRMADMIN.T_WHSE_PO_HDR poh
+INNER JOIN CRMADMIN.T_WHSE_PO_DTL pod ON
+	poh.VENDOR_FAC = pod.ITEM_FAC
+	AND poh.PO_NBR = pod.PO_NBR
+	AND poh.DATE_ORDERED = pod.DATE_ORDERED
+INNER JOIN CRMADMIN.T_WHSE_ITEM i ON
+	pod.ITEM_FAC = i.BICEPS_DC
+	AND pod.ITEM_NBR = i.ITEM_NBR
+INNER JOIN CRMADMIN.T_WHSE_DIV_XREF dx ON
+	i.FACILITYID = dx.SWAT_ID
+INNER JOIN CRMADMIN.T_WHSE_VENDOR v ON
+	poh.FACILITYID = v.FACILITYID
+	AND poh.VENDOR_NBR = v.VENDOR_NBR
+INNER JOIN CRMADMIN.V_AMZ_ASIN az ON
+	i.ROOT_ITEM_NBR = az.ROOT_ITEM_NBR
+	AND i.LV_ITEM_NBR = az.LV_ITEM_NBR
+WHERE
+	poh.TYPE NOT IN ('DV')
+	AND ((pod.LINE_STATUS <> 'D'
+		AND pod.DATE_ORDERED >= SYSDATE -60 DAY)
+	OR(pod.LINE_STATUS = 'D'
+		AND pod.DATE_RECEIVED BETWEEN CURRENT DATE -7 DAY AND CURRENT DATE))
+	AND pod.QUANTITY > 0
+	--AND i.ITEM_RES28 IN ('A', 'C') 
+	AND i.FACILITYID IN (
+	SELECT
+		vwcf.FACILITYID
+	FROM
+		CRMADMIN.V_WEB_CUSTOMER_FAC vwcf
+	WHERE
+		vwcf.CORP_CODE = 634001
+		AND vwcf.FACILITYID NOT IN ('001', '002', '071')
+	GROUP BY
+		vwcf.FACILITYID)
+	AND i.ON_ORDER_TURN <> 0
+	AND v.MASTER_VENDOR NOT IN ('757575', '767676')
+	AND i.FACILITYID <> '054' ;
 
 --------------------------------------------------
 -- Grant Authorities for CRMADMIN.V_AMZ_MFG_FILL_RATE_FEED_DS
@@ -2022,23 +2140,170 @@ grant select on CRMADMIN.V_AMZ_MFG_FILL_RATE_FEED_DS to user WEB;
 -- Create View CRMADMIN.V_AMZ_MFG_FILL_RATE_FEED_NFD
 --------------------------------------------------
 --drop view CRMADMIN.V_AMZ_MFG_FILL_RATE_FEED_NFD;
-create or replace view CRMADMIN.V_AMZ_MFG_FILL_RATE_FEED_NFD  as             SELECT pod.FACILITYID AS STOCK_FAC, i.FACILITYID, CASE i.FACILITYID_HOME WHEN '040' THEN 'F3SPB' WHEN '008' then 'SPD2Z' ELSE i.FACILITYID END AS VENDOR_CODE, CURRENT date AS SNAPSHOT_DATE, poh.PO_NBR AS PO_NUMBER, poh.VENDOR_NAME AS SUPPLIER_NAME, az.LU_CODE ASIN, i.ITEM_NBR_HS_HOME AS VENDOR_SKU, i.UPC_UNIT_CD, i.UPC_CASE_CD, i.ITEM_DESCRIP, pod.PACK AS CASE_PACK_QTY, 'EA' AS CASE_QTY_UOM, CASE i.ITEM_RES28 WHEN 'A' THEN 'YES' ELSE 'NO' END AS AMZ_SPECIFIC_UPC, decimal(round((pod.LIST_COST / pod.PACK), 2), 9, 3) AS ITEM_COST_PRICE, decimal(round((pod.AMOUNT_OFF_INVOICE / pod.PACK), 3), 9, 3) AS ITEM_COST_ALLOW, pod.LIST_COST AS CASE_PACK_COST_PRICE, pod.AMOUNT_OFF_INVOICE AS CASE_PACK_COST_ALLOW, CASE pod.LINE_STATUS WHEN 'D' THEN 'RECEIVED' ELSE 'OPEN' END AS STATUS, pod.DATE_ORDERED AS ORDERED_DATE, poh.PO_ORIGINAL_DLVRY_DATE AS ORIG_REQ_DEL_DATE, poh.BUYER_ARRIVAL_DATE AS ADJ_REQ_DEL_DATE, poh.DATE_ARRIVAL AS APPOINTMENT_DATE, pod.EXE_FIRST_RECVD_TIMESTAMP AS RECEIVED_DTIME, CASE pod.ORIGINAL_QUANTITY WHEN 0 THEN pod.QUANTITY * pod.PACK ELSE pod.ORIGINAL_QUANTITY * pod.PACK END AS TOTAL_UNITS_ORDERED, pod.RECEIVED * pod.PACK AS TOTAL_UNITS_RECEIVED, pod.TURN * pod.PACK AS TURN_UNITS_ORDERED, CASE pod.LINE_STATUS WHEN 'D' THEN INTEGER(pod.RECEIVED * (pod.TURN / pod.QUANTITY)) * pod.PACK ELSE 0 END AS TURN_UNITS_RECEIVED, CASE WHEN (integer(round((CASE i.ITEM_RES28 WHEN 'A' THEN pod.QUANTITY ELSE (integer(round((pod.TURN * ((i.ON_ORDER_TURN - ((i.FORECAST * (CASE WHEN i.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / i.ON_ORDER_TURN))))) END) * (CASE ir.num_relationships WHEN 1 THEN decimal(1.00, 9, 3) ELSE (decimal(value(ds.DC_STORES, 0), 9, 3) / decimal(value(ts.TOTAL_STORES, 0), 9, 3)) END))) * pod.PACK) < 0 THEN 0 ELSE (integer(round((CASE i.ITEM_RES28 WHEN 'A' THEN pod.QUANTITY ELSE (integer(round((pod.TURN * ((i.ON_ORDER_TURN - ((i.FORECAST * (CASE WHEN i.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / i.ON_ORDER_TURN))))) END) * (CASE ir.num_relationships WHEN 1 THEN decimal(1.00, 9, 3) ELSE (decimal(value(ds.DC_STORES, 0), 9, 3) / decimal(value(ts.TOTAL_STORES, 0), 9, 3)) END))) * pod.PACK) END AS AMZ_UNITS_ORDERED, CASE WHEN ( CASE pod.LINE_STATUS WHEN 'D' THEN integer(round((CASE i.ITEM_RES28 WHEN 'A' THEN pod.RECEIVED ELSE (integer(round((INTEGER(pod.RECEIVED * (pod.TURN / pod.QUANTITY)))) * ((i.ON_ORDER_TURN - ((i.FORECAST * (CASE WHEN i.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / i.ON_ORDER_TURN))) * (CASE ir.num_relationships WHEN 1 THEN decimal(1.00, 9, 3) ELSE (decimal(value(ds.DC_STORES, 0), 9, 3) / decimal(value(ts.TOTAL_STORES, 0), 9, 3))END)END))) * pod.PACK ELSE 0 END) < 0 THEN 0 ELSE CASE pod.LINE_STATUS WHEN 'D' THEN integer(round((CASE i.ITEM_RES28 WHEN 'A' THEN pod.RECEIVED ELSE (integer(round((INTEGER(pod.RECEIVED * (pod.TURN / pod.QUANTITY)))) * ((i.ON_ORDER_TURN - ((i.FORECAST * (CASE WHEN i.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / i.ON_ORDER_TURN))) * (CASE ir.num_relationships WHEN 1 THEN decimal(1.00, 9, 3) ELSE (decimal(value(ds.DC_STORES, 0), 9, 3) / decimal(value(ts.TOTAL_STORES, 0), 9, 3))END)END))) * pod.PACK ELSE 0 END END AS AMZ_UNITS_RECEIVED, ts.TOTAL_STORES, ds.DC_STORES, (decimal(value(ds.DC_STORES, 0), 9, 3) / decimal(value(ts.TOTAL_STORES, 0), 9, 3)) AS US_DS_ALLOC_PERCENT, ir.num_relationships 
-
-FROM CRMADMIN.V_AMZ_ITEM_NFD i 
-INNER JOIN CRMADMIN.T_WHSE_PO_DTL pod ON pod.FACILITYID = i.FACILITYID_STOCK AND pod.ITEM_NBR = i.ITEM_NBR_STOCK 
-INNER JOIN CRMADMIN.T_WHSE_PO_HDR poh ON poh.VENDOR_FAC = pod.ITEM_FAC AND poh.PO_NBR = pod.PO_NBR AND poh.DATE_ORDERED = pod.DATE_ORDERED 
-INNER JOIN CRMADMIN.T_WHSE_VENDOR v ON poh.FACILITYID = v.FACILITYID AND poh.VENDOR_NBR = v.VENDOR_NBR 
-INNER JOIN (SELECT '054' FACILITYID_UPSTREAM, count(*) TOTAL_STORES FROM CRMADMIN.V_WEB_CUSTOMER_FAC vwcf inner join CRMADMIN.T_WHSE_DIV_XREF dx on vwcf.FACILITYID = dx.SWAT_ID WHERE vwcf.CORP_CODE = 634001 AND vwcf.FACILITYID_PRIMARY = 'Y' AND dx.FACILITYID_UPSTREAM in ('002') GROUP BY dx.FACILITYID_UPSTREAM) ts ON i.FACILITYID_STOCK = ts.FACILITYID_UPSTREAM 
-INNER JOIN (SELECT vwcf.FACILITYID, count(*) DC_STORES FROM CRMADMIN.V_WEB_CUSTOMER_FAC vwcf inner join CRMADMIN.T_WHSE_DIV_XREF dx on vwcf.FACILITYID = dx.SWAT_ID WHERE vwcf.CORP_CODE = 634001 AND vwcf.FACILITYID_PRIMARY = 'Y' AND dx.FACILITYID_UPSTREAM in ('002') GROUP BY vwcf.FACILITYID) ds ON i.FACILITYID_HOME = ds.FACILITYID 
-INNER JOIN (SELECT FACILITYID_STOCK, ITEM_NBR_HS_STOCK, count(*) num_relationships FROM CRMADMIN.V_AMZ_ITEM_NFD inner join (SELECT vwcf.FACILITYID, count(*) DC_STORES FROM CRMADMIN.V_WEB_CUSTOMER_FAC vwcf inner join CRMADMIN.T_WHSE_DIV_XREF dx on vwcf.FACILITYID = dx.SWAT_ID WHERE vwcf.CORP_CODE = 634001 AND vwcf.FACILITYID_PRIMARY = 'Y' AND dx.FACILITYID_UPSTREAM in ('002') GROUP BY vwcf.FACILITYID) ds on FACILITYID_HOME = ds.FACILITYID GROUP BY FACILITYID_STOCK, ITEM_NBR_HS_STOCK) ir ON i.FACILITYID_STOCK = ir.FACILITYID_STOCK AND i.ITEM_NBR_HS_STOCK = ir.ITEM_NBR_HS_STOCK 
-LEFT OUTER JOIN CRMADMIN.V_AMZ_ASIN az ON az.ROOT_ITEM_NBR = i.ROOT_ITEM_NBR AND az.LV_ITEM_NBR = i.LV_ITEM_NBR 
-
-WHERE ((pod.LINE_STATUS <> 'D' AND pod.DATE_ORDERED >= SYSDATE -60 DAY) OR (pod.LINE_STATUS = 'D' AND pod.DATE_RECEIVED BETWEEN CURRENT DATE - 7 DAY AND CURRENT DATE)) 
---AND i.ITEM_RES28 IN ('A', 'C') 
-AND i.ON_ORDER_TURN <> 0 
-AND poh.TYPE NOT IN ('DV') 
-AND pod.QUANTITY > 0 
-AND v.MASTER_VENDOR NOT IN ('757575', '767676');
+create or replace view CRMADMIN.V_AMZ_MFG_FILL_RATE_FEED_NFD  as             
+SELECT
+	pod.FACILITYID AS STOCK_FAC,
+	i.FACILITYID,
+	CASE
+		i.FACILITYID_HOME WHEN '040' THEN 'F3SPB'
+		WHEN '008' THEN 'SPD2Z'
+		ELSE i.FACILITYID
+	END AS VENDOR_CODE,
+	CURRENT date AS SNAPSHOT_DATE,
+	poh.PO_NBR AS PO_NUMBER,
+	poh.VENDOR_NAME AS SUPPLIER_NAME,
+	az.LU_CODE ASIN,
+	i.ITEM_NBR_HS_HOME AS VENDOR_SKU,
+	i.UPC_UNIT_CD,
+	i.UPC_CASE_CD,
+	i.ITEM_DESCRIP,
+	pod.PACK AS CASE_PACK_QTY,
+	'EA' AS CASE_QTY_UOM,
+	CASE
+		i.ITEM_RES28 WHEN 'A' THEN 'YES'
+		ELSE 'NO'
+	END AS AMZ_SPECIFIC_UPC,
+	decimal(round((pod.LIST_COST / pod.PACK), 2),9,3) AS ITEM_COST_PRICE,
+	decimal(round((pod.AMOUNT_OFF_INVOICE / pod.PACK), 3),9,3) AS ITEM_COST_ALLOW,
+	pod.LIST_COST AS CASE_PACK_COST_PRICE,
+	pod.AMOUNT_OFF_INVOICE AS CASE_PACK_COST_ALLOW,
+	CASE
+		pod.LINE_STATUS WHEN 'D' THEN 'RECEIVED'
+		ELSE 'OPEN'
+	END AS STATUS,
+	pod.DATE_ORDERED AS ORDERED_DATE,
+	poh.PO_ORIGINAL_DLVRY_DATE AS ORIG_REQ_DEL_DATE,
+	poh.BUYER_ARRIVAL_DATE AS ADJ_REQ_DEL_DATE,
+	poh.DATE_ARRIVAL AS APPOINTMENT_DATE,
+	pod.EXE_FIRST_RECVD_TIMESTAMP AS RECEIVED_DTIME,
+	CASE
+		pod.ORIGINAL_QUANTITY WHEN 0 THEN pod.QUANTITY * pod.PACK
+		ELSE pod.ORIGINAL_QUANTITY * pod.PACK
+	END AS TOTAL_UNITS_ORDERED,
+	pod.RECEIVED * pod.PACK AS TOTAL_UNITS_RECEIVED,
+	pod.TURN * pod.PACK AS TURN_UNITS_ORDERED,
+	CASE
+		pod.LINE_STATUS WHEN 'D' THEN INTEGER(pod.RECEIVED * (pod.TURN / pod.QUANTITY)) * pod.PACK
+		ELSE 0
+	END AS TURN_UNITS_RECEIVED,
+	CASE
+		WHEN (integer(round((
+--        CASE i.ITEM_RES28 
+        case 'A'  --force 100% inventory pass-through per business request
+             WHEN 'A' 
+             THEN pod.QUANTITY ELSE (integer(round((pod.TURN * ((i.ON_ORDER_TURN - ((i.FORECAST * (CASE WHEN i.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / i.ON_ORDER_TURN))))) END) * (CASE ir.num_relationships WHEN 1 THEN decimal(1.00, 9, 3) ELSE (decimal(value(ds.DC_STORES, 0), 9, 3) / decimal(value(ts.TOTAL_STORES, 0), 9, 3)) END))) * pod.PACK) < 0 THEN 0
+		ELSE (integer(round((
+--        CASE i.ITEM_RES28 
+        case 'A'  --force 100% inventory pass-through per business request
+             WHEN 'A' 
+             THEN pod.QUANTITY ELSE (integer(round((pod.TURN * ((i.ON_ORDER_TURN - ((i.FORECAST * (CASE WHEN i.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / i.ON_ORDER_TURN))))) END) * (CASE ir.num_relationships WHEN 1 THEN decimal(1.00, 9, 3) ELSE (decimal(value(ds.DC_STORES, 0), 9, 3) / decimal(value(ts.TOTAL_STORES, 0), 9, 3)) END))) * pod.PACK)
+	END AS AMZ_UNITS_ORDERED,
+	CASE
+		WHEN (
+		CASE
+			pod.LINE_STATUS WHEN 'D' THEN integer(round((
+--        CASE i.ITEM_RES28 
+        case 'A'  --force 100% inventory pass-through per business request
+                 WHEN 'A' 
+                 THEN pod.RECEIVED ELSE (integer(round((INTEGER(pod.RECEIVED * (pod.TURN / pod.QUANTITY)))) * ((i.ON_ORDER_TURN - ((i.FORECAST * (CASE WHEN i.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / i.ON_ORDER_TURN))) * (CASE ir.num_relationships WHEN 1 THEN decimal(1.00, 9, 3) ELSE (decimal(value(ds.DC_STORES, 0), 9, 3) / decimal(value(ts.TOTAL_STORES, 0), 9, 3))END)END))) * pod.PACK
+			ELSE 0
+		END) < 0 THEN 0
+		ELSE
+		CASE
+			pod.LINE_STATUS WHEN 'D' THEN integer(round((
+--        CASE i.ITEM_RES28 
+        case 'A'  --force 100% inventory pass-through per business request
+                 WHEN 'A' 
+                 THEN pod.RECEIVED ELSE (integer(round((INTEGER(pod.RECEIVED * (pod.TURN / pod.QUANTITY)))) * ((i.ON_ORDER_TURN - ((i.FORECAST * (CASE WHEN i.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / i.ON_ORDER_TURN))) * (CASE ir.num_relationships WHEN 1 THEN decimal(1.00, 9, 3) ELSE (decimal(value(ds.DC_STORES, 0), 9, 3) / decimal(value(ts.TOTAL_STORES, 0), 9, 3))END)END))) * pod.PACK
+			ELSE 0
+		END
+	END AS AMZ_UNITS_RECEIVED,
+	ts.TOTAL_STORES,
+	ds.DC_STORES,
+	(decimal(value(ds.DC_STORES, 0),9,3) / decimal(value(ts.TOTAL_STORES, 0),9,3)) AS US_DS_ALLOC_PERCENT,
+	ir.num_relationships
+FROM
+	CRMADMIN.V_AMZ_ITEM_NFD i
+INNER JOIN CRMADMIN.T_WHSE_PO_DTL pod ON
+	pod.FACILITYID = i.FACILITYID_STOCK
+	AND pod.ITEM_NBR = i.ITEM_NBR_STOCK
+INNER JOIN CRMADMIN.T_WHSE_PO_HDR poh ON
+	poh.VENDOR_FAC = pod.ITEM_FAC
+	AND poh.PO_NBR = pod.PO_NBR
+	AND poh.DATE_ORDERED = pod.DATE_ORDERED
+INNER JOIN CRMADMIN.T_WHSE_VENDOR v ON
+	poh.FACILITYID = v.FACILITYID
+	AND poh.VENDOR_NBR = v.VENDOR_NBR
+INNER JOIN (
+	SELECT
+		'054' FACILITYID_UPSTREAM,
+		count(*) TOTAL_STORES
+	FROM
+		CRMADMIN.V_WEB_CUSTOMER_FAC vwcf
+	INNER JOIN CRMADMIN.T_WHSE_DIV_XREF dx ON
+		vwcf.FACILITYID = dx.SWAT_ID
+	WHERE
+		vwcf.CORP_CODE = 634001
+		AND vwcf.FACILITYID_PRIMARY = 'Y'
+		AND dx.FACILITYID_UPSTREAM IN ('002')
+	GROUP BY
+		dx.FACILITYID_UPSTREAM) ts ON
+	i.FACILITYID_STOCK = ts.FACILITYID_UPSTREAM
+INNER JOIN (
+	SELECT
+		vwcf.FACILITYID,
+		count(*) DC_STORES
+	FROM
+		CRMADMIN.V_WEB_CUSTOMER_FAC vwcf
+	INNER JOIN CRMADMIN.T_WHSE_DIV_XREF dx ON
+		vwcf.FACILITYID = dx.SWAT_ID
+	WHERE
+		vwcf.CORP_CODE = 634001
+		AND vwcf.FACILITYID_PRIMARY = 'Y'
+		AND dx.FACILITYID_UPSTREAM IN ('002')
+	GROUP BY
+		vwcf.FACILITYID) ds ON
+	i.FACILITYID_HOME = ds.FACILITYID
+INNER JOIN (
+	SELECT
+		FACILITYID_STOCK,
+		ITEM_NBR_HS_STOCK,
+		count(*) num_relationships
+	FROM
+		CRMADMIN.V_AMZ_ITEM_NFD
+	INNER JOIN (
+		SELECT
+			vwcf.FACILITYID,
+			count(*) DC_STORES
+		FROM
+			CRMADMIN.V_WEB_CUSTOMER_FAC vwcf
+		INNER JOIN CRMADMIN.T_WHSE_DIV_XREF dx ON
+			vwcf.FACILITYID = dx.SWAT_ID
+		WHERE
+			vwcf.CORP_CODE = 634001
+			AND vwcf.FACILITYID_PRIMARY = 'Y'
+			AND dx.FACILITYID_UPSTREAM IN ('002')
+		GROUP BY
+			vwcf.FACILITYID) ds ON
+		FACILITYID_HOME = ds.FACILITYID
+	GROUP BY
+		FACILITYID_STOCK,
+		ITEM_NBR_HS_STOCK) ir ON
+	i.FACILITYID_STOCK = ir.FACILITYID_STOCK
+	AND i.ITEM_NBR_HS_STOCK = ir.ITEM_NBR_HS_STOCK
+LEFT OUTER JOIN CRMADMIN.V_AMZ_ASIN az ON
+	az.ROOT_ITEM_NBR = i.ROOT_ITEM_NBR
+	AND az.LV_ITEM_NBR = i.LV_ITEM_NBR
+WHERE
+	((pod.LINE_STATUS <> 'D'
+		AND pod.DATE_ORDERED >= SYSDATE -60 DAY)
+	OR (pod.LINE_STATUS = 'D'
+		AND pod.DATE_RECEIVED BETWEEN CURRENT DATE - 7 DAY AND CURRENT DATE))
+	--AND i.ITEM_RES28 IN ('A', 'C') 
+	AND i.ON_ORDER_TURN <> 0
+	AND poh.TYPE NOT IN ('DV')
+	AND pod.QUANTITY > 0
+	AND v.MASTER_VENDOR NOT IN ('757575', '767676');
 
 --------------------------------------------------
 -- Grant Authorities for CRMADMIN.V_AMZ_MFG_FILL_RATE_FEED_NFD
@@ -2154,27 +2419,202 @@ grant select on CRMADMIN.V_AMZ_MFG_FILL_RATE_FEED_NFD to user WEB;
 -- Create View CRMADMIN.V_AMZ_MFG_FILL_RATE_FEED_US
 --------------------------------------------------
 --drop view CRMADMIN.V_AMZ_MFG_FILL_RATE_FEED_US;
-create or replace view CRMADMIN.V_AMZ_MFG_FILL_RATE_FEED_US as   SELECT pod.FACILITYID AS STOCK_FAC, i.FACILITYID, CASE i.FACILITYID WHEN '054' THEN 'F3SPB' WHEN '040' THEN 'F3SPB' WHEN '058' THEN 'F3SPA' WHEN '015' THEN 'F3SPC' WHEN '008' then 'SPD2Z' WHEN '085' then 'SPD30' WHEN '086' then 'SPDPD' ELSE i.FACILITYID END AS VENDOR_CODE, CURRENT date AS SNAPSHOT_DATE, poh.PO_NBR AS PO_NUMBER, poh.VENDOR_NAME AS SUPPLIER_NAME, az.LU_CODE ASIN, vi.ITEM_NBR_HS AS VENDOR_SKU, i.UPC_UNIT_CD, vi.UPC_CASE_CD, vi.ITEM_DESCRIP, pod.PACK AS CASE_PACK_QTY, 'EA' AS CASE_QTY_UOM, CASE i.ITEM_RES28 WHEN 'A' THEN 'YES' ELSE 'NO' END AS AMZ_SPECIFIC_UPC, decimal(round((pod.LIST_COST / pod.PACK), 2), 9, 3) AS ITEM_COST_PRICE, decimal(round((pod.AMOUNT_OFF_INVOICE / pod.PACK), 3), 9, 3) AS ITEM_COST_ALLOW, pod.LIST_COST AS CASE_PACK_COST_PRICE, pod.AMOUNT_OFF_INVOICE AS CASE_PACK_COST_ALLOW, CASE pod.LINE_STATUS WHEN 'D' THEN 'RECEIVED' ELSE 'OPEN' END AS STATUS, pod.DATE_ORDERED AS ORDERED_DATE, poh.PO_ORIGINAL_DLVRY_DATE AS ORIG_REQ_DEL_DATE, poh.BUYER_ARRIVAL_DATE AS ADJ_REQ_DEL_DATE, poh.DATE_ARRIVAL AS APPOINTMENT_DATE, pod.EXE_FIRST_RECVD_TIMESTAMP AS RECEIVED_DTIME, CASE pod.ORIGINAL_QUANTITY WHEN 0 THEN pod.QUANTITY * pod.PACK ELSE pod.ORIGINAL_QUANTITY * pod.PACK END AS TOTAL_UNITS_ORDERED, pod.RECEIVED * pod.PACK AS TOTAL_UNITS_RECEIVED, pod.TURN * pod.PACK AS TURN_UNITS_ORDERED, CASE pod.LINE_STATUS WHEN 'D' THEN INTEGER(pod.RECEIVED * (pod.TURN / pod.QUANTITY)) * pod.PACK ELSE 0 END AS TURN_UNITS_RECEIVED, CASE WHEN (integer(round((CASE vi.ITEM_RES28 WHEN 'A' THEN pod.QUANTITY ELSE (integer(round((pod.TURN * ((vi.ON_ORDER_TURN - ((vi.CASES_PER_WEEK * (CASE WHEN vi.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / vi.ON_ORDER_TURN))))) END) * (CASE ir.num_relationships WHEN 1 THEN decimal(1.00, 9, 3) ELSE (decimal(value(ds.DC_STORES, 0), 9, 3) / decimal(value(ts.TOTAL_STORES, 0), 9, 3)) END))) * pod.PACK) <0 THEN 0 ELSE (integer(round((CASE vi.ITEM_RES28 WHEN 'A' THEN pod.QUANTITY ELSE (integer(round((pod.TURN * ((vi.ON_ORDER_TURN - ((vi.CASES_PER_WEEK * (CASE WHEN vi.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / vi.ON_ORDER_TURN))))) END) * (CASE ir.num_relationships WHEN 1 THEN decimal(1.00, 9, 3) ELSE (decimal(value(ds.DC_STORES, 0), 9, 3) / decimal(value(ts.TOTAL_STORES, 0), 9, 3)) END))) * pod.PACK) END AS AMZ_UNITS_ORDERED, CASE WHEN ( CASE pod.LINE_STATUS WHEN 'D' THEN integer(round((CASE vi.ITEM_RES28 WHEN 'A' THEN pod.RECEIVED ELSE (integer(round((INTEGER(pod.RECEIVED * (pod.TURN / pod.QUANTITY)))) * ((vi.ON_ORDER_TURN - ((vi.CASES_PER_WEEK * (CASE WHEN vi.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / vi.ON_ORDER_TURN))) * (CASE ir.num_relationships WHEN 1 THEN decimal(1.00, 9, 3) ELSE (decimal(value(ds.DC_STORES, 0), 9, 3) / decimal(value(ts.TOTAL_STORES, 0), 9, 3))END)END))) * pod.PACK ELSE 0 END) <0 THEN 0 ELSE CASE pod.LINE_STATUS WHEN 'D' THEN integer(round((CASE vi.ITEM_RES28 WHEN 'A' THEN pod.RECEIVED ELSE (integer(round((INTEGER(pod.RECEIVED * (pod.TURN / pod.QUANTITY)))) * ((vi.ON_ORDER_TURN - ((vi.CASES_PER_WEEK * (CASE WHEN vi.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / vi.ON_ORDER_TURN))) * (CASE ir.num_relationships WHEN 1 THEN decimal(1.00, 9, 3) ELSE (decimal(value(ds.DC_STORES, 0), 9, 3) / decimal(value(ts.TOTAL_STORES, 0), 9, 3))END)END))) * pod.PACK ELSE 0 END END AS AMZ_UNITS_RECEIVED, ts.TOTAL_STORES, ds.DC_STORES, (decimal(value(ds.DC_STORES, 0), 9, 3) / decimal(value(ts.TOTAL_STORES, 0), 9, 3)) AS US_DS_ALLOC_PERCENT, ir.num_relationships 
-
-FROM CRMADMIN.T_WHSE_ITEM i 
-INNER JOIN CRMADMIN.T_WHSE_ITEM_PARENTCHILD ipc ON i.FACILITYID = ipc.FACILITYID_CHILD AND i.ITEM_NBR_HS = ipc.ITEM_NBR_HS_CHILD 
-INNER JOIN CRMADMIN.T_WHSE_ITEM vi ON ipc.FACILITYID_PARENT = vi.FACILITYID AND ipc.ITEM_NBR_HS_PARENT = vi.ITEM_NBR_HS 
-INNER JOIN CRMADMIN.T_WHSE_PO_DTL pod ON pod.ITEM_FAC = vi.BICEPS_DC AND pod.ITEM_NBR = vi.ITEM_NBR 
-INNER JOIN CRMADMIN.T_WHSE_PO_HDR poh ON poh.VENDOR_FAC = pod.ITEM_FAC AND poh.PO_NBR = pod.PO_NBR AND poh.DATE_ORDERED = pod.DATE_ORDERED 
-INNER JOIN CRMADMIN.T_WHSE_VENDOR v ON poh.FACILITYID = v.FACILITYID AND poh.VENDOR_NBR = v.VENDOR_NBR 
-INNER JOIN CRMADMIN.T_WHSE_DIV_XREF dx ON i.FACILITYID = dx.SWAT_ID 
-INNER JOIN (SELECT dx.FACILITYID_UPSTREAM, count(*) TOTAL_STORES FROM CRMADMIN.V_WEB_CUSTOMER_FAC vwcf inner join CRMADMIN.T_WHSE_DIV_XREF dx on vwcf.FACILITYID = dx.SWAT_ID WHERE vwcf.CORP_CODE = 634001 AND vwcf.FACILITYID_PRIMARY = 'Y' AND dx.FACILITYID_UPSTREAM in ('002', '071') GROUP BY dx.FACILITYID_UPSTREAM) ts ON dx.FACILITYID_UPSTREAM = ts.FACILITYID_UPSTREAM 
-INNER JOIN (SELECT vwcf.FACILITYID, count(*) DC_STORES FROM CRMADMIN.V_WEB_CUSTOMER_FAC vwcf inner join CRMADMIN.T_WHSE_DIV_XREF dx on vwcf.FACILITYID = dx.SWAT_ID WHERE vwcf.CORP_CODE = 634001 AND vwcf.FACILITYID_PRIMARY = 'Y' AND dx.FACILITYID_UPSTREAM in ('002', '071') GROUP BY vwcf.FACILITYID) ds ON i.FACILITYID = ds.FACILITYID 
-INNER JOIN (SELECT vi.FACILITYID, vi.ITEM_NBR_HS, count(*) num_relationships FROM CRMADMIN.T_WHSE_ITEM i INNER JOIN CRMADMIN.T_WHSE_ITEM_PARENTCHILD ipc ON i.FACILITYID = ipc.FACILITYID_CHILD AND i.ITEM_NBR_HS = ipc.ITEM_NBR_HS_CHILD INNER JOIN CRMADMIN.T_WHSE_ITEM vi ON ipc.FACILITYID_PARENT = vi.FACILITYID AND ipc.ITEM_NBR_HS_PARENT = vi.ITEM_NBR_HS INNER JOIN (SELECT vwcf.FACILITYID, count(*) DC_STORES FROM CRMADMIN.V_WEB_CUSTOMER_FAC vwcf inner join CRMADMIN.T_WHSE_DIV_XREF dx on vwcf.FACILITYID = dx.SWAT_ID WHERE vwcf.CORP_CODE = 634001 AND vwcf.FACILITYID_PRIMARY = 'Y' AND dx.FACILITYID_UPSTREAM in ('002', '071') GROUP BY vwcf.FACILITYID) ds ON i.FACILITYID = ds.FACILITYID WHERE i.ITEM_RES28 IN ('A', 'C') GROUP BY vi.FACILITYID, vi.ITEM_NBR_HS) ir ON dx.FACILITYID_UPSTREAM = ir.FACILITYID AND vi.ITEM_NBR_HS = ir.ITEM_NBR_HS 
-INNER JOIN CRMADMIN.V_AMZ_ASIN az ON az.ROOT_ITEM_NBR = vi.ROOT_ITEM_NBR AND az.LV_ITEM_NBR = vi.LV_ITEM_NBR 
-WHERE ((pod.LINE_STATUS <> 'D' AND pod.DATE_ORDERED >= SYSDATE -60 DAY) OR (pod.LINE_STATUS = 'D' AND pod.DATE_RECEIVED BETWEEN CURRENT DATE - 7 DAY AND CURRENT DATE)) 
---AND i.ITEM_RES28 IN ('A', 'C') 
-AND i.FACILITYID IN (SELECT vwcf.FACILITYID FROM CRMADMIN.V_WEB_CUSTOMER_FAC vwcf WHERE vwcf.CORP_CODE = 634001 AND vwcf.FACILITYID not in ('001', '002', '071') GROUP BY vwcf.FACILITYID) 
-AND vi.ON_ORDER_TURN <> 0 
-AND poh.TYPE NOT IN ('DV') 
-AND pod.QUANTITY >0 
-AND v.MASTER_VENDOR NOT IN ('757575', '767676') 
-AND i.FACILITYID <> '054';
+create or replace view CRMADMIN.V_AMZ_MFG_FILL_RATE_FEED_US as  
+SELECT
+	pod.FACILITYID AS STOCK_FAC,
+	i.FACILITYID,
+	CASE
+		i.FACILITYID WHEN '054' THEN 'F3SPB'
+		WHEN '040' THEN 'F3SPB'
+		WHEN '058' THEN 'F3SPA'
+		WHEN '015' THEN 'F3SPC'
+		WHEN '008' THEN 'SPD2Z'
+		WHEN '085' THEN 'SPD30'
+		WHEN '086' THEN 'SPDPD'
+		ELSE i.FACILITYID
+	END AS VENDOR_CODE,
+	CURRENT date AS SNAPSHOT_DATE,
+	poh.PO_NBR AS PO_NUMBER,
+	poh.VENDOR_NAME AS SUPPLIER_NAME,
+	az.LU_CODE ASIN,
+	vi.ITEM_NBR_HS AS VENDOR_SKU,
+	i.UPC_UNIT_CD,
+	vi.UPC_CASE_CD,
+	vi.ITEM_DESCRIP,
+	pod.PACK AS CASE_PACK_QTY,
+	'EA' AS CASE_QTY_UOM,
+	CASE
+		i.ITEM_RES28 WHEN 'A' THEN 'YES'
+		ELSE 'NO'
+	END AS AMZ_SPECIFIC_UPC,
+	decimal(round((pod.LIST_COST / pod.PACK), 2),9,3) AS ITEM_COST_PRICE,
+	decimal(round((pod.AMOUNT_OFF_INVOICE / pod.PACK), 3),9,3) AS ITEM_COST_ALLOW,
+	pod.LIST_COST AS CASE_PACK_COST_PRICE,
+	pod.AMOUNT_OFF_INVOICE AS CASE_PACK_COST_ALLOW,
+	CASE
+		pod.LINE_STATUS WHEN 'D' THEN 'RECEIVED'
+		ELSE 'OPEN'
+	END AS STATUS,
+	pod.DATE_ORDERED AS ORDERED_DATE,
+	poh.PO_ORIGINAL_DLVRY_DATE AS ORIG_REQ_DEL_DATE,
+	poh.BUYER_ARRIVAL_DATE AS ADJ_REQ_DEL_DATE,
+	poh.DATE_ARRIVAL AS APPOINTMENT_DATE,
+	pod.EXE_FIRST_RECVD_TIMESTAMP AS RECEIVED_DTIME,
+	CASE
+		pod.ORIGINAL_QUANTITY WHEN 0 THEN pod.QUANTITY * pod.PACK
+		ELSE pod.ORIGINAL_QUANTITY * pod.PACK
+	END AS TOTAL_UNITS_ORDERED,
+	pod.RECEIVED * pod.PACK AS TOTAL_UNITS_RECEIVED,
+	pod.TURN * pod.PACK AS TURN_UNITS_ORDERED,
+	CASE
+		pod.LINE_STATUS WHEN 'D' THEN INTEGER(pod.RECEIVED * (pod.TURN / pod.QUANTITY)) * pod.PACK
+		ELSE 0
+	END AS TURN_UNITS_RECEIVED,
+	CASE
+		WHEN (integer(round((
+--        CASE i.ITEM_RES28 
+        case 'A'  --force 100% inventory pass-through per business request
+             WHEN 'A' 
+             THEN pod.QUANTITY ELSE (integer(round((pod.TURN * ((vi.ON_ORDER_TURN - ((vi.CASES_PER_WEEK * (CASE WHEN vi.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / vi.ON_ORDER_TURN))))) END) * (CASE ir.num_relationships WHEN 1 THEN decimal(1.00, 9, 3) ELSE (decimal(value(ds.DC_STORES, 0), 9, 3) / decimal(value(ts.TOTAL_STORES, 0), 9, 3)) END))) * pod.PACK) <0 THEN 0
+		ELSE (integer(round((
+--        CASE i.ITEM_RES28 
+        case 'A'  --force 100% inventory pass-through per business request
+             WHEN 'A' 
+             THEN pod.QUANTITY ELSE (integer(round((pod.TURN * ((vi.ON_ORDER_TURN - ((vi.CASES_PER_WEEK * (CASE WHEN vi.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / vi.ON_ORDER_TURN))))) END) * (CASE ir.num_relationships WHEN 1 THEN decimal(1.00, 9, 3) ELSE (decimal(value(ds.DC_STORES, 0), 9, 3) / decimal(value(ts.TOTAL_STORES, 0), 9, 3)) END))) * pod.PACK)
+	END AS AMZ_UNITS_ORDERED,
+	CASE
+		WHEN (
+		CASE
+			pod.LINE_STATUS WHEN 'D' THEN integer(round((
+--        CASE i.ITEM_RES28 
+        case 'A'  --force 100% inventory pass-through per business request
+             WHEN 'A' 
+             THEN pod.RECEIVED ELSE (integer(round((INTEGER(pod.RECEIVED * (pod.TURN / pod.QUANTITY)))) * ((vi.ON_ORDER_TURN - ((vi.CASES_PER_WEEK * (CASE WHEN vi.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / vi.ON_ORDER_TURN))) * (CASE ir.num_relationships WHEN 1 THEN decimal(1.00, 9, 3) ELSE (decimal(value(ds.DC_STORES, 0), 9, 3) / decimal(value(ts.TOTAL_STORES, 0), 9, 3))END)END))) * pod.PACK
+			ELSE 0
+		END) <0 THEN 0
+		ELSE
+		CASE
+			pod.LINE_STATUS WHEN 'D' THEN integer(round((
+--        CASE i.ITEM_RES28 
+        case 'A'  --force 100% inventory pass-through per business request
+             WHEN 'A' 
+             THEN pod.RECEIVED ELSE (integer(round((INTEGER(pod.RECEIVED * (pod.TURN / pod.QUANTITY)))) * ((vi.ON_ORDER_TURN - ((vi.CASES_PER_WEEK * (CASE WHEN vi.ITEM_DEPT IN ('020', '025', '070', '073', '075', '080', '090') THEN 1 ELSE 2 END)))) / vi.ON_ORDER_TURN))) * (CASE ir.num_relationships WHEN 1 THEN decimal(1.00, 9, 3) ELSE (decimal(value(ds.DC_STORES, 0), 9, 3) / decimal(value(ts.TOTAL_STORES, 0), 9, 3))END)END))) * pod.PACK
+			ELSE 0
+		END
+	END AS AMZ_UNITS_RECEIVED,
+	ts.TOTAL_STORES,
+	ds.DC_STORES,
+	(decimal(value(ds.DC_STORES, 0),9,3) / decimal(value(ts.TOTAL_STORES, 0),9,3)) AS US_DS_ALLOC_PERCENT,
+	ir.num_relationships
+FROM
+	CRMADMIN.T_WHSE_ITEM i
+INNER JOIN CRMADMIN.T_WHSE_ITEM_PARENTCHILD ipc ON
+	i.FACILITYID = ipc.FACILITYID_CHILD
+	AND i.ITEM_NBR_HS = ipc.ITEM_NBR_HS_CHILD
+INNER JOIN CRMADMIN.T_WHSE_ITEM vi ON
+	ipc.FACILITYID_PARENT = vi.FACILITYID
+	AND ipc.ITEM_NBR_HS_PARENT = vi.ITEM_NBR_HS
+INNER JOIN CRMADMIN.T_WHSE_PO_DTL pod ON
+	pod.ITEM_FAC = vi.BICEPS_DC
+	AND pod.ITEM_NBR = vi.ITEM_NBR
+INNER JOIN CRMADMIN.T_WHSE_PO_HDR poh ON
+	poh.VENDOR_FAC = pod.ITEM_FAC
+	AND poh.PO_NBR = pod.PO_NBR
+	AND poh.DATE_ORDERED = pod.DATE_ORDERED
+INNER JOIN CRMADMIN.T_WHSE_VENDOR v ON
+	poh.FACILITYID = v.FACILITYID
+	AND poh.VENDOR_NBR = v.VENDOR_NBR
+INNER JOIN CRMADMIN.T_WHSE_DIV_XREF dx ON
+	i.FACILITYID = dx.SWAT_ID
+INNER JOIN (
+	SELECT
+		dx.FACILITYID_UPSTREAM,
+		count(*) TOTAL_STORES
+	FROM
+		CRMADMIN.V_WEB_CUSTOMER_FAC vwcf
+	INNER JOIN CRMADMIN.T_WHSE_DIV_XREF dx ON
+		vwcf.FACILITYID = dx.SWAT_ID
+	WHERE
+		vwcf.CORP_CODE = 634001
+		AND vwcf.FACILITYID_PRIMARY = 'Y'
+		AND dx.FACILITYID_UPSTREAM IN ('002', '071')
+	GROUP BY
+		dx.FACILITYID_UPSTREAM) ts ON
+	dx.FACILITYID_UPSTREAM = ts.FACILITYID_UPSTREAM
+INNER JOIN (
+	SELECT
+		vwcf.FACILITYID,
+		count(*) DC_STORES
+	FROM
+		CRMADMIN.V_WEB_CUSTOMER_FAC vwcf
+	INNER JOIN CRMADMIN.T_WHSE_DIV_XREF dx ON
+		vwcf.FACILITYID = dx.SWAT_ID
+	WHERE
+		vwcf.CORP_CODE = 634001
+		AND vwcf.FACILITYID_PRIMARY = 'Y'
+		AND dx.FACILITYID_UPSTREAM IN ('002', '071')
+	GROUP BY
+		vwcf.FACILITYID) ds ON
+	i.FACILITYID = ds.FACILITYID
+INNER JOIN (
+	SELECT
+		vi.FACILITYID,
+		vi.ITEM_NBR_HS,
+		count(*) num_relationships
+	FROM
+		CRMADMIN.T_WHSE_ITEM i
+	INNER JOIN CRMADMIN.T_WHSE_ITEM_PARENTCHILD ipc ON
+		i.FACILITYID = ipc.FACILITYID_CHILD
+		AND i.ITEM_NBR_HS = ipc.ITEM_NBR_HS_CHILD
+	INNER JOIN CRMADMIN.T_WHSE_ITEM vi ON
+		ipc.FACILITYID_PARENT = vi.FACILITYID
+		AND ipc.ITEM_NBR_HS_PARENT = vi.ITEM_NBR_HS
+	INNER JOIN (
+		SELECT
+			vwcf.FACILITYID,
+			count(*) DC_STORES
+		FROM
+			CRMADMIN.V_WEB_CUSTOMER_FAC vwcf
+		INNER JOIN CRMADMIN.T_WHSE_DIV_XREF dx ON
+			vwcf.FACILITYID = dx.SWAT_ID
+		WHERE
+			vwcf.CORP_CODE = 634001
+			AND vwcf.FACILITYID_PRIMARY = 'Y'
+			AND dx.FACILITYID_UPSTREAM IN ('002', '071')
+		GROUP BY
+			vwcf.FACILITYID) ds ON
+		i.FACILITYID = ds.FACILITYID
+	WHERE
+		i.ITEM_RES28 IN ('A', 'C')
+	GROUP BY
+		vi.FACILITYID,
+		vi.ITEM_NBR_HS) ir ON
+	dx.FACILITYID_UPSTREAM = ir.FACILITYID
+	AND vi.ITEM_NBR_HS = ir.ITEM_NBR_HS
+INNER JOIN CRMADMIN.V_AMZ_ASIN az ON
+	az.ROOT_ITEM_NBR = vi.ROOT_ITEM_NBR
+	AND az.LV_ITEM_NBR = vi.LV_ITEM_NBR
+WHERE
+	((pod.LINE_STATUS <> 'D'
+		AND pod.DATE_ORDERED >= SYSDATE -60 DAY)
+	OR (pod.LINE_STATUS = 'D'
+		AND pod.DATE_RECEIVED BETWEEN CURRENT DATE - 7 DAY AND CURRENT DATE))
+	--AND i.ITEM_RES28 IN ('A', 'C') 
+	AND i.FACILITYID IN (
+	SELECT
+		vwcf.FACILITYID
+	FROM
+		CRMADMIN.V_WEB_CUSTOMER_FAC vwcf
+	WHERE
+		vwcf.CORP_CODE = 634001
+		AND vwcf.FACILITYID NOT IN ('001', '002', '071')
+	GROUP BY
+		vwcf.FACILITYID)
+	AND vi.ON_ORDER_TURN <> 0
+	AND poh.TYPE NOT IN ('DV')
+	AND pod.QUANTITY > 0
+	AND v.MASTER_VENDOR NOT IN ('757575', '767676')
+	AND i.FACILITYID <> '054';
 
 --------------------------------------------------
 -- Grant Authorities for CRMADMIN.V_AMZ_MFG_FILL_RATE_FEED_US

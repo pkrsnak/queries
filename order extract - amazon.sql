@@ -25,7 +25,7 @@ FROM     CRMADMIN.T_WHSE_ORDER_DTL od
          inner join crmadmin.T_WHSE_ITEM i on od.FACILITYID = i.FACILITYID and od.ITEM_NBR_CD = i.ITEM_NBR_CD 
          inner join ETLADMIN.T_TEMP_FAC_ITEM tfi on tfi.FACILITYID = i.FACILITYID and tfi.ITEM_NBR = i.ITEM_NBR_HS
 WHERE    corp.CORP_CODE = 634001
-AND      od.ORDER_RECVD_DTE between '2018-12-29' and '2019-12-28'
+AND      od.ORDER_RECVD_DTE between '2020-01-01' and current date
 --AND      od.ORDER_RECVD_DTE between '2019-12-29' and '2020-07-31'
 --AND      od.ORDER_RECVD_DTE between '2020-08-01' and '2021-01-31'
 --AND      od.ORDER_RECVD_DTE >= '2021-02-01' --and '2021-01-31'

@@ -1,3 +1,8 @@
+-- file export path
+-- \\spfile01\itworkgroup\Data Management\Temp\myrtle\
+
+
+
 --select count(*) from (
 SELECT   i.FACILITYID,
          poh.FAC_SHIP_TO,
@@ -183,7 +188,7 @@ FROM     whmgr.mdv_division
 where active_flg = 'True' and natl_acct_flg = 'False'
 ;
  
-
+--Netezza Sam Rahman ('2021-07-17')
 /*      Location - Demand History FD                 (check if we need to multiply the qty by pack)                        */
 --select count(*) from (
 SELECT   S.INVOICE_NBR,
@@ -207,9 +212,9 @@ SELECT   S.INVOICE_NBR,
 FROM     WH_OWNER.DC_SALES_HST S 
          inner join WH_OWNER.FISCAL_DAY D on D.SALES_DT = S.TRANSACTION_DATE 
          inner join WH_OWNER.DC_ITEM i on s.FACILITY_ID = i.FACILITY_ID and s.ITEM_NBR = i.ITEM_NBR
-WHERE    TRANSACTION_DATE between '2020-01-01' and '2021-06-12'
+WHERE    TRANSACTION_DATE between '2021-05-26' and '2021-06-12'
 --WHERE    TRANSACTION_DATE between '2021-04-14' and '2021-04-14'
-AND      s.FACILITY_ID in (80, 90)
+--AND      s.FACILITY_ID in (80, 90)
 --and (s.CUSTOMER_NBR = 29190 and s.FACILITY_ID = 15 and s.INVOICE_NBR = 1625199)
 GROUP BY S.INVOICE_NBR, s.FACILITY_ID, s.SHIP_FACILITY_ID, s.ITEM_NBR, 
          s.CUSTOMER_NBR, s.TRANSACTION_DATE, S.DELIVERY_DATE, D.FISCAL_WEEK_ID, 
@@ -255,7 +260,7 @@ GROUP BY S.INVOICE_NBR, s.FACILITY_ID, s.SHIP_FACILITY_ID, s.ITEM_NBR,
 HAVING   UNITS_SOLD > 0
 ;
 
-
+--mdvods Sam Rahman ('2021-07-17')
 /*      Location - Demand History MDV                (check if we need to multiply the qty by pack)                        */
 
 SELECT   case d.division_cd 
@@ -289,7 +294,7 @@ FROM     whmgr.mdv_sales_hst shd
          inner join whmgr.mdv_item i on shd.dept_cd = i.dept_cd and shd.upc_cd = i.case_upc_cd 
          inner join whmgr.mdv_dept d on i.dept_cd = d.dept_cd 
          inner join whmgr.mdv_vendor v on i.vendor_id = v.vendor_cd
-WHERE    (shd.ship_date between '12-29-2018' and '01-02-2021')
+WHERE    (shd.ship_date between '05-25-2021' and '06-12-2021')
 --WHERE    (shd.ship_date between '12-29-2018' and '12-28-2019')
 --WHERE    (shd.ship_date between '12-29-2019' and '01-02-2021')
 and      d.division_cd in ('NOR', 'BAL', 'PNS', 'SAT', 'CSG', 'BLM', 'OKA')
@@ -374,7 +379,7 @@ FROM     CRMADMIN.T_WHSE_PO_HDR
 WHERE    DATE_ORDERED >= '2020-01-01'
 ;
 
-
+--mdvods
 SELECT   case d.division_cd 
      when 'NOR' then '070' 
      when 'BAL' then '069' 
@@ -559,7 +564,7 @@ WHERE    pod.PO_NBR = 787572
 ;
 
 
-
+--CRM
 SELECT   --L.ITEM_NBR_HS, L.UPC_CASE, L.UPC_UNIT, 
         dx.ENTERPRISE_KEY, L.FACILITYID, L.ITEM_DEPT, '' dept_lookup, '' dept_description, --L.PO_NBR, 
          --LPAD(STOCK_FAC,3,0) STOCK_FAC, remove because it is supposed to be the same as Facility
@@ -591,7 +596,7 @@ SELECT   --L.ITEM_NBR_HS, L.UPC_CASE, L.UPC_UNIT,
 FROM     CRMADMIN.T_WHSE_LAYER_HISTORY L 
          join CRMADMIN.T_DATE D on D.DATE_KEY = l.LAYER_FILE_DTE and d.DAY_OF_WEEK_ID = 7
          join CRMADMIN.T_WHSE_DIV_XREF dx on L.FACILITYID = dx.SWAT_ID
-WHERE     L.LAYER_FILE_DTE between '2018-12-30' and '2021-04-12'   
+WHERE     L.LAYER_FILE_DTE between '2021-06-16' and '2021-07-17'   
        -- and  L.FACILITYID in ('080', '090') and L.UPC_CASE <> L.UPC_UNIT
 group by --L.ITEM_NBR_HS, L.UPC_CASE, L.UPC_UNIT, 
         dx.ENTERPRISE_KEY, L.FACILITYID, L.ITEM_DEPT, --L.PO_NBR, 
@@ -630,7 +635,7 @@ AND      dsh.TRANSACTION_DATE between '12-29-2019' and '01-02-2021'
 GROUP BY dsh.FACILITY_ID, fd.FISCAL_PERIOD_ID
 ;
 
-
+-- CRM Sam Rahman ('2021-07-17') 
 --Victor's SQL
 select count(*) from (
 ;
@@ -659,7 +664,7 @@ FROM     CRMADMIN.T_WHSE_LAYER_HISTORY L
 --WHERE    (D.COMPANY_YEAR_ID = 2020 and D.COMPANY_QUARTER_ID = 3)
 --WHERE    (D.COMPANY_YEAR_ID = 2020 and D.COMPANY_QUARTER_ID = 4)
 --WHERE    (D.COMPANY_YEAR_ID = 2021 and D.COMPANY_QUARTER_ID = 1)
-WHERE    (D.COMPANY_YEAR_ID = 2021 and D.COMPANY_QUARTER_ID = 2)
+WHERE    (D.COMPANY_YEAR_ID = 2021 and D.COMPANY_QUARTER_ID = 2 and d.COMPANY_WEEK_ID between 21 and 23)
 GROUP BY L.ITEM_NBR_HS, L.UPC_CASE, L.UPC_UNIT, L.FACILITYID, L.PO_NBR, 
          LPAD(STOCK_FAC,3,0), L.LAYER_FILE_DTE, L.RAND_WGT_CD, 
          L.SHIPPING_CASE_WEIGHT, L.STORE_PACK, 
@@ -703,6 +708,10 @@ FROM     WH_OWNER.DC_VENDOR
 --where VENDOR_STATUS_CD <> 'D' 
 ;
 
+--new  Location - Vendor FD 20210715
+Select VENDOR_NBR, VENDOR_NAME, FACILITYID, ADDRESS_1, ADDRESS_2, CITY, STATE, ZIP, STATUS VENDOR_STATUS_CD, LEAD_TIME_STATED_WEEKS
+from CRMADMIN.T_WHSE_VENDOR
+;
 
 /*      Location - Vendor MDV                                                */
 
@@ -716,7 +725,7 @@ SELECT   vendor_cd,
 FROM     whmgr.mdv_vendor
 ;
 
-
+--CRM
 /*      Product Master                                                       */
 --select count(*) from (
 SELECT
@@ -1065,7 +1074,7 @@ FROM     whmgr.mdv_ship_to;
 --==================================================================================================================================================================================================
 --CAITO
 --==================================================================================================================================================================================================
-
+--Netezza
 --Caito sales 
 SELECT   s.DOCUMENT_NBR,
          LPAD(s.FACILITY_ID,3,0) Facility,
@@ -1089,7 +1098,7 @@ GROUP BY s.DOCUMENT_NBR, s.FACILITY_ID, s.ITEM_2_NBR, s.CUSTOMER_NBR,
          s.INVOICE_DT, s.ACTUAL_SHIP_DT, D.FISCAL_WEEK_ID, s.REASON_CD, 
          s.UNIT_COST_AMT
 ;
-
+--cafods
 --Caito product
 SELECT   item_2_nbr,
          item_3_nbr,
@@ -1123,6 +1132,7 @@ SELECT   item_2_nbr,
 FROM     whmgr.caito_item
 ;
 
+--cafods
 --Caito customer
 SELECT   customer_nbr,
          customer_desc,
@@ -1136,6 +1146,7 @@ SELECT   customer_nbr,
 FROM     whmgr.caito_customer
 ;
 
+--cafods
 --Caito vendor
 SELECT   vendor_nbr,
          vendor_desc,
@@ -1145,3 +1156,5 @@ SELECT   vendor_nbr,
          empl_type_cd
 FROM     whmgr.caito_vendor
 ;
+
+

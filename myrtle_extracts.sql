@@ -53,7 +53,7 @@ FROM     CRMADMIN.T_WHSE_PO_DTL pod
          inner join CRMADMIN.T_WHSE_PO_HDR poh on pod.ITEM_FAC = poh.VENDOR_FAC and pod.DATE_ORDERED = poh.DATE_ORDERED and pod.PO_NBR = poh.PO_NBR 
          inner join CRMADMIN.T_WHSE_ITEM i on pod.ITEM_FAC = i.BICEPS_DC and pod.ITEM_NBR = i.ITEM_NBR 
          inner join CRMADMIN.T_WHSE_VENDOR v on i.FACILITYID = v.FACILITYID and i.VENDOR_NBR = v.VENDOR_NBR
-WHERE    pod.DATE_ORDERED > '2020-01-01'
+WHERE    pod.DATE_ORDERED between '2021-08-15' and '2021-09-11'  --'08-15-2021' and '09-11-2021'
 --AND      pod.ITEM_FAC = '01'
 --) 5,204,567 records
 ;
@@ -212,7 +212,7 @@ SELECT   S.INVOICE_NBR,
 FROM     WH_OWNER.DC_SALES_HST S 
          inner join WH_OWNER.FISCAL_DAY D on D.SALES_DT = S.TRANSACTION_DATE 
          inner join WH_OWNER.DC_ITEM i on s.FACILITY_ID = i.FACILITY_ID and s.ITEM_NBR = i.ITEM_NBR
-WHERE    TRANSACTION_DATE between '2021-05-26' and '2021-06-12'
+WHERE    TRANSACTION_DATE between '2021-07-18' and '2021-08-14'
 --WHERE    TRANSACTION_DATE between '2021-04-14' and '2021-04-14'
 --AND      s.FACILITY_ID in (80, 90)
 --and (s.CUSTOMER_NBR = 29190 and s.FACILITY_ID = 15 and s.INVOICE_NBR = 1625199)
@@ -294,12 +294,13 @@ FROM     whmgr.mdv_sales_hst shd
          inner join whmgr.mdv_item i on shd.dept_cd = i.dept_cd and shd.upc_cd = i.case_upc_cd 
          inner join whmgr.mdv_dept d on i.dept_cd = d.dept_cd 
          inner join whmgr.mdv_vendor v on i.vendor_id = v.vendor_cd
-WHERE    (shd.ship_date between '05-25-2021' and '06-12-2021')
+WHERE    (shd.ship_date between '08-15-2021' and '09-11-2021')
 --WHERE    (shd.ship_date between '12-29-2018' and '12-28-2019')
 --WHERE    (shd.ship_date between '12-29-2019' and '01-02-2021')
 and      d.division_cd in ('NOR', 'BAL', 'PNS', 'SAT', 'CSG', 'BLM', 'OKA')
 ;
 
+-- Sam
 --select count(*) from (
 SELECT   case d.division_cd 
               when 'NOR' then '070' 
@@ -332,123 +333,12 @@ FROM     whmgr.mdv_po_dtl pod
          inner join whmgr.mdv_item i on pod.dept_cd = i.dept_cd and pod.case_upc_cd = i.case_upc_cd 
          inner join whmgr.mdv_dept d on i.dept_cd = d.dept_cd 
          inner join whmgr.mdv_vendor v on i.vendor_id = v.vendor_cd
-WHERE    (poh.receive_date between '01-01-2020' and '06-19-2021')
+WHERE    (poh.receive_date between '08-15-2021' and '09-11-2021')  --'08-15-2021' and '09-11-2021'
 AND      d.division_cd in ('NOR', 'BAL', 'PNS', 'SAT', 'CSG', 'BLM', 'OKA', 'CSZ', 'SAZ')
 --)
 ;
 
 
-SELECT   FACILITYID,
-         PO_NBR,
-         DATE_ORDERED,
-         TYPE,
-         STATUS,
-         FREIGHT_ALLOW,
-         FREIGHT_ALLOW_TYPE,
-         LOAD_NBR,
-         FLAG_PREPAID,
-         FLAG_PREPAY_AND_ADD,
-         FLAG_FREIGHT_BILL,
-         FLAG_BACKHAUL,
-         ACTUAL_TURN_COST,
-         ACTUAL_TURN_WEIGHT,
-         ACTUAL_TURN_CUBE,
-         ACTUAL_TURN_PALLETS,
-         ACTUAL_TURN_UNITS,
-         ACTUAL_TURN_FACTOR_1,
-         ACTUAL_TURN_FACTOR_2,
-         PROMO_COST,
-         PROMO_WEIGHT,
-         PROMO_CUBE,
-         PROMO_PALLETS,
-         PROMO_UNITS,
-         PROMO_FACTOR_1,
-         PROMO_FACTOR_2,
-         FWD_BUY_COST,
-         FWD_BUY_WEIGHT,
-         FWD_BUY_CUBE,
-         FWD_BUY_PALLETS,
-         FWD_BUY_UNITS,
-         FWD_BUY_FACTOR_1,
-         FWD_BUY_FACTOR_2,
-         PICKUP_POINT_CITY,
-         PICKUP_POINT_STATE,
-         PICKUP_POINT_ZIPCODE,
-         LOAD_NBR
-FROM     CRMADMIN.T_WHSE_PO_HDR
-WHERE    DATE_ORDERED >= '2020-01-01'
-;
-
---mdvods
-SELECT   case d.division_cd 
-     when 'NOR' then '070' 
-     when 'BAL' then '069' 
-     when 'PNS' then '027' 
-     when 'SAT' then '029' 
-     when 'CSG' then '033' 
-     when 'BLM' then '038' 
-     when 'OKA' then '039' 
-     when 'CSZ' then '080' 
-     when 'SAZ' then '090' 
-     else '999' 
-end FACILITY,
-         d.division_cd,
-         poh.order_nbr,
-         poh.warehouse_id,
-         poh.deliver_to_whse_id,
-         poh.vendor_cd,
-         poh.buyer_id,
-         poh.invoice_date,
-         poh.order_date,
-         poh.required_by_date,
-         poh.appointment_tmsp,
-         poh.pickup_date,
-         poh.receive_date,
-         poh.arrival_tmsp,
-         poh.master_po_nbr,
-         poh.master_po_flg,
-         poh.requisition_nbr,
-         poh.freight_code,
-         poh.ship_instru_txt,
-         poh.carrier_desc,
-         poh.contact_desc,
-         poh.order_qty,
-         poh.weight_amt,
-         poh.cube_amt,
-         poh.pallets_qty,
-         poh.status_cd,
-         poh.container_desc,
-         poh.cases_ordered_qty,
-         poh.cases_received_qty,
-         poh.pu_add_code,
-         poh.product_cost_amt,
-         poh.load_number,
-         poh.backhaul_amt,
-         poh.caw_amt,
-         poh.max_frt_allw_amt,
-         poh.frt_allw_amt,
-         poh.frt_allw_type_cd,
-         poh.fuel_surchrg_amt,
-         poh.fuel_srchrg_typ_cd,
-         poh.backhaul_type_cd,
-         poh.invoice_bkhaul_amt,
-         poh.item_count,
-         poh.scac_carrier_desc,
-         poh.pickup_name,
-         poh.pickup_address1,
-         poh.pickup_address2,
-         poh.pickup_city_nm,
-         poh.pickup_state_cd,
-         poh.pickup_zip_code,
-         poh.dssroute_cd,
-         poh.total_value_amt,
-         poh.po_lastnote_txt,
-         poh.ap_vendor_id
-FROM     whmgr.mdv_po_hdr poh 
-         inner join whmgr.mdv_dept d on poh.warehouse_id = d.dept_cd
-WHERE    (poh.receive_date between '01-01-2020' and '06-19-2021')
-AND      d.division_cd in ('NOR', 'BAL', 'PNS', 'SAT', 'CSG', 'BLM', 'OKA', 'CSZ', 'SAZ')
-;
 
 MDV_00000000023577330
 MDV_00000004200087346
@@ -658,13 +548,14 @@ SELECT   L.ITEM_NBR_HS,
 FROM     CRMADMIN.T_WHSE_LAYER_HISTORY L 
          join CRMADMIN.T_DATE D on D.DATE_KEY = l.LAYER_FILE_DTE --and d.DAY_OF_WEEK_ID = 7 
          join CRMADMIN.T_WHSE_DIV_XREF dx on L.FACILITYID = dx.SWAT_ID
---WHERE    L.LAYER_FILE_DTE between '2018-12-30' and '2021-01-02'
+WHERE    L.LAYER_FILE_DTE between '2021-08-15' and '2021-09-11'
 --WHERE    (D.COMPANY_YEAR_ID = 2020 and D.COMPANY_QUARTER_ID = 1)
 --WHERE    (D.COMPANY_YEAR_ID = 2020 and D.COMPANY_QUARTER_ID = 2)
 --WHERE    (D.COMPANY_YEAR_ID = 2020 and D.COMPANY_QUARTER_ID = 3)
 --WHERE    (D.COMPANY_YEAR_ID = 2020 and D.COMPANY_QUARTER_ID = 4)
 --WHERE    (D.COMPANY_YEAR_ID = 2021 and D.COMPANY_QUARTER_ID = 1)
-WHERE    (D.COMPANY_YEAR_ID = 2021 and D.COMPANY_QUARTER_ID = 2 and d.COMPANY_WEEK_ID between 21 and 23)
+--WHERE    (D.COMPANY_YEAR_ID = 2021 and D.COMPANY_QUARTER_ID = 2 and d.COMPANY_WEEK_ID between 21 and 23)
+--WHERE    l.LAYER_FILE_DTE = current date - 1 day
 GROUP BY L.ITEM_NBR_HS, L.UPC_CASE, L.UPC_UNIT, L.FACILITYID, L.PO_NBR, 
          LPAD(STOCK_FAC,3,0), L.LAYER_FILE_DTE, L.RAND_WGT_CD, 
          L.SHIPPING_CASE_WEIGHT, L.STORE_PACK, 
@@ -778,7 +669,7 @@ SELECT
 	wc.WAREHOUSE_CODE_DESC_FAC,
 	wc.WAREHOUSE_CODE_TEMP_ZONE, 
     i.RAND_WGT_CD, 
-    i.ITEM_RES33
+    i.ITEM_RES33, i.SAFETY_STOCK, i.CYCLE_STOCK
 FROM
 	CRMADMIN.T_WHSE_ITEM I
 inner join ETLADMIN.V_MDM_MDSE_HIERARCHY mds ON
@@ -842,7 +733,7 @@ SELECT
 	wc.WAREHOUSE_CODE_DESC_FAC,
 	wc.WAREHOUSE_CODE_TEMP_ZONE, 
     i.RAND_WGT_CD, 
-    i.ITEM_RES33
+    i.ITEM_RES33, i.SAFETY_STOCK, i.CYCLE_STOCK
 FROM
 	CRMADMIN.T_WHSE_ITEM I
 inner join ETLADMIN.V_MDM_MDSE_HIERARCHY mds ON
@@ -907,7 +798,7 @@ SELECT
 	wc.WAREHOUSE_CODE_DESC_FAC,
 	wc.WAREHOUSE_CODE_TEMP_ZONE, 
     i.RAND_WGT_CD, 
-    i.ITEM_RES33
+    i.ITEM_RES33, i.SAFETY_STOCK, i.CYCLE_STOCK
 FROM
 	CRMADMIN.T_WHSE_ITEM I
 inner join ETLADMIN.V_MDM_MDSE_HIERARCHY mds ON
@@ -1157,4 +1048,19 @@ SELECT   vendor_nbr,
 FROM     whmgr.caito_vendor
 ;
 
+---------------------- 2021-08-19 Alicia Additions -------------------------
 
+Also, below are the SQL statements that were used to send the files they requested:
+----FD items with first 3 levels of hierarchy
+Select FACILITYID , ITEM_NBR_HS , ITEM_DESCRIP , PACK_CASE , PURCH_STATUS, BILLING_STATUS, MERCH_DEPT_GRP, MERCH_DEPT_GRP_DESC, MERCH_DEPT, MERCH_DEPT_DESC, MERCH_GRP, MERCH_GRP_DESC
+from CRMADMIN.T_WHSE_ITEM
+where BILLING_STATUS <> 'D'
+;
+ 
+------
+-- connect to GOLD CLOUD PRD
+--mdv items with first 3 levels of hierarchy
+Select ISI_DC_CODE, ISI_ITEM_CODE, ISI_ITEM_DESC, ISI_MASTER_PACK, ISI_PURCHASING_STATUS, ISI_GPC_DEPT_GRP_CODE, ISI_GPC_DEPT_GRP_DESC, ISI_GPC_DEPT_CODE, ISI_GPC_DEPT_DESC, ISI_GPC_MDSE_GRP_CODE, ISI_GPC_MDSE_GRP_DESC
+from ADG.NF_ITEM
+where ISI_DSS_EXISTS = 1
+;

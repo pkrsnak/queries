@@ -1,0 +1,11 @@
+SELECT   fd.FISCAL_WEEK_ID,
+         dsh.FACILITY_ID, c.CUSTOMER_NBR, c.CUSTOMER_NAME, 
+         sum(dsh.TOTAL_SALES_AMT) tot_sales,
+         sum(dsh.EXT_WHSE_SALES_AMT) tot_whse_sales
+FROM     WH_OWNER.DC_SALES_HST dsh 
+         inner join WH_OWNER.DC_CUSTOMER c on dsh.FACILITY_ID = c.FACILITY_ID and dsh.CUSTOMER_NBR = c.CUSTOMER_NBR 
+         inner join WH_OWNER.FISCAL_DAY fd on dsh.TRANSACTION_DATE = fd.SALES_DT
+WHERE    c.TERRITORY_NBR = 29
+and fd.FISCAL_WEEK_ID = 202142
+--AND      dsh.FACILITY_ID = 1
+GROUP BY fd.FISCAL_WEEK_ID, dsh.FACILITY_ID, c.CUSTOMER_NBR , c.CUSTOMER_NAME 

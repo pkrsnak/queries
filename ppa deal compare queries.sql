@@ -43,7 +43,7 @@ FROM     CRMADMIN.T_WHSE_DEAL d
          inner join CRMADMIN.T_WHSE_ITEM i on i.FACILITYID = d.FACILITYID and i.ITEM_NBR_CD = d.ITEM_NBR
 WHERE    d.DATE_START > current date
 AND      d.AMT_BBACK > 0
-AND      not(d.DEAL_NBR between 560001 and 800000)
+AND      not(d.DEAL_NBR between 560001 and 800000) 
 
 union all
 

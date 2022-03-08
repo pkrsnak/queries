@@ -1533,6 +1533,7 @@ GROUP BY lh.LAYER_FILE_DTE,
 
 --cases_received
 --source:  entods
+/*
 SELECT   'distribution' SCORECARD_TYPE,
          'cases_received' KPI_TYPE,
          date(receipt_dtim) DATE_VALUE,
@@ -1550,11 +1551,25 @@ SELECT   'distribution' SCORECARD_TYPE,
          'W' TIME_GRANULARITY
 FROM     whmgr.ent_irctd irctd 
          inner join datawhse02@dss_prd_tcp:whmgr.dc_item i on irctd.facility_id = i.facility_id and irctd.prod_id = i.item_nbr
-WHERE    date(receipt_dtim) = '10-28-2019'
+WHERE    date(receipt_dtim) = '02-19-2022'
 GROUP BY 1, 2, 3, 4, 5, 7, 8
 ;
-
-
+*/
+--cases_received
+--source: datawhse02, entods
+SELECT 'distribution' SCORECARD_TYPE,
+irctd.division_id DIVISION_ID,
+'cases_received' KPI_TYPE,
+'F' DATA_GRANULARITY,
+'W' TIME_GRANULARITY,
+DATE('02-20-2022') - (WEEKDAY(DATE('02-20-2022')) + 1) UNITS DAY KPI_DATE,
+irctd.facility_id KPI_KEY_VALUE,
+sum(irctd.rct_qty / irctd.item_pack_qty) KPI_DATA_VALUE
+FROM entods@ods_prd_tcp:ent_irctd irctd
+-- inner join #P_IX_datawhse_02.$pd_db_schema_datawhse02_whmgr#.dc_item i on irctd.facility_id = i.facility_id and irctd.prod_id = i.item_nbr
+WHERE date(irctd.receipt_dtim) between DATE('02-20-2022') - (WEEKDAY(DATE('02-20-2022')) + 7) UNITS DAY and DATE('02-20-2022') - (WEEKDAY(DATE('02-20-2022')) + 1) UNITS DAY
+GROUP BY 1, 2, 3, 4, 5, 6, 7
+;
 --cases shipped by facility
 --source:  datawhse02
 SELECT   'distribution' SCORECARD_TYPE,

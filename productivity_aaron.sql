@@ -44,8 +44,8 @@ FROM     crmadmin.T_WHSE_EXE_AASSG aassg
          inner join crmadmin.T_WHSE_EXE_ASELD aseld on aassg.FACILITYID = aseld.FACILITYID and aseld.assg_id = aassg.assg_id 
          inner join CRMADMIN.V_WED wed on wed.LOOKUP_DATE = aassg.RPT_DT
          inner join CRMADMIN.T_WHSE_CUST c on aassg.FACILITYID = c.FACILITYID and aseld.CUST_ID = c.CUSTOMER_NBR_STND
-WHERE    wed.WEEK_ENDING_DATE between '2020-01-04' and '2020-02-22' --between '2020-01-25' and current date
-and aassg.FACILITYID in ('015', '058', '040')
+WHERE    wed.WEEK_ENDING_DATE between '2022-01-02' and '2022-02-26' --between '2020-01-25' and current date
+and aassg.FACILITYID in ('015')--, '058', '040')
 AND      aassg.asta_id = 'C'
 AND      aassg.start_dtim IS NOT NULL
 AND      aassg.end_dtim IS NOT NULL

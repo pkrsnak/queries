@@ -1,0 +1,2497 @@
+--Column
+--SALES_DT
+--SALES_LINE_ID
+--TRANS_NBR
+--REGISTER_ID
+--ITEM_ID
+--LOYALTY_CARD_NBR
+--DISCOUNT_LINK_CD
+--LIST_UNIT_PRC_AMT
+--TOTAL_SALES_AMT
+--TOTAL_SALES_QTY
+--TOTAL_SALES_WGT
+--EXT_COST_AMT
+--EXT_COST_ALLW_AMT
+--EXT_GROSS_PRC_AMT
+--DEPT_KEY
+--MDSE_CLASS_KEY
+--ALLOCATED_DISC_AMT
+--PRICE_TYPE
+--EVENT_CD
+--PROMOTION_ID
+--EXT_BILLBACK_AMT
+--LOAD_BATCH_ID
+--ORIGIN_ID
+
+
+CREATE OR REPLACE VIEW sbx_biz.marketing.RSAL_DY_LN_ITM_TRN 
+AS
+SELECT   DT.FULL_DATE AS SALES_DT,
+         'SRTL'||STORE_NBR as SALES_LINE_ID,
+         to_date(TRANS_DATE_ID::varchar, 'YYYYMMDD') AS TRANS_DATE,
+         TRANS_NBR,
+         REGISTER_ID,
+         RI.PRODUCT_UPC AS ITEM_ID,
+         CASE 
+              WHEN LOYALTY_CARD_NBR IS NULL OR LOYALTY_CARD_NBR = 0 OR LOYALTY_CARD_NBR = 99999999999 THEN 0 
+              ELSE LOYALTY_CARD_NBR 
+         END AS LOYALTY_CARD_NBR,
+         DISCOUNT_LINK_CD,
+         AVG(LIST_UNIT_PRC_AMT) AS LIST_UNIT_PRC_AMT,
+         SUM(TOTAL_SALES_AMT) AS TOTAL_SALES_AMT,
+         SUM(TOTAL_SALES_QTY) AS TOTAL_SALES_QTY,
+         SUM(TOTAL_SALES_WGT) AS TOTAL_SALES_WGT,
+         SUM(EXT_COST_AMT) AS EXT_COST_AMT,
+         SUM(EXT_COST_ALLW_AMT) AS EXT_COST_ALLW_AMT,
+         SUM(EXT_GROSS_PRC_AMT) AS EXT_GROSS_PRC_AMT,
+         DEPT_KEY AS DEPT_KEY,
+         STR.MDSE_CLASS_KEY,
+         SUM(ALLOCATED_DISC_AMT) AS ALLOCATED_DISC_AMT,
+         PRICE_TYPE,
+         EVENT_CD,
+         PROMOTION_ID,
+         SUM(EXT_BILLBACK_AMT) AS EXT_BILLBACK_AMT
+FROM     EDW.RTL.STR_TRANS_DTL_CTMSP_MV STR 
+         JOIN EDW.MDM.DATE_DIM DT ON STR.SALES_DATE_ID = DT.DATE_PK 
+         JOIN EDW.RTL.RETAIL_ITEM RI ON STR.RETAIL_ITEM_ID = RI.RETAIL_ITEM_PK
+GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 16, 17, 19, 20, 21
+;
+--
+--CREATE OR REPLACE VIEW sbx_biz.marketing.RSAL_DY_LN_ITM_TRN 
+--AS
+--SELECT 
+--    DT.FULL_DATE AS SALES_DT,
+--    'SRTL'||STORE_NBR as SALES_LINE_ID,
+--    DT1.FULL_DATE AS TRANS_DATE,
+--    TRANS_NBR,
+--    REGISTER_ID,
+--    RI.PRODUCT_UPC AS ITEM_ID,
+--    CASE WHEN LOYALTY_CARD_NBR IS NULL OR LOYALTY_CARD_NBR = 0 OR LOYALTY_CARD_NBR = 99999999999 THEN 0 ELSE LOYALTY_CARD_NBR END AS LOYALTY_CARD_NBR,
+--    DISCOUNT_LINK_CD,
+--    AVG(LIST_UNIT_PRC_AMT) AS LIST_UNIT_PRC_AMT,
+--    SUM(TOTAL_SALES_AMT) AS TOTAL_SALES_AMT,
+--    SUM(TOTAL_SALES_QTY) AS TOTAL_SALES_QTY,
+--    SUM(TOTAL_SALES_WGT) AS TOTAL_SALES_WGT,
+--    SUM(EXT_COST_AMT) AS EXT_COST_AMT,
+--    SUM(EXT_COST_ALLW_AMT) AS EXT_COST_ALLW_AMT,
+--    SUM(EXT_GROSS_PRC_AMT) AS EXT_GROSS_PRC_AMT,
+--    DEPT_KEY AS DEPT_KEY,
+--    STR.MDSE_CLASS_KEY,
+--    SUM(ALLOCATED_DISC_AMT) AS ALLOCATED_DISC_AMT,
+--    PRICE_TYPE,
+--    EVENT_CD,
+--    PROMOTION_ID,
+--    SUM(EXT_BILLBACK_AMT) AS EXT_BILLBACK_AMT
+--FROM EDW.RTL.STR_TRANS_DTL_CTMSP_MV STR
+--JOIN EDW.MDM.DATE_DIM DT ON STR.SALES_DATE_ID = DT.DATE_PK
+--JOIN EDW.MDM.DATE_DIM DT1 ON STR.TRANS_DATE_ID = DT.DATE_PK
+--JOIN EDW.RTL.RETAIL_ITEM RI ON STR.RETAIL_ITEM_ID = RI.RETAIL_ITEM_PK
+--GROUP BY 1,2,3,4,5,6,7,8,16,17,19,20,21
+--;
+
+--Column
+--CATGY_MANAGER_KEY
+--FIRST_NM
+--LAST_NM
+--EXPIRATION_DATE
+create view SBX_BIZ.MARKETING.CATEGORY_MANAGER 
+as 
+SELECT   CATGY_MANAGER_KEY,
+         FIRST_NAME as FIRST_NM,
+         LAST_NAME as LAST_NM,
+         EXPIRATION_DT as EXPIRATION_DATE
+FROM     EDW.MDM.CATEGORY_MANAGER;
+
+--Column
+--SALES_CHAIN_ID
+--SALES_CHAIN_DESC
+--CHAIN_SHORT_DESC
+--SALES_CHANNEL_ID
+--CHAIN_CTGRY_KEY
+
+create view SBX_BIZ.MARKETING.CHAIN 
+as 
+SELECT   SALES_CHAIN_PK SALES_CHAIN_ID,
+         SALES_CHAIN_DESC,
+         CHAIN_SHORT_DESC,
+         SALES_CHANNEL_ID,
+         CHAIN_CTGRY_ID as CHAIN_CTGRY_KEY
+FROM     EDW.RTL.CHAIN
+;
+
+--Column
+--SALES_CHANNEL_ID
+--SALES_CHANNEL_DESC
+--ENTERPRISE_ID
+
+create view SBX_BIZ.MARKETING.CHANNEL 
+as 
+SELECT   SALES_CHANNEL_PK as SALES_CHANNEL_ID,
+         SALES_CHANNEL_DESC,
+         ENTERPRISE_ID
+FROM     EDW.RTL.CHANNEL
+;
+
+
+--Column
+--COMMODITY_KEY
+--COMMODITY_CODE
+--COMMODITY_DESC
+--CMDTY_TYPE_KEY
+--CREATE_USER_ID
+--CREATE_TMSP
+--UPDATE_USER_ID
+--UPDATE_TMSP
+
+create view SBX_BIZ.MARKETING.COMMODITY
+as 
+SELECT   COMMODITY_PK as COMMODITY_KEY,
+         COMMODITY_CD as COMMODITY_CODE,
+         COMMODITY_DESC,
+         '' as CMDTY_TYPE_KEY
+FROM     EDW.RTL.COMMODITY
+;
+
+
+--Column
+--COMP_STATUS_KEY
+--COMP_STATUS_DESC
+
+create view SBX_BIZ.MARKETING.COMP_STATUS
+as 
+SELECT   COMP_STATUS_PK as COMP_STATUS_KEY,
+         COMP_STATUS_DESC
+FROM     EDW.RTL.COMP_STATUS
+;
+
+--Column
+--DEPT_KEY
+--DEPT_GRP_KEY
+--BUS_DEPT_KEY
+--BUDGET_DEPT_KEY
+--DEPT_NAME
+--MERCH_TYPE_KEY
+--CREATE_USER_ID
+--CREATE_TMSP
+--UPDATE_USER_ID
+--UPDATE_TMSP
+
+create view SBX_BIZ.MARKETING.DEPARTMENT
+as 
+SELECT   DEPT_KEY,
+         DEPT_GRP_KEY,
+         '' as BUS_DEPT_KEY,
+         BUDGET_DEPT_KEY,
+         DEPT_NAME,
+         MERCH_TYPE_KEY,
+         CREATE_USER_ID,
+         CREATE_TMSP,
+         UPDATE_USER_ID,
+         UPDATE_TMSP
+FROM     EDW.MDM.DEPARTMENT
+;
+
+
+--Column
+--DEPT_GRP_KEY
+--DEPT_GRP_NAME
+--DEPT_GRP_TYPE_KEY
+--CREATE_USER_ID
+--CREATE_TMSP
+--UPDATE_USER_ID
+--UPDATE_TMSP
+--PS_DEPT_ID
+--GL_EXPENSE_ID
+
+create view SBX_BIZ.MARKETING.DEPARTMENT_GROUP
+as 
+SELECT   DEPT_GRP_KEY,
+         DEPT_GRP_NAME,
+         DEPT_GRP_TYPE_KEY,
+         CREATE_USER_ID,
+         CREATE_TMSP,
+         UPDATE_USER_ID,
+         UPDATE_TMSP,
+         PS_DEPT_ID,
+         GL_EXPENSE_ID
+FROM     EDW.MDM.DEPARTMENT_GROUP
+;
+
+--Column
+--EVENT_CD
+--EVENT_CD_DESC
+
+create view SBX_BIZ.MARKETING.EVENT_CODE
+as 
+SELECT   EVENT_PK,
+         EVENT_CD,
+         EVENT_NM as EVENT_CD_DESC
+FROM     EDW.RTL.EVENT_CODE
+;
+
+
+--Column
+--ITEM_BRAND_KEY
+--ITEM_BRAND_CD
+--ITEM_BRAND_DESC
+--CREATE_USER_ID
+--CREATE_TMSP
+--UPDATE_USER_ID
+--UPDATE_TMSP
+--PRIVATE_BRAND_KEY
+--STATUS_CD
+
+create or replace view SBX_BIZ.MARKETING.ITEM_BRAND
+as 
+SELECT   ITEM_BRAND_PK as ITEM_BRAND_KEY, 
+         ITEM_BRAND_CD as ITEM_BRAND_CD,
+         ITEM_BRAND_DESC,
+         PRIVATE_BRAND_ID as PRIVATE_BRAND_KEY,
+         STATUS_CD
+FROM     EDW.RTL.RETAIL_ITEM_BRAND
+;
+
+--Column
+--SALES_LINE_ID
+--STORE_NBR
+--SALES_LINE_DESC
+--SALES_CHAIN_ID
+--MKTG_CHAIN_ID
+--REGION_KEY
+--DISTRICT_KEY
+--CUST_STATUS_KEY
+--LOYALTY_STATUS_CD
+--PRICE_ZONE_ID
+--FORMAT_TYPE_ID
+--SALES_SITE_ID
+--SVGSTAR_BANNER_ID
+--SLS_LINE_OPEN_DT
+--SLS_LINE_CLOSE_DT
+--FCST_REQUIRED_FLG
+--SFUEL_CTR_MILE_MSR
+
+create or replace view SBX_BIZ.MARKETING.LINE
+as 
+SELECT   'SRTL' || sd.STORE_NBR as SALES_LINE_ID,
+         sd.STORE_NBR,
+         sd.STORE_DESC as SALES_LINE_DESC,
+         shdv.SALES_CHAIN_ID,
+         sd.MKTG_CHAIN_ID,
+         shdv.REGION_ID as REGION_KEY,
+         shdv.DISTRICT_ID as DISTRICT_KEY,
+         sd.CUST_STATUS_KEY,
+         sd.LOYALTY_STATUS_FLG as LOYALTY_STATUS_CD,
+         '' as PRICE_ZONE_ID,
+         shdv.FORMAT_TYPE_ID as FORMAT_TYPE_ID,
+         sd.SALES_SITE_ID,
+         sd.SVGSTAR_BANNER_ID,
+         sd.OPEN_DT as SLS_LINE_OPEN_DT,
+         sd.CLOSE_DT as SLS_LINE_CLOSE_DT,
+         sd.FCST_REQUIRED_FLG,
+         sd.SFUEL_CTR_MILE_MSR,
+         sd.STORE_TYPE
+FROM     EDW.RTL.STORE_DIM sd 
+         inner join EDW.RTL.STORE_HIERARCHY_DIM_VW shdv on shdv.STORE_NBR = sd.STORE_NBR
+;
+
+
+--Column
+--PERSON_KEY
+--HOUSEHOLD_KEY
+--LOYALTY_CARD_NBR
+--CARD_TYPE_CD
+--CARD_STATUS_CD
+--CARD_FLAGS
+--LAST_CHG_DATE
+--LAST_CHG_USER_ID
+--ORGANIZATION_CD
+--EFF_DATE
+--FIRST_PURCH_DATE
+--LAST_PURCHASE_DATE
+--LOAD_BATCH_ID
+--ORIGIN_ID
+
+create view SBX_BIZ.MARKETING.LOYALTY_CARD
+as 
+SELECT   PERSON_KEY,
+         HOUSEHOLD_KEY,
+         LOYALTY_CARD_NBR,
+         CARD_TYPE_CD,
+         CARD_STATUS_CD,
+         CARD_FLAGS,
+         LAST_CHG_DATE,
+         LAST_CHG_USER_ID,
+         ORGANIZATION_CD,
+         EFF_DATE,
+         FIRST_PURCH_DATE,
+         LAST_PURCHASE_DATE,
+         LOAD_BATCH_ID,
+         ORIGIN_ID
+FROM     EDL.POS_TOSHIBA.LOYALTY_CARD
+;
+
+--Column
+--MDSE_CATGY_KEY
+--MDSE_GRP_KEY
+--MDSE_CATGY_NAME
+--CREATE_USER_ID
+--CREATE_TMSP
+--UPDATE_USER_ID
+--UPDATE_TMSP
+
+create view SBX_BIZ.MARKETING.MDSE_CATEGORY
+as 
+SELECT   MDSE_CATGY_KEY,
+         MDSE_GRP_KEY,
+         MDSE_CATGY_NAME,
+         CREATE_USER_ID,
+         CREATE_TMSP,
+         UPDATE_USER_ID,
+         UPDATE_TMSP
+FROM     EDW.MDM.MDSE_CATEGORY
+;
+
+
+--Column
+--MDSE_CLASS_KEY
+--MDSE_CATGY_KEY
+--MDSE_CLASS_NAME
+--NIELSEN_CLASS_ID
+--VARIABLE_PRICE_IND
+--CREATE_USER_ID
+--CREATE_TMSP
+--UPDATE_USER_ID
+--UPDATE_TMSP
+
+create view SBX_BIZ.MARKETING.MDSE_CLASS
+as 
+SELECT   MDSE_CLASS_KEY,
+         MDSE_CATGY_KEY,
+         MDSE_CLASS_NAME,
+         NIELSEN_CLASS_ID,
+         VARIABLE_PRICE_IND,
+         CREATE_USER_ID,
+         CREATE_TMSP,
+         UPDATE_USER_ID,
+         UPDATE_TMSP
+FROM     EDW.MDM.MDSE_CLASS
+;
+
+
+--Column
+--MDSE_GRP_KEY
+--DEPT_KEY
+--MDSE_GRP_NAME
+--CREATE_USER_ID
+--CREATE_TMSP
+--UPDATE_USER_ID
+--UPDATE_TMSP
+
+
+create view SBX_BIZ.MARKETING.MDSE_GROUP
+as 
+SELECT   MDSE_GRP_KEY,
+         DEPT_KEY,
+         MDSE_GRP_NAME,
+         CREATE_USER_ID,
+         CREATE_TMSP,
+         UPDATE_USER_ID,
+         UPDATE_TMSP
+FROM     EDW.MDM.MDSE_GROUP
+;
+
+--Column
+--MKTG_CHAIN_ID
+--MKTG_CHAIN_DESC
+--MKTG_CHANNEL_ID
+--MKTG_CHN_SHRT_DESC
+--CHAIN_CTGRY_KEY
+
+
+create view SBX_BIZ.MARKETING.MKTG_CHAIN
+as 
+SELECT   MKTG_CHAIN_PK as MKTG_CHAIN_ID,
+         MKTG_CHAIN_DESC,
+         MKTG_CHANNEL_ID,
+         MKTG_CHN_SHRT_DESC,
+         CHAIN_CTGRY_ID as CHAIN_CTGRY_KEY
+FROM     EDW.RTL.MKTG_CHAIN
+;
+
+--Column
+--FORMAT_TYPE_ID
+--FORMAT_TYPE_DESC
+
+create view SBX_BIZ.MARKETING.SALES_LINE_FORMAT
+as 
+SELECT   FORMAT_TYPE_ID,
+         FORMAT_TYPE_DESC
+FROM     EDW.RTL.SALES_STORE_FORMAT;
+
+--Column
+--FISCAL_DAY_ID
+--SALES_DT
+--WEEKDAY_NBR
+--WEEKDAY_DESC
+--LY_SALES_DT
+--LY_DAY_ID
+--LY_EXT_SALES_DT
+--FISCAL_DAY_NBR
+--FISCAL_WEEK_ID
+--FISCAL_PERIOD_ID
+--FISCAL_QUARTER_ID
+--FISCAL_YEAR_ID
+
+
+create or replace view SBX_BIZ.MARKETING.FISCAL_DAY
+as 
+SELECT   ddc.DATE_PK as FISCAL_DAY_ID,
+         ddc.FULL_DATE as SALES_DT,
+         ddc.DAY_OF_WEEK as WEEKDAY_NBR,
+         ddc.DATE_NM as WEEKDAY_DESC,
+         ddly.FULL_DATE as LY_SALES_DT,
+         ddc.PREV_FISCAL_DAY as LY_DAY_ID,
+         '' as LY_EXT_SALES_DT,
+         ddc.FISCAL_DAY as FISCAL_DAY_NBR,
+         ddc.FISCAL_WEEK as FISCAL_WEEK_ID,
+         ddc.FISCAL_PERIOD as FISCAL_PERIOD_ID,
+         ddc.FISCAL_QUARTER as FISCAL_QUARTER_ID,
+         ddc.FISCAL_YEAR as FISCAL_YEAR_ID
+FROM     EDW.MDM.DATE_DIM_VW ddc inner join EDW.MDM.DATE_DIM_VW ddly on ddly.DATE_PK = ddc.DATE_ID_LY
+;
+
+
+--Column
+--FISCAL_PERIOD_ID
+--FISCAL_QUARTER_ID
+--FISCAL_PERIOD_NBR
+--START_DT
+--END_DT
+--PREVIOUS_PERIOD_ID
+
+create view SBX_BIZ.MARKETING.FISCAL_PERIOD
+as 
+SELECT   Distinct FISCAL_PERIOD as FISCAL_PERIOD_ID,
+         FISCAL_QUARTER as FISCAL_QUARTER_ID,
+         FISCAL_PERIOD - (trunc(fiscal_period / 100) * 100) as FISCAL_PERIOD_NBR,
+         FISCAL_PERIOD_START_DT as START_DT,
+         FISCAL_PERIOD_END_DT as END_DT,
+         PREV_FISCAL_PERIOD as PREVIOUS_PERIOD_ID
+FROM     EDW.MDM.DATE_DIM_VW
+;
+
+--Column
+--FISCAL_QUARTER_ID
+--FISCAL_YEAR_ID
+--FISCAL_QUARTER_NBR
+--START_DT
+--END_DT
+
+create view SBX_BIZ.MARKETING.FISCAL_QUARTER
+as 
+SELECT   Distinct FISCAL_QUARTER as FISCAL_QUARTER_ID,
+         FISCAL_YEAR as FISCAL_YEAR_ID,
+         FISCAL_QUARTER - (trunc(FISCAL_QUARTER / 100) * 100) as FISCAL_QUARTER_NBR,
+         FISCAL_QUARTER_START_DT as START_DT,
+         FISCAL_QUARTER_END_DT as END_DT
+FROM     EDW.MDM.DATE_DIM_VW
+;
+
+
+--Column
+--FISCAL_WEEK_ID
+--FISCAL_PERIOD_ID
+--FISCAL_WEEK_NBR
+--START_DT
+--END_DT
+--PREVIOUS_WEEK_ID
+--LY_WEEK_ID
+--L2Y_WEEK_ID
+--PERIOD_WEEK_NBR
+
+create view SBX_BIZ.MARKETING.FISCAL_WEEK
+as 
+SELECT   Distinct FISCAL_WEEK as FISCAL_WEEK_ID,
+         FISCAL_PERIOD as FISCAL_PERIOD_ID,
+         FISCAL_WEEK - (trunc(FISCAL_WEEK / 100) * 100) as FISCAL_WEEK_NBR,
+         FISCAL_WEEK_START_DT as START_DT,
+         FISCAL_WEEK_END_DT as END_DT,
+         PREV_FISCAL_WEEK as PREVIOUS_WEEK_ID,
+         WEEK_ID_LY as LY_WEEK_ID,
+         WEEK_ID_L2Y as L2Y_WEEK_ID,
+         '' as PERIOD_WEEK_NBR
+FROM     EDW.MDM.DATE_DIM_VW
+;
+
+--Column
+--FISCAL_YEAR_ID
+--START_DT
+--END_DT
+
+create view SBX_BIZ.MARKETING.FISCAL_YEAR
+as 
+SELECT  distinct FISCAL_YEAR as FISCAL_YEAR_ID,
+         FISCAL_YEAR_START_DT as START_DT,
+         FISCAL_YEAR_END_DT as END_DT
+FROM     EDW.MDM.DATE_DIM_VW
+;
+
+--Column
+--ITEM_ID
+--PRODUCT_ID
+--SKU_NBR
+--ITEM_BRAND_CD
+--DEPARTMENT_ID
+--MDSE_CLASS_KEY
+--PRIME_WHSE_ITEM_ID
+--ITEM_DESCRIPTION
+--AVAILABILITY_DT
+--SIZE_CD
+--SIZE_UOM
+--TYPE_CD
+--AUDIT_SOURCE_ID
+
+create or replace view SBX_BIZ.MARKETING.MDSE_ITEM
+as 
+SELECT   ri.PRODUCT_UPC as ITEM_ID,
+         ri.RETAIL_ITEM_PK as PRODUCT_ID,
+         ri.SKU_NBR,
+         ri.ITEM_BRAND_ID,
+         ib.ITEM_BRAND_CD,
+         mh.DEPT_KEY as DEPARTMENT_ID,
+         ri.MDSE_CLASS_KEY,
+         ri.WHSE_ITEM_ID as PRIME_WHSE_ITEM_ID,
+         ri.ITEM_DESCRIPTION,
+         ri.AVAILABILITY_DT,
+         ri.SIZE_CD,
+         ri.SIZE_UOM,
+         ri.TYPE_CD,
+         ri.AUDIT_SOURCE_ID
+FROM     EDW.RTL.RETAIL_ITEM ri 
+         inner join EDW.MDM.MDSE_HIERARCHY_DIM_VW mh on mh.MDSE_CLASS_KEY = ri.MDSE_CLASS_KEY 
+         inner join EDW.RTL.RETAIL_ITEM_BRAND ib on ri.ITEM_BRAND_ID = ib.ITEM_BRAND_PK
+;
+
+
+create view SBX_BIZ.MARKETING.V_FISCAL_CALENDAR
+as 
+SELECT   FD.FISCAL_DAY_ID AS "Fcl Day ID",
+         FD.LY_DAY_ID AS "Fcl Day ID LY",
+         FD.SALES_DT AS "Dt",
+         FD.LY_SALES_DT AS "Dt LY",
+         FD.WEEKDAY_NBR AS "Wk Day Nbr",
+         FD.WEEKDAY_DESC AS "Wk Day Desc",
+         FD.FISCAL_DAY_NBR AS "Fcl Day Nbr",
+         FD.FISCAL_WEEK_ID AS "Fcl Wk ID",
+         FW.LY_WEEK_ID AS "Fcl Wk ID LY",
+         FW.FISCAL_WEEK_NBR AS "Fcl Wk Nbr",
+         FW.START_DT AS "Wk Strt Dt",
+         FW.END_DT AS "Wk End Dt",
+         FW.PREVIOUS_WEEK_ID AS "Prev Fcl Wk ID",
+         FW.PERIOD_WEEK_NBR AS "Wk of Per Nbr",
+         FD.FISCAL_PERIOD_ID AS "Fcl Per ID",
+         FP.FISCAL_PERIOD_NBR AS "Fcl Per Nbr",
+         FP.START_DT AS "Fcl Per Strt Dt",
+         FP.END_DT AS "Fcl Per End Dt",
+         FP.PREVIOUS_PERIOD_ID AS "Prev Fcl Per ID",
+         FD.FISCAL_QUARTER_ID AS "Fcl Qtr ID",
+         FQ.FISCAL_QUARTER_NBR AS "Fcl Qtr Nbr",
+         FQ.START_DT AS "Fcl Qtr Strt Dt",
+         FQ.END_DT AS "Fcl Qtr End Dt",
+         FD.FISCAL_YEAR_ID AS "Fcl Yr ID",
+         FY.START_DT AS "Fcl Yr Strt Dt",
+         FY.END_DT AS "Fcl Yr End Dt",
+         CASE 
+              WHEN FD.FISCAL_YEAR_ID = (SELECT DISTINCT FISCAL_DAY.FISCAL_YEAR_ID FROM SBX_BIZ.MARKETING.FISCAL_DAY WHERE (FISCAL_DAY.SALES_DT = CURRENT_DATE())) THEN 'Y' 
+              ELSE 'N' 
+         END AS "Curr Yr Flg",
+         CASE 
+              WHEN (FD.SALES_DT >= CURRENT_DATE()) THEN 'Y'
+              ELSE 'N'
+         END AS "Ftr Dt",
+         CASE 
+              WHEN (FD.SALES_DT = (CURRENT_DATE() - 1)) THEN 'Y' 
+              ELSE 'N' 
+         END AS "Curr Dt Flg",
+         CASE 
+              WHEN (FD.FISCAL_WEEK_ID = (SELECT DISTINCT FISCAL_DAY.FISCAL_WEEK_ID FROM SBX_BIZ.MARKETING.FISCAL_DAY WHERE (FISCAL_DAY.SALES_DT = (CURRENT_DATE() - 1)))) THEN 'Y' 
+              ELSE 'N' 
+         END AS "Curr Wk Flg",
+         HCD.HOLIDAY AS "Holiday",
+         HCD."Day Count Down" AS "Holiday Count Down",
+         HCD."Dt LY" AS "Dt LY Holiday",
+         HCD."Week Count Down",
+         CASE 
+              WHEN ((FW.END_DT >= (SELECT DISTINCT FW.END_DT FROM (SBX_BIZ.MARKETING.FISCAL_DAY FD JOIN SBX_BIZ.MARKETING.FISCAL_WEEK FW ON ((FD.FISCAL_WEEK_ID = FW.FISCAL_WEEK_ID))) WHERE ((FW.END_DT >= (CURRENT_DATE() - 7)) AND (FW.END_DT <= (CURRENT_DATE() - 1))))) AND (FW.END_DT <= (SELECT DISTINCT FW.END_DT FROM (SBX_BIZ.MARKETING.FISCAL_DAY FD JOIN SBX_BIZ.MARKETING.FISCAL_WEEK FW ON ((FD.FISCAL_WEEK_ID = FW.FISCAL_WEEK_ID))) WHERE (FD.SALES_DT = (CURRENT_DATE() - 1))))) THEN 'Y' 
+              ELSE 'N'
+         END AS "LW TW Flag",
+         (FD.LY_SALES_DT - 364) AS "Dt LLY"
+FROM     ((((SBX_BIZ.MARKETING.FISCAL_DAY FD 
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK FW ON ((FD.FISCAL_WEEK_ID = FW.FISCAL_WEEK_ID))) 
+         JOIN SBX_BIZ.MARKETING.FISCAL_PERIOD FP ON ((FW.FISCAL_PERIOD_ID = FP.FISCAL_PERIOD_ID))) 
+         JOIN SBX_BIZ.MARKETING.FISCAL_QUARTER FQ ON ((FP.FISCAL_QUARTER_ID = FQ.FISCAL_QUARTER_ID))) 
+         JOIN SBX_BIZ.MARKETING.FISCAL_YEAR FY ON ((FQ.FISCAL_YEAR_ID = FY.FISCAL_YEAR_ID))) 
+         LEFT JOIN SBX_BIZ.MARKETING.I_HOLIDAY_DAILY_COUNTDOWN HCD ON ((FD.SALES_DT = HCD.DT))
+WHERE    ((FY.FISCAL_YEAR_ID >= (SELECT DISTINCT (FISCAL_DAY.FISCAL_YEAR_ID - 3) FROM SBX_BIZ.MARKETING.FISCAL_DAY WHERE (FISCAL_DAY.SALES_DT = CURRENT_DATE())))
+     AND (FY.FISCAL_YEAR_ID <= (SELECT DISTINCT FISCAL_DAY.FISCAL_YEAR_ID FROM SBX_BIZ.MARKETING.FISCAL_DAY WHERE (FISCAL_DAY.SALES_DT = CURRENT_DATE()))))
+;
+
+--need Sunder help.
+create or replace view SBX_BIZ.MARKETING.V_PRIVATE_LABEL_UPC
+as
+SELECT   Distinct A.ITEM_ID AS "Item"
+FROM     SBX_BIZ.MARKETING.MDSE_ITEM A 
+         JOIN SBX_BIZ.MARKETING.ITEM_BRAND I ON (A.ITEM_BRAND_CD = I.ITEM_BRAND_CD)
+         JOIN SBX_BIZ.MARKETING.I_PRIVATE_LABEL_CODES K ON (I.ITEM_BRAND_CD = K.ITEM_BRAND_CD)
+;
+
+--V_FISCAL_CALENDAR_PDDF
+create or replace view SBX_BIZ.MARKETING.V_FISCAL_CALENDAR_PDDF
+as
+SELECT   V_FISCAL_CALENDAR."Fcl Day ID",
+         V_FISCAL_CALENDAR."Fcl Day ID LY",
+         V_FISCAL_CALENDAR."Dt",
+         V_FISCAL_CALENDAR."Dt LY",
+         V_FISCAL_CALENDAR."Wk Day Nbr",
+         V_FISCAL_CALENDAR."Wk Day Desc",
+         V_FISCAL_CALENDAR."Fcl Day Nbr",
+         V_FISCAL_CALENDAR."Fcl Wk ID",
+         V_FISCAL_CALENDAR."Fcl Wk ID LY",
+         V_FISCAL_CALENDAR."Fcl Wk Nbr",
+         V_FISCAL_CALENDAR."Wk Strt Dt",
+         V_FISCAL_CALENDAR."Wk End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Wk ID",
+         V_FISCAL_CALENDAR."Wk of Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Per End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Qtr ID",
+         V_FISCAL_CALENDAR."Fcl Qtr Nbr",
+         V_FISCAL_CALENDAR."Fcl Qtr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Qtr End Dt",
+         V_FISCAL_CALENDAR."Fcl Yr ID",
+         V_FISCAL_CALENDAR."Fcl Yr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Yr End Dt",
+         V_FISCAL_CALENDAR."Curr Yr Flg",
+         V_FISCAL_CALENDAR."Ftr Dt",
+         V_FISCAL_CALENDAR."Curr Dt Flg",
+         V_FISCAL_CALENDAR."Curr Wk Flg",
+         V_FISCAL_CALENDAR."Holiday",
+         V_FISCAL_CALENDAR."Holiday Count Down",
+         V_FISCAL_CALENDAR."Dt LY Holiday",
+         V_FISCAL_CALENDAR."Week Count Down",
+         V_FISCAL_CALENDAR."LW TW Flag",
+         V_FISCAL_CALENDAR."Dt LLY",
+         1 AS "Pddf Sort ID",
+         'None' AS "Pddf Desc"
+FROM     SBX_BIZ.MARKETING.V_FISCAL_CALENDAR
+UNION ALL 
+SELECT   V_FISCAL_CALENDAR."Fcl Day ID",
+         V_FISCAL_CALENDAR."Fcl Day ID LY",
+         V_FISCAL_CALENDAR."Dt",
+         V_FISCAL_CALENDAR."Dt LY",
+         V_FISCAL_CALENDAR."Wk Day Nbr",
+         V_FISCAL_CALENDAR."Wk Day Desc",
+         V_FISCAL_CALENDAR."Fcl Day Nbr",
+         V_FISCAL_CALENDAR."Fcl Wk ID",
+         V_FISCAL_CALENDAR."Fcl Wk ID LY",
+         V_FISCAL_CALENDAR."Fcl Wk Nbr",
+         V_FISCAL_CALENDAR."Wk Strt Dt",
+         V_FISCAL_CALENDAR."Wk End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Wk ID",
+         V_FISCAL_CALENDAR."Wk of Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Per End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Qtr ID",
+         V_FISCAL_CALENDAR."Fcl Qtr Nbr",
+         V_FISCAL_CALENDAR."Fcl Qtr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Qtr End Dt",
+         V_FISCAL_CALENDAR."Fcl Yr ID",
+         V_FISCAL_CALENDAR."Fcl Yr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Yr End Dt",
+         V_FISCAL_CALENDAR."Curr Yr Flg",
+         V_FISCAL_CALENDAR."Ftr Dt",
+         V_FISCAL_CALENDAR."Curr Dt Flg",
+         V_FISCAL_CALENDAR."Curr Wk Flg",
+         V_FISCAL_CALENDAR."Holiday",
+         V_FISCAL_CALENDAR."Holiday Count Down",
+         V_FISCAL_CALENDAR."Dt LY Holiday",
+         V_FISCAL_CALENDAR."Week Count Down",
+         V_FISCAL_CALENDAR."LW TW Flag",
+         V_FISCAL_CALENDAR."Dt LLY",
+         2 AS "Pddf Sort ID",
+         'This Week' AS "Pddf Desc"
+FROM     SBX_BIZ.MARKETING.V_FISCAL_CALENDAR
+WHERE    V_FISCAL_CALENDAR."Wk End Dt" = ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Dt" = (CURRENT_DATE() - 1))
+UNION ALL 
+SELECT   V_FISCAL_CALENDAR."Fcl Day ID",
+         V_FISCAL_CALENDAR."Fcl Day ID LY",
+         V_FISCAL_CALENDAR."Dt",
+         V_FISCAL_CALENDAR."Dt LY",
+         V_FISCAL_CALENDAR."Wk Day Nbr",
+         V_FISCAL_CALENDAR."Wk Day Desc",
+         V_FISCAL_CALENDAR."Fcl Day Nbr",
+         V_FISCAL_CALENDAR."Fcl Wk ID",
+         V_FISCAL_CALENDAR."Fcl Wk ID LY",
+         V_FISCAL_CALENDAR."Fcl Wk Nbr",
+         V_FISCAL_CALENDAR."Wk Strt Dt",
+         V_FISCAL_CALENDAR."Wk End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Wk ID",
+         V_FISCAL_CALENDAR."Wk of Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Per End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Qtr ID",
+         V_FISCAL_CALENDAR."Fcl Qtr Nbr",
+         V_FISCAL_CALENDAR."Fcl Qtr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Qtr End Dt",
+         V_FISCAL_CALENDAR."Fcl Yr ID",
+         V_FISCAL_CALENDAR."Fcl Yr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Yr End Dt",
+         V_FISCAL_CALENDAR."Curr Yr Flg",
+         V_FISCAL_CALENDAR."Ftr Dt",
+         V_FISCAL_CALENDAR."Curr Dt Flg",
+         V_FISCAL_CALENDAR."Curr Wk Flg",
+         V_FISCAL_CALENDAR."Holiday",
+         V_FISCAL_CALENDAR."Holiday Count Down",
+         V_FISCAL_CALENDAR."Dt LY Holiday",
+         V_FISCAL_CALENDAR."Week Count Down",
+         V_FISCAL_CALENDAR."LW TW Flag",
+         V_FISCAL_CALENDAR."Dt LLY",
+         3 AS "Pddf Sort ID",
+         'Last Week' AS "Pddf Desc"
+FROM     SBX_BIZ.MARKETING.V_FISCAL_CALENDAR
+WHERE    V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+AND      V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1)
+UNION ALL
+SELECT   V_FISCAL_CALENDAR."Fcl Day ID",
+         V_FISCAL_CALENDAR."Fcl Day ID LY",
+         V_FISCAL_CALENDAR."Dt",
+         V_FISCAL_CALENDAR."Dt LY",
+         V_FISCAL_CALENDAR."Wk Day Nbr",
+         V_FISCAL_CALENDAR."Wk Day Desc",
+         V_FISCAL_CALENDAR."Fcl Day Nbr",
+         V_FISCAL_CALENDAR."Fcl Wk ID",
+         V_FISCAL_CALENDAR."Fcl Wk ID LY",
+         V_FISCAL_CALENDAR."Fcl Wk Nbr",
+         V_FISCAL_CALENDAR."Wk Strt Dt",
+         V_FISCAL_CALENDAR."Wk End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Wk ID",
+         V_FISCAL_CALENDAR."Wk of Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Per End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Qtr ID",
+         V_FISCAL_CALENDAR."Fcl Qtr Nbr",
+         V_FISCAL_CALENDAR."Fcl Qtr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Qtr End Dt",
+         V_FISCAL_CALENDAR."Fcl Yr ID",
+         V_FISCAL_CALENDAR."Fcl Yr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Yr End Dt",
+         V_FISCAL_CALENDAR."Curr Yr Flg",
+         V_FISCAL_CALENDAR."Ftr Dt",
+         V_FISCAL_CALENDAR."Curr Dt Flg",
+         V_FISCAL_CALENDAR."Curr Wk Flg",
+         V_FISCAL_CALENDAR."Holiday",
+         V_FISCAL_CALENDAR."Holiday Count Down",
+         V_FISCAL_CALENDAR."Dt LY Holiday",
+         V_FISCAL_CALENDAR."Week Count Down",
+         V_FISCAL_CALENDAR."LW TW Flag",
+         V_FISCAL_CALENDAR."Dt LLY",
+         4 AS "Pddf Sort ID",
+         'Current Period' AS "Pddf Desc"
+FROM     SBX_BIZ.MARKETING.V_FISCAL_CALENDAR
+WHERE    V_FISCAL_CALENDAR."Fcl Per ID" = ( SELECT DISTINCT V_FISCAL_CALENDAR."Fcl Per ID" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+UNION ALL
+SELECT   V_FISCAL_CALENDAR."Fcl Day ID",
+         V_FISCAL_CALENDAR."Fcl Day ID LY",
+         V_FISCAL_CALENDAR."Dt",
+         V_FISCAL_CALENDAR."Dt LY",
+         V_FISCAL_CALENDAR."Wk Day Nbr",
+         V_FISCAL_CALENDAR."Wk Day Desc",
+         V_FISCAL_CALENDAR."Fcl Day Nbr",
+         V_FISCAL_CALENDAR."Fcl Wk ID",
+         V_FISCAL_CALENDAR."Fcl Wk ID LY",
+         V_FISCAL_CALENDAR."Fcl Wk Nbr",
+         V_FISCAL_CALENDAR."Wk Strt Dt",
+         V_FISCAL_CALENDAR."Wk End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Wk ID",
+         V_FISCAL_CALENDAR."Wk of Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Per End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Qtr ID",
+         V_FISCAL_CALENDAR."Fcl Qtr Nbr",
+         V_FISCAL_CALENDAR."Fcl Qtr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Qtr End Dt",
+         V_FISCAL_CALENDAR."Fcl Yr ID",
+         V_FISCAL_CALENDAR."Fcl Yr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Yr End Dt",
+         V_FISCAL_CALENDAR."Curr Yr Flg",
+         V_FISCAL_CALENDAR."Ftr Dt",
+         V_FISCAL_CALENDAR."Curr Dt Flg",
+         V_FISCAL_CALENDAR."Curr Wk Flg",
+         V_FISCAL_CALENDAR."Holiday",
+         V_FISCAL_CALENDAR."Holiday Count Down",
+         V_FISCAL_CALENDAR."Dt LY Holiday",
+         V_FISCAL_CALENDAR."Week Count Down",
+         V_FISCAL_CALENDAR."LW TW Flag",
+         V_FISCAL_CALENDAR."Dt LLY",
+         5 AS "Pddf Sort ID",
+         'Current Quarter' AS "Pddf Desc"
+FROM     SBX_BIZ.MARKETING.V_FISCAL_CALENDAR
+WHERE    V_FISCAL_CALENDAR."Fcl Qtr ID" = ( SELECT DISTINCT V_FISCAL_CALENDAR."Fcl Qtr ID" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+UNION ALL
+SELECT   V_FISCAL_CALENDAR."Fcl Day ID",
+         V_FISCAL_CALENDAR."Fcl Day ID LY",
+         V_FISCAL_CALENDAR."Dt",
+         V_FISCAL_CALENDAR."Dt LY",
+         V_FISCAL_CALENDAR."Wk Day Nbr",
+         V_FISCAL_CALENDAR."Wk Day Desc",
+         V_FISCAL_CALENDAR."Fcl Day Nbr",
+         V_FISCAL_CALENDAR."Fcl Wk ID",
+         V_FISCAL_CALENDAR."Fcl Wk ID LY",
+         V_FISCAL_CALENDAR."Fcl Wk Nbr",
+         V_FISCAL_CALENDAR."Wk Strt Dt",
+         V_FISCAL_CALENDAR."Wk End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Wk ID",
+         V_FISCAL_CALENDAR."Wk of Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Per End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Qtr ID",
+         V_FISCAL_CALENDAR."Fcl Qtr Nbr",
+         V_FISCAL_CALENDAR."Fcl Qtr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Qtr End Dt",
+         V_FISCAL_CALENDAR."Fcl Yr ID",
+         V_FISCAL_CALENDAR."Fcl Yr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Yr End Dt",
+         V_FISCAL_CALENDAR."Curr Yr Flg",
+         V_FISCAL_CALENDAR."Ftr Dt",
+         V_FISCAL_CALENDAR."Curr Dt Flg",
+         V_FISCAL_CALENDAR."Curr Wk Flg",
+         V_FISCAL_CALENDAR."Holiday",
+         V_FISCAL_CALENDAR."Holiday Count Down",
+         V_FISCAL_CALENDAR."Dt LY Holiday",
+         V_FISCAL_CALENDAR."Week Count Down",
+         V_FISCAL_CALENDAR."LW TW Flag",
+         V_FISCAL_CALENDAR."Dt LLY",
+         6 AS "Pddf Sort ID",
+         'Current Year' AS "Pddf Desc"
+FROM     SBX_BIZ.MARKETING.V_FISCAL_CALENDAR
+WHERE    V_FISCAL_CALENDAR."Fcl Yr ID" = ( SELECT DISTINCT V_FISCAL_CALENDAR."Fcl Yr ID" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+        AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+UNION ALL
+SELECT   V_FISCAL_CALENDAR."Fcl Day ID",
+         V_FISCAL_CALENDAR."Fcl Day ID LY",
+         V_FISCAL_CALENDAR."Dt",
+         V_FISCAL_CALENDAR."Dt LY",
+         V_FISCAL_CALENDAR."Wk Day Nbr",
+         V_FISCAL_CALENDAR."Wk Day Desc",
+         V_FISCAL_CALENDAR."Fcl Day Nbr",
+         V_FISCAL_CALENDAR."Fcl Wk ID",
+         V_FISCAL_CALENDAR."Fcl Wk ID LY",
+         V_FISCAL_CALENDAR."Fcl Wk Nbr",
+         V_FISCAL_CALENDAR."Wk Strt Dt",
+         V_FISCAL_CALENDAR."Wk End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Wk ID",
+         V_FISCAL_CALENDAR."Wk of Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Per End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Qtr ID",
+         V_FISCAL_CALENDAR."Fcl Qtr Nbr",
+         V_FISCAL_CALENDAR."Fcl Qtr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Qtr End Dt",
+         V_FISCAL_CALENDAR."Fcl Yr ID",
+         V_FISCAL_CALENDAR."Fcl Yr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Yr End Dt",
+         V_FISCAL_CALENDAR."Curr Yr Flg",
+         V_FISCAL_CALENDAR."Ftr Dt",
+         V_FISCAL_CALENDAR."Curr Dt Flg",
+         V_FISCAL_CALENDAR."Curr Wk Flg",
+         V_FISCAL_CALENDAR."Holiday",
+         V_FISCAL_CALENDAR."Holiday Count Down",
+         V_FISCAL_CALENDAR."Dt LY Holiday",
+         V_FISCAL_CALENDAR."Week Count Down",
+         V_FISCAL_CALENDAR."LW TW Flag",
+         V_FISCAL_CALENDAR."Dt LLY",
+         7 AS "Pddf Sort ID",
+         'Previous 2 Weeks' AS "Pddf Desc"
+FROM     SBX_BIZ.MARKETING.V_FISCAL_CALENDAR
+WHERE    V_FISCAL_CALENDAR."Wk End Dt" >= ( SELECT DISTINCT (V_FISCAL_CALENDAR."Wk End Dt" - 10) FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+AND      V_FISCAL_CALENDAR."Wk End Dt" <= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+UNION ALL 
+SELECT   V_FISCAL_CALENDAR."Fcl Day ID",
+         V_FISCAL_CALENDAR."Fcl Day ID LY",
+         V_FISCAL_CALENDAR."Dt",
+         V_FISCAL_CALENDAR."Dt LY",
+         V_FISCAL_CALENDAR."Wk Day Nbr",
+         V_FISCAL_CALENDAR."Wk Day Desc",
+         V_FISCAL_CALENDAR."Fcl Day Nbr",
+         V_FISCAL_CALENDAR."Fcl Wk ID",
+         V_FISCAL_CALENDAR."Fcl Wk ID LY",
+         V_FISCAL_CALENDAR."Fcl Wk Nbr",
+         V_FISCAL_CALENDAR."Wk Strt Dt",
+         V_FISCAL_CALENDAR."Wk End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Wk ID",
+         V_FISCAL_CALENDAR."Wk of Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Per End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Qtr ID",
+         V_FISCAL_CALENDAR."Fcl Qtr Nbr",
+         V_FISCAL_CALENDAR."Fcl Qtr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Qtr End Dt",
+         V_FISCAL_CALENDAR."Fcl Yr ID",
+         V_FISCAL_CALENDAR."Fcl Yr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Yr End Dt",
+         V_FISCAL_CALENDAR."Curr Yr Flg",
+         V_FISCAL_CALENDAR."Ftr Dt",
+         V_FISCAL_CALENDAR."Curr Dt Flg",
+         V_FISCAL_CALENDAR."Curr Wk Flg",
+         V_FISCAL_CALENDAR."Holiday",
+         V_FISCAL_CALENDAR."Holiday Count Down",
+         V_FISCAL_CALENDAR."Dt LY Holiday",
+         V_FISCAL_CALENDAR."Week Count Down",
+         V_FISCAL_CALENDAR."LW TW Flag",
+         V_FISCAL_CALENDAR."Dt LLY",
+         8 AS "Pddf Sort ID",
+         'Previous 4 Weeks' AS "Pddf Desc"
+FROM     SBX_BIZ.MARKETING.V_FISCAL_CALENDAR
+WHERE    V_FISCAL_CALENDAR."Wk End Dt" >= ( SELECT DISTINCT (V_FISCAL_CALENDAR."Wk End Dt" - 21) FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+AND      V_FISCAL_CALENDAR."Wk End Dt" <= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+UNION ALL 
+SELECT   V_FISCAL_CALENDAR."Fcl Day ID",
+         V_FISCAL_CALENDAR."Fcl Day ID LY",
+         V_FISCAL_CALENDAR."Dt",
+         V_FISCAL_CALENDAR."Dt LY",
+         V_FISCAL_CALENDAR."Wk Day Nbr",
+         V_FISCAL_CALENDAR."Wk Day Desc",
+         V_FISCAL_CALENDAR."Fcl Day Nbr",
+         V_FISCAL_CALENDAR."Fcl Wk ID",
+         V_FISCAL_CALENDAR."Fcl Wk ID LY",
+         V_FISCAL_CALENDAR."Fcl Wk Nbr",
+         V_FISCAL_CALENDAR."Wk Strt Dt",
+         V_FISCAL_CALENDAR."Wk End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Wk ID",
+         V_FISCAL_CALENDAR."Wk of Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Per End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Qtr ID",
+         V_FISCAL_CALENDAR."Fcl Qtr Nbr",
+         V_FISCAL_CALENDAR."Fcl Qtr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Qtr End Dt",
+         V_FISCAL_CALENDAR."Fcl Yr ID",
+         V_FISCAL_CALENDAR."Fcl Yr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Yr End Dt",
+         V_FISCAL_CALENDAR."Curr Yr Flg",
+         V_FISCAL_CALENDAR."Ftr Dt",
+         V_FISCAL_CALENDAR."Curr Dt Flg",
+         V_FISCAL_CALENDAR."Curr Wk Flg",
+         V_FISCAL_CALENDAR."Holiday",
+         V_FISCAL_CALENDAR."Holiday Count Down",
+         V_FISCAL_CALENDAR."Dt LY Holiday",
+         V_FISCAL_CALENDAR."Week Count Down",
+         V_FISCAL_CALENDAR."LW TW Flag",
+         V_FISCAL_CALENDAR."Dt LLY",
+         9 AS "Pddf Sort ID",
+         'Previous 6 Weeks' AS "Pddf Desc"
+FROM     SBX_BIZ.MARKETING.V_FISCAL_CALENDAR
+WHERE    V_FISCAL_CALENDAR."Wk End Dt" >= ( SELECT DISTINCT (V_FISCAL_CALENDAR."Wk End Dt" - 35) FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 14)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 8))
+AND      V_FISCAL_CALENDAR."Wk End Dt" <= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 14)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 8))
+UNION ALL 
+SELECT   V_FISCAL_CALENDAR."Fcl Day ID",
+         V_FISCAL_CALENDAR."Fcl Day ID LY",
+         V_FISCAL_CALENDAR."Dt",
+         V_FISCAL_CALENDAR."Dt LY",
+         V_FISCAL_CALENDAR."Wk Day Nbr",
+         V_FISCAL_CALENDAR."Wk Day Desc",
+         V_FISCAL_CALENDAR."Fcl Day Nbr",
+         V_FISCAL_CALENDAR."Fcl Wk ID",
+         V_FISCAL_CALENDAR."Fcl Wk ID LY",
+         V_FISCAL_CALENDAR."Fcl Wk Nbr",
+         V_FISCAL_CALENDAR."Wk Strt Dt",
+         V_FISCAL_CALENDAR."Wk End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Wk ID",
+         V_FISCAL_CALENDAR."Wk of Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Per End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Qtr ID",
+         V_FISCAL_CALENDAR."Fcl Qtr Nbr",
+         V_FISCAL_CALENDAR."Fcl Qtr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Qtr End Dt",
+         V_FISCAL_CALENDAR."Fcl Yr ID",
+         V_FISCAL_CALENDAR."Fcl Yr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Yr End Dt",
+         V_FISCAL_CALENDAR."Curr Yr Flg",
+         V_FISCAL_CALENDAR."Ftr Dt",
+         V_FISCAL_CALENDAR."Curr Dt Flg",
+         V_FISCAL_CALENDAR."Curr Wk Flg",
+         V_FISCAL_CALENDAR."Holiday",
+         V_FISCAL_CALENDAR."Holiday Count Down",
+         V_FISCAL_CALENDAR."Dt LY Holiday",
+         V_FISCAL_CALENDAR."Week Count Down",
+         V_FISCAL_CALENDAR."LW TW Flag",
+         V_FISCAL_CALENDAR."Dt LLY",
+         10 AS "Pddf Sort ID",
+         'Previous 8 Weeks' AS "Pddf Desc"
+FROM     SBX_BIZ.MARKETING.V_FISCAL_CALENDAR
+WHERE    V_FISCAL_CALENDAR."Wk End Dt" >= ( SELECT DISTINCT (V_FISCAL_CALENDAR."Wk End Dt" - 49) FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+AND      V_FISCAL_CALENDAR."Wk End Dt" <= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+UNION ALL
+SELECT   V_FISCAL_CALENDAR."Fcl Day ID",
+         V_FISCAL_CALENDAR."Fcl Day ID LY",
+         V_FISCAL_CALENDAR."Dt",
+         V_FISCAL_CALENDAR."Dt LY",
+         V_FISCAL_CALENDAR."Wk Day Nbr",
+         V_FISCAL_CALENDAR."Wk Day Desc",
+         V_FISCAL_CALENDAR."Fcl Day Nbr",
+         V_FISCAL_CALENDAR."Fcl Wk ID",
+         V_FISCAL_CALENDAR."Fcl Wk ID LY",
+         V_FISCAL_CALENDAR."Fcl Wk Nbr",
+         V_FISCAL_CALENDAR."Wk Strt Dt",
+         V_FISCAL_CALENDAR."Wk End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Wk ID",
+         V_FISCAL_CALENDAR."Wk of Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Per End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Qtr ID",
+         V_FISCAL_CALENDAR."Fcl Qtr Nbr",
+         V_FISCAL_CALENDAR."Fcl Qtr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Qtr End Dt",
+         V_FISCAL_CALENDAR."Fcl Yr ID",
+         V_FISCAL_CALENDAR."Fcl Yr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Yr End Dt",
+         V_FISCAL_CALENDAR."Curr Yr Flg",
+         V_FISCAL_CALENDAR."Ftr Dt",
+         V_FISCAL_CALENDAR."Curr Dt Flg",
+         V_FISCAL_CALENDAR."Curr Wk Flg",
+         V_FISCAL_CALENDAR."Holiday",
+         V_FISCAL_CALENDAR."Holiday Count Down",
+         V_FISCAL_CALENDAR."Dt LY Holiday",
+         V_FISCAL_CALENDAR."Week Count Down",
+         V_FISCAL_CALENDAR."LW TW Flag",
+         V_FISCAL_CALENDAR."Dt LLY",
+         11 AS "Pddf Sort ID",
+         'Previous 12 Weeks' AS "Pddf Desc"
+FROM     SBX_BIZ.MARKETING.V_FISCAL_CALENDAR
+WHERE    V_FISCAL_CALENDAR."Wk End Dt" >= ( SELECT DISTINCT (V_FISCAL_CALENDAR."Wk End Dt" - 77) FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+AND      V_FISCAL_CALENDAR."Wk End Dt" <= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+UNION ALL
+SELECT   V_FISCAL_CALENDAR."Fcl Day ID",
+         V_FISCAL_CALENDAR."Fcl Day ID LY",
+         V_FISCAL_CALENDAR."Dt",
+         V_FISCAL_CALENDAR."Dt LY",
+         V_FISCAL_CALENDAR."Wk Day Nbr",
+         V_FISCAL_CALENDAR."Wk Day Desc",
+         V_FISCAL_CALENDAR."Fcl Day Nbr",
+         V_FISCAL_CALENDAR."Fcl Wk ID",
+         V_FISCAL_CALENDAR."Fcl Wk ID LY",
+         V_FISCAL_CALENDAR."Fcl Wk Nbr",
+         V_FISCAL_CALENDAR."Wk Strt Dt",
+         V_FISCAL_CALENDAR."Wk End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Wk ID",
+         V_FISCAL_CALENDAR."Wk of Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Per End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Qtr ID",
+         V_FISCAL_CALENDAR."Fcl Qtr Nbr",
+         V_FISCAL_CALENDAR."Fcl Qtr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Qtr End Dt",
+         V_FISCAL_CALENDAR."Fcl Yr ID",
+         V_FISCAL_CALENDAR."Fcl Yr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Yr End Dt",
+         V_FISCAL_CALENDAR."Curr Yr Flg",
+         V_FISCAL_CALENDAR."Ftr Dt",
+         V_FISCAL_CALENDAR."Curr Dt Flg",
+         V_FISCAL_CALENDAR."Curr Wk Flg",
+         V_FISCAL_CALENDAR."Holiday",
+         V_FISCAL_CALENDAR."Holiday Count Down",
+         V_FISCAL_CALENDAR."Dt LY Holiday",
+         V_FISCAL_CALENDAR."Week Count Down",
+         V_FISCAL_CALENDAR."LW TW Flag",
+         V_FISCAL_CALENDAR."Dt LLY",
+         11.1 AS "Pddf Sort ID",
+         'Previous 13 Weeks' AS "Pddf Desc"
+FROM     SBX_BIZ.MARKETING.V_FISCAL_CALENDAR
+WHERE    V_FISCAL_CALENDAR."Wk End Dt" >= ( SELECT DISTINCT (V_FISCAL_CALENDAR."Wk End Dt" - 84) FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+AND      V_FISCAL_CALENDAR."Wk End Dt" <= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+UNION ALL
+SELECT   V_FISCAL_CALENDAR."Fcl Day ID",
+         V_FISCAL_CALENDAR."Fcl Day ID LY",
+         V_FISCAL_CALENDAR."Dt",
+         V_FISCAL_CALENDAR."Dt LY",
+         V_FISCAL_CALENDAR."Wk Day Nbr",
+         V_FISCAL_CALENDAR."Wk Day Desc",
+         V_FISCAL_CALENDAR."Fcl Day Nbr",
+         V_FISCAL_CALENDAR."Fcl Wk ID",
+         V_FISCAL_CALENDAR."Fcl Wk ID LY",
+         V_FISCAL_CALENDAR."Fcl Wk Nbr",
+         V_FISCAL_CALENDAR."Wk Strt Dt",
+         V_FISCAL_CALENDAR."Wk End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Wk ID",
+         V_FISCAL_CALENDAR."Wk of Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Per End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Qtr ID",
+         V_FISCAL_CALENDAR."Fcl Qtr Nbr",
+         V_FISCAL_CALENDAR."Fcl Qtr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Qtr End Dt",
+         V_FISCAL_CALENDAR."Fcl Yr ID",
+         V_FISCAL_CALENDAR."Fcl Yr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Yr End Dt",
+         V_FISCAL_CALENDAR."Curr Yr Flg",
+         V_FISCAL_CALENDAR."Ftr Dt",
+         V_FISCAL_CALENDAR."Curr Dt Flg",
+         V_FISCAL_CALENDAR."Curr Wk Flg",
+         V_FISCAL_CALENDAR."Holiday",
+         V_FISCAL_CALENDAR."Holiday Count Down",
+         V_FISCAL_CALENDAR."Dt LY Holiday",
+         V_FISCAL_CALENDAR."Week Count Down",
+         V_FISCAL_CALENDAR."LW TW Flag",
+         V_FISCAL_CALENDAR."Dt LLY",
+         12 AS "Pddf Sort ID",
+         'Previous 26 Weeks' AS "Pddf Desc"
+FROM     SBX_BIZ.MARKETING.V_FISCAL_CALENDAR
+WHERE    V_FISCAL_CALENDAR."Wk End Dt" >= ( SELECT DISTINCT (V_FISCAL_CALENDAR."Wk End Dt" - 175) FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+AND      V_FISCAL_CALENDAR."Wk End Dt" <= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+UNION ALL
+SELECT   V_FISCAL_CALENDAR."Fcl Day ID",
+         V_FISCAL_CALENDAR."Fcl Day ID LY",
+         V_FISCAL_CALENDAR."Dt",
+         V_FISCAL_CALENDAR."Dt LY",
+         V_FISCAL_CALENDAR."Wk Day Nbr",
+         V_FISCAL_CALENDAR."Wk Day Desc",
+         V_FISCAL_CALENDAR."Fcl Day Nbr",
+         V_FISCAL_CALENDAR."Fcl Wk ID",
+         V_FISCAL_CALENDAR."Fcl Wk ID LY",
+         V_FISCAL_CALENDAR."Fcl Wk Nbr",
+         V_FISCAL_CALENDAR."Wk Strt Dt",
+         V_FISCAL_CALENDAR."Wk End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Wk ID",
+         V_FISCAL_CALENDAR."Wk of Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Per End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Qtr ID",
+         V_FISCAL_CALENDAR."Fcl Qtr Nbr",
+         V_FISCAL_CALENDAR."Fcl Qtr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Qtr End Dt",
+         V_FISCAL_CALENDAR."Fcl Yr ID",
+         V_FISCAL_CALENDAR."Fcl Yr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Yr End Dt",
+         V_FISCAL_CALENDAR."Curr Yr Flg",
+         V_FISCAL_CALENDAR."Ftr Dt",
+         V_FISCAL_CALENDAR."Curr Dt Flg",
+         V_FISCAL_CALENDAR."Curr Wk Flg",
+         V_FISCAL_CALENDAR."Holiday",
+         V_FISCAL_CALENDAR."Holiday Count Down",
+         V_FISCAL_CALENDAR."Dt LY Holiday",
+         V_FISCAL_CALENDAR."Week Count Down",
+         V_FISCAL_CALENDAR."LW TW Flag",
+         V_FISCAL_CALENDAR."Dt LLY",
+         13 AS "Pddf Sort ID",
+         'Previous 52 Weeks' AS "Pddf Desc"
+FROM     SBX_BIZ.MARKETING.V_FISCAL_CALENDAR
+WHERE    V_FISCAL_CALENDAR."Wk End Dt" >= ( SELECT DISTINCT (V_FISCAL_CALENDAR."Wk End Dt" - 357) FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+AND      V_FISCAL_CALENDAR."Wk End Dt" <= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+UNION ALL
+SELECT   V_FISCAL_CALENDAR."Fcl Day ID",
+         V_FISCAL_CALENDAR."Fcl Day ID LY",
+         V_FISCAL_CALENDAR."Dt",
+         V_FISCAL_CALENDAR."Dt LY",
+         V_FISCAL_CALENDAR."Wk Day Nbr",
+         V_FISCAL_CALENDAR."Wk Day Desc",
+         V_FISCAL_CALENDAR."Fcl Day Nbr",
+         V_FISCAL_CALENDAR."Fcl Wk ID",
+         V_FISCAL_CALENDAR."Fcl Wk ID LY",
+         V_FISCAL_CALENDAR."Fcl Wk Nbr",
+         V_FISCAL_CALENDAR."Wk Strt Dt",
+         V_FISCAL_CALENDAR."Wk End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Wk ID",
+         V_FISCAL_CALENDAR."Wk of Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Per End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Qtr ID",
+         V_FISCAL_CALENDAR."Fcl Qtr Nbr",
+         V_FISCAL_CALENDAR."Fcl Qtr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Qtr End Dt",
+         V_FISCAL_CALENDAR."Fcl Yr ID",
+         V_FISCAL_CALENDAR."Fcl Yr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Yr End Dt",
+         V_FISCAL_CALENDAR."Curr Yr Flg",
+         V_FISCAL_CALENDAR."Ftr Dt",
+         V_FISCAL_CALENDAR."Curr Dt Flg",
+         V_FISCAL_CALENDAR."Curr Wk Flg",
+         V_FISCAL_CALENDAR."Holiday",
+         V_FISCAL_CALENDAR."Holiday Count Down",
+         V_FISCAL_CALENDAR."Dt LY Holiday",
+         V_FISCAL_CALENDAR."Week Count Down",
+         V_FISCAL_CALENDAR."LW TW Flag",
+         V_FISCAL_CALENDAR."Dt LLY",
+         14 AS "Pddf Sort ID",
+         'Previous 104 Weeks' AS "Pddf Desc"
+FROM     SBX_BIZ.MARKETING.V_FISCAL_CALENDAR
+WHERE    V_FISCAL_CALENDAR."Wk End Dt" >= ( SELECT DISTINCT (V_FISCAL_CALENDAR."Wk End Dt" - 721) FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+AND      V_FISCAL_CALENDAR."Wk End Dt" <= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+UNION ALL
+SELECT   V_FISCAL_CALENDAR."Fcl Day ID",
+         V_FISCAL_CALENDAR."Fcl Day ID LY",
+         V_FISCAL_CALENDAR."Dt",
+         V_FISCAL_CALENDAR."Dt LY",
+         V_FISCAL_CALENDAR."Wk Day Nbr",
+         V_FISCAL_CALENDAR."Wk Day Desc",
+         V_FISCAL_CALENDAR."Fcl Day Nbr",
+         V_FISCAL_CALENDAR."Fcl Wk ID",
+         V_FISCAL_CALENDAR."Fcl Wk ID LY",
+         V_FISCAL_CALENDAR."Fcl Wk Nbr",
+         V_FISCAL_CALENDAR."Wk Strt Dt",
+         V_FISCAL_CALENDAR."Wk End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Wk ID",
+         V_FISCAL_CALENDAR."Wk of Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Per End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Qtr ID",
+         V_FISCAL_CALENDAR."Fcl Qtr Nbr",
+         V_FISCAL_CALENDAR."Fcl Qtr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Qtr End Dt",
+         V_FISCAL_CALENDAR."Fcl Yr ID",
+         V_FISCAL_CALENDAR."Fcl Yr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Yr End Dt",
+         V_FISCAL_CALENDAR."Curr Yr Flg",
+         V_FISCAL_CALENDAR."Ftr Dt",
+         V_FISCAL_CALENDAR."Curr Dt Flg",
+         V_FISCAL_CALENDAR."Curr Wk Flg",
+         V_FISCAL_CALENDAR."Holiday",
+         V_FISCAL_CALENDAR."Holiday Count Down",
+         V_FISCAL_CALENDAR."Dt LY Holiday",
+         V_FISCAL_CALENDAR."Week Count Down",
+         V_FISCAL_CALENDAR."LW TW Flag",
+         V_FISCAL_CALENDAR."Dt LLY",
+         15 AS "Pddf Sort ID",
+         'Pre COVID-19' AS "Pddf Desc"
+FROM     SBX_BIZ.MARKETING.V_FISCAL_CALENDAR
+WHERE    V_FISCAL_CALENDAR."Wk End Dt" >= '2020-01-04'
+AND      V_FISCAL_CALENDAR."Wk End Dt" <= '2020-03-07'
+UNION ALL
+SELECT   V_FISCAL_CALENDAR."Fcl Day ID",
+         V_FISCAL_CALENDAR."Fcl Day ID LY",
+         V_FISCAL_CALENDAR."Dt",
+         V_FISCAL_CALENDAR."Dt LY",
+         V_FISCAL_CALENDAR."Wk Day Nbr",
+         V_FISCAL_CALENDAR."Wk Day Desc",
+         V_FISCAL_CALENDAR."Fcl Day Nbr",
+         V_FISCAL_CALENDAR."Fcl Wk ID",
+         V_FISCAL_CALENDAR."Fcl Wk ID LY",
+         V_FISCAL_CALENDAR."Fcl Wk Nbr",
+         V_FISCAL_CALENDAR."Wk Strt Dt",
+         V_FISCAL_CALENDAR."Wk End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Wk ID",
+         V_FISCAL_CALENDAR."Wk of Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Per Nbr",
+         V_FISCAL_CALENDAR."Fcl Per Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Per End Dt",
+         V_FISCAL_CALENDAR."Prev Fcl Per ID",
+         V_FISCAL_CALENDAR."Fcl Qtr ID",
+         V_FISCAL_CALENDAR."Fcl Qtr Nbr",
+         V_FISCAL_CALENDAR."Fcl Qtr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Qtr End Dt",
+         V_FISCAL_CALENDAR."Fcl Yr ID",
+         V_FISCAL_CALENDAR."Fcl Yr Strt Dt",
+         V_FISCAL_CALENDAR."Fcl Yr End Dt",
+         V_FISCAL_CALENDAR."Curr Yr Flg",
+         V_FISCAL_CALENDAR."Ftr Dt",
+         V_FISCAL_CALENDAR."Curr Dt Flg",
+         V_FISCAL_CALENDAR."Curr Wk Flg",
+         V_FISCAL_CALENDAR."Holiday",
+         V_FISCAL_CALENDAR."Holiday Count Down",
+         V_FISCAL_CALENDAR."Dt LY Holiday",
+         V_FISCAL_CALENDAR."Week Count Down",
+         V_FISCAL_CALENDAR."LW TW Flag",
+         V_FISCAL_CALENDAR."Dt LLY",
+         16 AS "Pddf Sort ID",
+         'During COVID-19' AS "Pddf Desc"
+FROM     SBX_BIZ.MARKETING.V_FISCAL_CALENDAR
+WHERE    V_FISCAL_CALENDAR."Wk End Dt" >= '2020-03-14'
+;
+
+--V_DAY_LIST
+create or replace view SBX_BIZ.MARKETING.V_DAY_LIST
+as
+SELECT V_FISCAL_CALENDAR."Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR
+;
+
+--V_LINE_SUPERMARKET
+create or replace view SBX_BIZ.MARKETING.V_LINE_SUPERMARKET
+as
+select   A.STORE_NBR AS "Store Nbr",
+         A.SALES_LINE_ID AS "Store ID",
+         A.SALES_LINE_DESC AS "Store Description",
+         A.SLS_LINE_OPEN_DT AS "Open Date",
+         A.SLS_LINE_CLOSE_DT AS "Close Date",
+         B.FORMAT_TYPE_DESC AS "Format",
+         C.MKTG_CHAIN_DESC AS "Banner",
+         F.SALES_CHAIN_DESC AS "Sales Chain",
+         CASE 
+              WHEN (((F.SALES_CHAIN_DESC = 'UMW') OR (F.SALES_CHAIN_DESC = 'Family Fresh')) OR (F.SALES_CHAIN_DESC = 'Omaha')) THEN 'West' 
+              ELSE CASE 
+                        WHEN (F.SALES_CHAIN_DESC = 'Martins') THEN 'Martins' 
+                        ELSE 'Michigan' 
+                   END 
+         END AS "Division",
+         A.LOYALTY_STATUS_CD AS "Loyalty Status",
+         G.SALES_CHANNEL_DESC AS "Sales Channel",
+         COMP_STATUS.COMP_STATUS_DESC AS "Comp Status",
+         CASE 
+              WHEN (FL."Store Nbr" is not null) THEN 1 
+              ELSE 0 
+         END AS FL_STORE,
+         CASE 
+              WHEN (KIRN."Store Nbr" is not null) THEN 1 
+              ELSE 0 
+         END AS KIRN_STORE,
+         CASE 
+              WHEN (KIRNM."Store Nbr" is not null) THEN 1 
+              ELSE 0 
+         END AS KIRN_MAJOR_REMODELS,
+         CASE 
+              WHEN (KIRNTU."Store Nbr" is not null) THEN 1 
+              ELSE 0 
+         END AS KIRN_TOUCHUPS,
+         CASE 
+              WHEN (KIRNP."Store Nbr" is not null) THEN 1 
+              ELSE 0 
+         END AS KIRN_POSITIONED,
+         CASE 
+              WHEN (KIRNW."Store Nbr" is not null) THEN 1 
+              ELSE 0 
+         END AS KIRN_WEST_FOCUS,
+         CASE 
+              WHEN (KIRNF."Store Nbr" is not null) THEN 1 
+              ELSE 0 
+         END AS KIRN_FENTON,
+         CASE 
+              WHEN (KIRND."Store Nbr" is not null) THEN 1 
+              ELSE 0 
+         END AS KIRN_DANS,
+         CASE 
+              WHEN (KIRNFA."Store Nbr" is not null) THEN 1 
+              ELSE 0 
+         END AS KIRN_FARGO,
+         CASE 
+              WHEN (KIRNEX4580."Store Nbr" is not null) THEN 1 
+              ELSE 0 
+         END AS KRIN_STORES_1580EXCLUDED,
+         CASE 
+              WHEN (SDVG."Store Nbr" is not null) THEN 1 
+              ELSE 0 
+         END AS SENIOR_DISCOUNT_VG,
+         CASE 
+              WHEN (SDFFN."Store Nbr" is not null) THEN 1 
+              ELSE 0 
+         END AS SENIOR_DISCOUNT_FF_NORTH,
+         CASE 
+              WHEN (Z."Store Nbr" is not null) THEN Z."Fresh West Store Group" 
+              ELSE (C.MKTG_CHAIN_DESC) 
+         END AS "Fresh West Store Group",
+         CASE 
+              WHEN (SG."Hot Bar Full Service" is not null) THEN SG."Hot Bar Full Service" 
+              WHEN ('N' is not null) THEN 'N' 
+              ELSE NULL 
+         END AS "Hot Bar Full Service",
+         CASE 
+              WHEN (SG."Hot Bar Self Service" is not null) THEN SG."Hot Bar Self Service" 
+              WHEN ('N' is not null) THEN 'N' 
+              ELSE NULL 
+         END AS "Hot Bar Self Service",
+         CASE 
+              WHEN (SG."Pastry Case" is not null) THEN SG."Pastry Case" 
+              WHEN ('N' is not null) THEN 'N' 
+              ELSE NULL 
+         END AS "Pastry Case",
+         CASE 
+              WHEN (SG."Virtual Food Truck" is not null) THEN SG."Virtual Food Truck" 
+              WHEN ('N' is not null) THEN 'N' 
+              ELSE NULL 
+         END AS "Virtual Food Truck",
+         SR."Store Rating",
+         CASE 
+              WHEN (ADB."Store Nbr" is not null) THEN ADB."Ad Break" 
+              ELSE 'Sunday' 
+         END AS "Ad Break",
+         ('District ' || A.DISTRICT_KEY) AS "District",
+         CASE 
+              WHEN (A.SALES_LINE_DESC LIKE '%MARTIN%') THEN 'Y' 
+              ELSE 'N' 
+         END AS "Martins Flag",
+         CASE 
+              WHEN (FDS."Fresh Divide Stores" is not null) THEN 'Y' 
+              ELSE 'N' 
+         END AS "Fresh Divide Stores" ,
+         CASE 
+              WHEN (BP."Store Nbr" is not null) THEN BP.BANNER 
+              ELSE 'Other' 
+         END AS "Promo Banner",
+         DS.SPECIALIST AS "Dan Specialist",
+         CASE 
+              WHEN (SBC."SN Corp Supplied by Caito" is not null) THEN 'Y' 
+              ELSE 'N' 
+         END AS "SN Corp Supplied by Caito",
+         CASE 
+              WHEN (SCS."St Cloud Stores" is not null) THEN 'Y' 
+              ELSE 'N' 
+         END AS "St Cloud Stores",
+         PZ."PZ Lookup",
+         PZ."KVI Region",
+         PZ."Primary Competitor",
+         PZ."Center Store - PZ",
+         PZ."Fresh - Meat, Seafood, Deli, Bakery - PZ",
+         PZ."Fresh - Produce & Floral - PZ",
+         PZ."POP - PZ",
+         PZ."BEER - PZ",
+         PZ."WINE - PZ",
+         PZ."LIQUOR - PZ",
+         DST."District Manager",
+         A.CUST_STATUS_KEY,
+         CASE 
+              WHEN (FBS.Store is not null) THEN 'Y' 
+              ELSE 'N' 
+         END AS "French Bread Store",
+         CASE 
+              WHEN (CS2Y."2 Yr Comp" is not null) THEN CS2Y."2 Yr Comp" 
+              WHEN ('N' is not null) THEN 'N' 
+              ELSE NULL 
+         END AS "2 Yr Comp",
+         CASE 
+              WHEN (GS."Store Nbr" is not null) THEN GS.SPECIALIST 
+              ELSE 'UNASSIGNED' 
+         END AS "George Specialist",
+         CASE 
+              WHEN (SC."Store Nbr" is not null) THEN 'Y' 
+              ELSE 'N' 
+         END AS "Closed Store Flg",
+         SCMS."Store Clusters (M&S)" AS "Store Clusters",
+         SS."STATE"
+FROM     SBX_BIZ.MARKETING.LINE A 
+         LEFT JOIN SBX_BIZ.MARKETING.SALES_LINE_FORMAT B ON A.FORMAT_TYPE_ID = B.FORMAT_TYPE_ID 
+         LEFT JOIN SBX_BIZ.MARKETING.MKTG_CHAIN C ON A.MKTG_CHAIN_ID = C.MKTG_CHAIN_ID 
+         LEFT JOIN SBX_BIZ.MARKETING.CHAIN F ON A.SALES_CHAIN_ID = F.SALES_CHAIN_ID 
+         LEFT JOIN SBX_BIZ.MARKETING.CHANNEL G ON F.SALES_CHANNEL_ID = G.SALES_CHANNEL_ID 
+         LEFT JOIN SBX_BIZ.MARKETING.COMP_STATUS COMP_STATUS ON A.CUST_STATUS_KEY = COMP_STATUS.COMP_STATUS_KEY 
+         LEFT JOIN SBX_BIZ.MARKETING.I_FRENCH_BREAD_STORES FBS ON A.STORE_NBR = FBS.STORE
+         LEFT JOIN SBX_BIZ.MARKETING.I_FRESH_WEST_STORE_GROUP Z ON A.STORE_NBR = Z."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_STORE_GROUPS_DELI SG ON A.STORE_NBR = SG."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_STORE_RATING SR ON A.STORE_NBR = SR."Str Nbr"
+         LEFT JOIN SBX_BIZ.MARKETING.I_STORE_AD_BREAK ADB ON A.STORE_NBR = ADB."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_FRESH_DIVIDE_STORE FDS ON A.STORE_NBR = FDS."Fresh Divide Stores"
+         LEFT JOIN SBX_BIZ.MARKETING.I_BANNER_PROMO BP ON A.STORE_NBR = BP."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_DAN_SPECIALISTS DS ON A.STORE_NBR = DS."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_SN_CORP_SUPPLY_BY_CAITO SBC ON A.STORE_NBR = SBC."SN Corp Supplied by Caito" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_ST_CLOUD_STORE SCS ON A.STORE_NBR = SCS."St Cloud Stores" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_FAST_LANE_STORES FL ON A.STORE_NBR = FL."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_KIRN_STORES KIRN ON A.STORE_NBR = KIRN."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_KIRN_MAJOR_REMODELS KIRNM ON A.STORE_NBR = KIRNM."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_KIRN_TOUCHUPS KIRNTU ON A.STORE_NBR = KIRNTU."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_KIRN_POSITIONED KIRNP ON A.STORE_NBR = KIRNP."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_KIRN_WEST_FOCUS KIRNW ON A.STORE_NBR = KIRNW."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_KIRN_FENTON KIRNF ON A.STORE_NBR = KIRNF."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_KIRN_DANS KIRND ON A.STORE_NBR = KIRND."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_KIRN_FARGO KIRNFA ON A.STORE_NBR = KIRNFA."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_KRIN_STORES_1580EXCLUDED KIRNEX4580 ON A.STORE_NBR = KIRNEX4580."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_SENIOR_DISCOUNT_VG SDVG ON A.STORE_NBR = SDVG."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_SENIOR_DISCOUNT_FF_NORTH SDFFN ON A.STORE_NBR = SDFFN."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_STORE_PRICE_ZONES PZ ON A.STORE_NBR = PZ."Store ID" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_DISTRICT_SELL_THRU DST ON A.DISTRICT_KEY = DST.DISTRICT
+         LEFT JOIN SBX_BIZ.MARKETING.I_2YEAR_COMP_STORES CS2Y ON A.STORE_NBR = CS2Y."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_GEORGE_SPECIALISTS GS ON A.STORE_NBR = GS."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_STORE_CLOSED SC ON A.STORE_NBR = SC."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_STORE_CLUSTERS_MEAT_SEAFOOD SCMS ON A.STORE_NBR = SCMS."Store Nbr" 
+         LEFT JOIN SBX_BIZ.MARKETING.I_SUPERMARKET_STATE SS ON A.STORE_NBR = SS."Store Nbr"
+WHERE    B.FORMAT_TYPE_DESC like 'Supermarket%'
+;
+
+--V_EVENT_CODE
+create or replace view SBX_BIZ.MARKETING.V_EVENT_CODE
+as
+SELECT   A.EVENT_CD AS "Event Code",
+         A.EVENT_CD_DESC AS "Event Description",
+         B.EVENT_CD_LARGE AS "Event Large",
+         CASE 
+              WHEN (A.EVENT_CD = 'ADS') OR (A.EVENT_CD = 'ADW') THEN 'Ad Mkdn' 
+              ELSE CASE 
+                        WHEN (A.EVENT_CD = 'TPRN') OR (A.EVENT_CD = 'TPRW') OR (A.EVENT_CD = 'TPRL') OR (A.EVENT_CD = 'WVBV') OR (A.EVENT_CD = 'RPED') OR (A.EVENT_CD = 'PFRZ') THEN 'TPR Mkdn' 
+                        ELSE CASE 
+                                  WHEN (A.EVENT_CD = 'ISMD') THEN 'In-Store Mkdn' 
+                                  ELSE CASE 
+                                            WHEN (A.EVENT_CD = 'DISC') OR (A.EVENT_CD = 'MARK') OR (A.EVENT_CD = 'RST') OR (A.EVENT_CD = 'UNKN') OR (A.EVENT_CD = 'REG') OR (A.EVENT_CD = 'WINE') OR (A.EVENT_CD = 'BIG') OR (A.EVENT_CD = 'INST') THEN 'Other Mkdn' 
+                                            ELSE CASE 
+                                                      WHEN (A.EVENT_CD = 'LOY') THEN 'Loyalty Mkdn' 
+                                                      ELSE NULL 
+                                                 END 
+                                       END 
+                             END 
+                   END 
+         END AS "Markdown Category"
+FROM     SBX_BIZ.MARKETING.EVENT_CODE A 
+         JOIN SBX_BIZ.MARKETING.I_EVENT_CODE_LARGE B ON A.EVENT_CD = B.EVENT_CD
+;
+
+--V_PROD_DEPT
+create or replace view SBX_BIZ.MARKETING.V_PROD_DEPT
+as
+SELECT   Distinct D.DEPT_KEY,
+         D.DEPT_NAME,
+         CASE 
+              WHEN (((((D.DEPT_KEY = 60) OR (D.DEPT_KEY = 10)) OR ((D.DEPT_KEY = 12) OR (D.DEPT_KEY = 13))) OR (((D.DEPT_KEY = 41) OR (D.DEPT_KEY = 11)) OR ((D.DEPT_KEY = 40) OR (D.DEPT_KEY = 50)))) OR ((D.DEPT_KEY = 90) OR (D.DEPT_KEY = 15))) THEN 'CENTER STORE' 
+              WHEN ((((D.DEPT_KEY = 80) OR (D.DEPT_KEY = 110)) OR ((D.DEPT_KEY = 30) OR (D.DEPT_KEY = 20))) OR ((D.DEPT_KEY = 120) OR (D.DEPT_KEY = 70))) THEN 'FRESH' 
+              ELSE 'MISC' 
+         END AS DEPT_GROUP,
+         CASE 
+              WHEN (((((D.DEPT_KEY = 70) OR (D.DEPT_KEY = 60)) OR ((D.DEPT_KEY = 80) OR (D.DEPT_KEY = 90))) OR (((D.DEPT_KEY = 40) OR (D.DEPT_KEY = 10)) OR ((D.DEPT_KEY = 11) OR (D.DEPT_KEY = 41)))) OR (((D.DEPT_KEY = 20) OR (D.DEPT_KEY = 30)) OR ((D.DEPT_KEY = 120) OR (D.DEPT_KEY = 110)))) THEN 'Y' 
+              ELSE 'N' 
+         END AS OB_DEPT,
+         G.DEPT_GRP_NAME
+FROM     SBX_BIZ.MARKETING.DEPARTMENT D 
+         JOIN SBX_BIZ.MARKETING.DEPARTMENT_GROUP G ON ((D.DEPT_GRP_KEY = G.DEPT_GRP_KEY))
+;
+
+
+--V_STORE_SPECIALIST
+create or replace view SBX_BIZ.MARKETING.V_STORE_SPECIALIST
+as
+SELECT
+	A.Store,
+	A.SPECIALIST AS "Specialist",
+	A.DEPARTMENT AS "Department"
+FROM
+	SBX_BIZ.MARKETING.I_STORE_SPECIALIST A
+;
+
+
+--V_EXEC_DASH_STO_WK_GRP_SLS
+create or replace view SBX_BIZ.MARKETING.V_EXEC_DASH_STO_WK_GRP_SLS
+as
+SELECT   C.STORE_NBR || ' - ' || D.END_DT AS "Comp Store Key",
+         C.STORE_NBR AS "Store Nbr",
+         G.MDSE_GRP_KEY || ' - ' || (CASE WHEN (I.ITEM_BRAND_CD is NOT NULL) THEN 'Y' ELSE 'N' END) AS "Group OB Key",
+         D.END_DT AS "Wk End Dt",
+         SUM(A.TOTAL_SALES_AMT) AS "Sales Dollars",
+         SUM(CASE WHEN (K.EVENT_TYPE = 'Promotion') THEN A.TOTAL_SALES_AMT ELSE '0' END) AS "Sales Dollars Promo",
+         SUM(A.WHSE_MVMT_QTY) AS "Sales Quantity",
+         SUM(CASE WHEN (K.EVENT_TYPE = 'Promotion') THEN A.WHSE_MVMT_QTY ELSE '0' END) AS "Sales Quantity Promo",
+         SUM(A.EXT_MOVEMENT_WT) AS "Sales Weight",
+         SUM(CASE WHEN (K.EVENT_TYPE = 'Promotion') THEN A.EXT_MOVEMENT_WT ELSE '0' END) AS "Sales Weight Promo"
+FROM     SBX_BIZ.MARKETING.EFIN_WK_LINE_ITEM A 
+         JOIN SBX_BIZ.MARKETING.MDSE_ITEM B ON A.ITEM_ID = B.ITEM_ID 
+         JOIN SBX_BIZ.MARKETING.LINE C ON A.SALES_LINE_ID = C.SALES_LINE_ID 
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK D ON A.FISCAL_WEEK_ID = D.FISCAL_WEEK_ID 
+         JOIN SBX_BIZ.MARKETING.MDSE_CLASS E ON B.MDSE_CLASS_KEY = E.MDSE_CLASS_KEY 
+         JOIN SBX_BIZ.MARKETING.MDSE_CATEGORY F ON E.MDSE_CATGY_KEY = F.MDSE_CATGY_KEY 
+         JOIN SBX_BIZ.MARKETING.MDSE_GROUP G ON F.MDSE_GRP_KEY = G.MDSE_GRP_KEY 
+         JOIN (SELECT DISTINCT ITEM_BRAND.ITEM_BRAND_CD FROM SBX_BIZ.MARKETING.ITEM_BRAND) H ON B.ITEM_BRAND_CD = H.ITEM_BRAND_CD 
+         JOIN SBX_BIZ.MARKETING.I_EVENT_CODE_LARGE K ON A.EVENT_CD = K.EVENT_CD 
+         LEFT JOIN SBX_BIZ.MARKETING.I_PRIVATE_LABEL_CODES I ON H.ITEM_BRAND_CD = I.ITEM_BRAND_CD
+WHERE    C.CUST_STATUS_KEY < 3
+--AND      a.FISCAL_WEEK_ID = 202213
+AND      (D.END_DT >= ( SELECT DISTINCT (V_FISCAL_CALENDAR."Wk End Dt" - 903) FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+        AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+     AND D.END_DT <= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+        AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1)))
+AND      C.FORMAT_TYPE_ID like 'SUPERMKT%'
+AND      C.LOYALTY_STATUS_CD <> 'DUMMY'
+GROUP BY 1, 2, 3, 4 
+;
+
+--V_ITEM_DC_SLS_LST_3FY
+create or replace view SBX_BIZ.MARKETING.V_ITEM_DC_SLS_LST_3FY
+as
+SELECT   dsh.ITEM_NBR AS "DC Item",
+         dsh.FACILITY_ID AS "Facility ID",
+         SUM(dsh.TOTAL_SALES_AMT) AS "Shipped Sales"
+FROM     (EDW.FD.DC_SALES_HST_VW dsh 
+         JOIN SBX_BIZ.MARKETING.FISCAL_DAY fd ON ((dsh.TRANSACTION_DT = fd.SALES_DT))) 
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK fw ON ((fd.FISCAL_WEEK_ID = fw.FISCAL_WEEK_ID))
+WHERE    fd.FISCAL_YEAR_ID >= (SELECT DISTINCT (FISCAL_DAY.FISCAL_YEAR_ID - 2) FROM SBX_BIZ.MARKETING.FISCAL_DAY WHERE FISCAL_DAY.SALES_DT = CURRENT_DATE())
+     AND fd.FISCAL_YEAR_ID <= (SELECT DISTINCT FISCAL_DAY.FISCAL_YEAR_ID FROM SBX_BIZ.MARKETING.FISCAL_DAY WHERE FISCAL_DAY.SALES_DT = CURRENT_DATE())
+GROUP BY dsh.ITEM_NBR, dsh.FACILITY_ID
+;
+
+--V_LIVING_WELL_ATTRIBUTES
+
+create or replace view SBX_BIZ.MARKETING.V_LIVING_WELL_ATTRIBUTES
+as
+SELECT   I_LIVING_WELL_ATTRIBUTES.UPC AS "UPC w/ Check Digit",
+         (CASE WHEN (LENGTH(I_LIVING_WELL_ATTRIBUTES.UPC) <= 7) THEN (I_LIVING_WELL_ATTRIBUTES.UPC) ELSE SUBSTRING(I_LIVING_WELL_ATTRIBUTES.UPC, 1, LENGTH(I_LIVING_WELL_ATTRIBUTES.UPC) - 1) END)::integer AS UPC,
+         CASE 
+              WHEN (I_LIVING_WELL_ATTRIBUTES."SpartanNash Shelf Tag -  Food & Beverage - SpartanNash Shelf Tag - 5 Ingredients or Less" = 'Not Applicable') THEN 'N' 
+              ELSE 'Y' 
+         END AS "5 Ingredients or Less",
+         CASE 
+              WHEN (I_LIVING_WELL_ATTRIBUTES."SpartanNash Shelf Tag -  Food & Beverage - SpartanNash Shelf Tag - Free From" = 'Not Applicable') THEN 'N' 
+              ELSE 'Y' 
+         END AS "Free From",
+         CASE 
+              WHEN (I_LIVING_WELL_ATTRIBUTES."SpartanNash Shelf Tag -  Food & Beverage - SpartanNash Shelf Tag - Gluten Free" = 'Not Applicable') THEN 'N' 
+              ELSE 'Y' 
+         END AS "Gluten Free",
+         CASE 
+              WHEN (I_LIVING_WELL_ATTRIBUTES."SpartanNash Shelf Tag -  Food & Beverage - SpartanNash Shelf Tag - Good Source Protein" = 'Not Applicable') THEN 'N' 
+              ELSE 'Y' 
+         END AS "Good Source Protein",
+         CASE 
+              WHEN (I_LIVING_WELL_ATTRIBUTES."SpartanNash Shelf Tag -  Food & Beverage - SpartanNash Shelf Tag - Heart Healthy" = 'Not Applicable') THEN 'N' 
+              ELSE 'Y' 
+         END AS "Heart Healthy",
+         CASE 
+              WHEN (I_LIVING_WELL_ATTRIBUTES."SpartanNash Shelf Tag -  Food & Beverage - SpartanNash Shelf Tag - High Fiber" = 'Not Applicable') THEN 'N' 
+              ELSE 'Y' 
+         END AS "High Fiber",
+         CASE 
+              WHEN (I_LIVING_WELL_ATTRIBUTES."SpartanNash Shelf Tag -  Food & Beverage - SpartanNash Shelf Tag - Kosher" = 'Not Applicable') THEN 'N' 
+              ELSE 'Y' 
+         END AS "Kosher",
+         CASE 
+              WHEN (I_LIVING_WELL_ATTRIBUTES."SpartanNash Shelf Tag -  Food & Beverage - SpartanNash Shelf Tag - Lactose Free" = 'Not Applicable') THEN 'N' 
+              ELSE 'Y' 
+         END AS "Lactose Free",
+         CASE 
+              WHEN (I_LIVING_WELL_ATTRIBUTES."SpartanNash Shelf Tag -  Food & Beverage - SpartanNash Shelf Tag - Low Sodium" = 'Not Applicable') THEN 'N' 
+              ELSE 'Y' 
+         END AS "Low Sodium",
+         CASE 
+              WHEN (I_LIVING_WELL_ATTRIBUTES."SpartanNash Shelf Tag -  Food & Beverage - SpartanNash Shelf Tag - No Added Sugar" = 'Not Applicable') THEN 'N' 
+              ELSE 'Y' 
+         END AS "No Added Sugar",
+         CASE 
+              WHEN (I_LIVING_WELL_ATTRIBUTES."SpartanNash Shelf Tag -  Food & Beverage - SpartanNash Shelf Tag - Non Dairy" = 'Not Applicable') THEN 'N' 
+              ELSE 'Y' 
+         END AS "Non Dairy",
+         CASE 
+              WHEN (I_LIVING_WELL_ATTRIBUTES."SpartanNash Shelf Tag -  Food & Beverage - SpartanNash Shelf Tag - Non GMO" = 'Not Applicable') THEN 'N' 
+              ELSE 'Y' 
+         END AS "Non GMO",
+         CASE 
+              WHEN (I_LIVING_WELL_ATTRIBUTES."SpartanNash Shelf Tag -  Food & Beverage - SpartanNash Shelf Tag - Nothing Artificial" = 'Not Applicable') THEN 'N' 
+              ELSE 'Y' 
+         END AS "Nothing Artificial",
+         CASE 
+              WHEN (I_LIVING_WELL_ATTRIBUTES."SpartanNash Shelf Tag -  Food & Beverage - SpartanNash Shelf Tag - Nut Free" = 'Not Applicable') THEN 'N' 
+              ELSE 'Y' 
+         END AS "Nut Free",
+         CASE 
+              WHEN (I_LIVING_WELL_ATTRIBUTES."SpartanNash Shelf Tag -  Food & Beverage - SpartanNash Shelf Tag - Organic" = 'Not Applicable') THEN 'N' 
+              ELSE 'Y' 
+         END AS "Organic",
+         CASE 
+              WHEN (I_LIVING_WELL_ATTRIBUTES."SpartanNash Shelf Tag -  Food & Beverage - SpartanNash Shelf Tag - Sustainable" = 'Not Applicable') THEN 'N' 
+              ELSE 'Y' 
+         END AS "Sustainable",
+         CASE 
+              WHEN (I_LIVING_WELL_ATTRIBUTES."SpartanNash Shelf Tag -  Food & Beverage - SpartanNash Shelf Tag - Vegan Plant Based" = 'Not Applicable') THEN 'N' 
+              ELSE 'Y' 
+         END AS "Vegan Plant Based",
+         CASE 
+              WHEN (I_LIVING_WELL_ATTRIBUTES."SpartanNash Shelf Tag -  Food & Beverage - SpartanNash Shelf Tag - Whole Grain" = 'Not Applicable') THEN 'N' 
+              ELSE 'Y' 
+         END AS "Whole Grain"
+FROM     SBX_BIZ.MARKETING.I_LIVING_WELL_ATTRIBUTES
+WHERE    I_LIVING_WELL_ATTRIBUTES.UPC = ANY (SELECT A.UPC FROM (SELECT I_LIVING_WELL_ATTRIBUTES.UPC, COUNT(*) AS COUNT FROM SBX_BIZ.MARKETING.I_LIVING_WELL_ATTRIBUTES GROUP BY I_LIVING_WELL_ATTRIBUTES.UPC HAVING (COUNT(*) = 1)) A)
+;
+
+--V_ITEM_SLS_LST_3FY
+create or replace view SBX_BIZ.MARKETING.V_ITEM_SLS_LST_3FY
+as
+SELECT   A11.ITEM_ID AS "Item"
+FROM     SBX_BIZ.MARKETING.EFIN_WK_LINE_ITEM A11 
+         JOIN SBX_BIZ.MARKETING.MDSE_ITEM A12 ON A11.ITEM_ID = A12.ITEM_ID
+         JOIN SBX_BIZ.MARKETING.LINE A13 ON A11.SALES_LINE_ID = A13.SALES_LINE_ID
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK A14 ON A11.FISCAL_WEEK_ID = A14.FISCAL_WEEK_ID
+WHERE    A14.FISCAL_WEEK_ID >= (SELECT MIN(FISCAL_DAY.FISCAL_WEEK_ID) AS MIN FROM SBX_BIZ.MARKETING.FISCAL_DAY WHERE (FISCAL_DAY.FISCAL_YEAR_ID = (SELECT DISTINCT (FISCAL_DAY.FISCAL_YEAR_ID - 2) FROM SBX_BIZ.MARKETING.FISCAL_DAY WHERE (FISCAL_DAY.SALES_DT = CURRENT_DATE()))))
+        AND A14.FISCAL_WEEK_ID <= (SELECT MAX(FISCAL_DAY.FISCAL_WEEK_ID) AS MAX FROM SBX_BIZ.MARKETING.FISCAL_DAY WHERE (FISCAL_DAY.FISCAL_YEAR_ID = (SELECT DISTINCT FISCAL_DAY.FISCAL_YEAR_ID FROM SBX_BIZ.MARKETING.FISCAL_DAY WHERE (FISCAL_DAY.SALES_DT = CURRENT_DATE()))))
+     AND (A14.END_DT < CURRENT_DATE())
+UNION 
+SELECT   A11.ITEM_ID AS "Item"
+FROM     SBX_BIZ.MARKETING.RSAL_DY_LN_ITM_TRN A11 
+         JOIN SBX_BIZ.MARKETING.FISCAL_DAY A14 ON A11.SALES_DT = A14.SALES_DT
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK A16 ON A14.FISCAL_WEEK_ID = A16.FISCAL_WEEK_ID
+WHERE    A16.END_DT = (SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE (V_FISCAL_CALENDAR."Dt" = (CURRENT_DATE() - 1)))
+;
+
+
+--V_ITEM
+create or replace view SBX_BIZ.MARKETING.V_ITEM
+as
+SELECT
+	DISTINCT A.ITEM_ID AS "Item",
+	I.ITEM_BRAND_DESC AS "Brand",
+	trim(A.ITEM_DESCRIPTION) || ' - ' || trim(A.SIZE_CD) || ' ' || TRIM(A.SIZE_UOM) || ' - ' || TRIM(A.ITEM_ID) AS "Item Description",
+	A.TYPE_CD AS "Type",
+	TRIM(A.SIZE_CD) || ' ' || TRIM(A.SIZE_UOM) AS "Size",
+	CASE
+		WHEN (TRIM(TRIM(D.FIRST_NM) || ' ' || TRIM(D.LAST_NM)) IS NOT NULL) THEN TRIM(TRIM(D.FIRST_NM) || ' ' || TRIM(D.LAST_NM))
+		WHEN ('UNKNOWN' IS NOT NULL) THEN 'UNKNOWN'
+		ELSE NULL
+	END AS "Category Manager",
+	B.MDSE_CLASS_NAME AS "Class",
+	B.MDSE_CLASS_KEY AS "Class ID",
+	CASE
+		WHEN (M.UPC IS NOT NULL) THEN M."Class (Analytics)"
+		ELSE NULL
+	END AS "Class (Analytics)",
+	E.MDSE_CATGY_NAME AS "Category",
+	E.MDSE_CATGY_KEY AS "Category ID",
+	CASE
+		WHEN (M.UPC IS NOT NULL) THEN M."Category (Analytics)"
+		ELSE NULL
+	END AS "Category (Analytics)",
+	H.MDSE_GRP_NAME AS "Group",
+	H.MDSE_GRP_KEY AS "Group ID",
+	CASE
+		WHEN (M.UPC IS NOT NULL) THEN M."Group (Analytics)"
+		ELSE NULL
+	END AS "Group (Analytics)",
+	F.DEPT_NAME AS "Department",
+	F.DEPT_KEY AS "Department ID",
+	G.DEPT_GRP_NAME AS "Department Group",
+	F.DEPT_GRP_KEY AS "Department Group ID",
+	CASE
+		WHEN (J.UPC IS NOT NULL) THEN 'Y'
+		ELSE 'N'
+	END AS "Living Well Flg",
+	CASE
+		WHEN (K.ITEM_BRAND_CD IS NOT NULL) THEN 'Y'
+		ELSE 'N'
+	END AS "Private Label Flg",
+	CASE
+		WHEN (L.PROGRAM IS NOT NULL) THEN L.PROGRAM
+		ELSE 'No Program'
+	END AS "Program",
+	CASE
+		WHEN (BWL."BWL Promo Blocks" IS NOT NULL) THEN BWL."BWL Promo Blocks"
+		ELSE NULL
+	END AS "BWL Promo Blocks",
+	CASE
+		WHEN (LWA."5 Ingredients or Less" IS NOT NULL) THEN LWA."5 Ingredients or Less"
+		ELSE 'N'
+	END AS "5 Ingredients or Less",
+	CASE
+		WHEN (LWA."Free From" IS NOT NULL) THEN LWA."Free From"
+		ELSE 'N'
+	END AS "Free From",
+	CASE
+		WHEN (LWA."Gluten Free" IS NOT NULL) THEN LWA."Gluten Free"
+		ELSE 'N'
+	END AS "Gluten Free",
+	CASE
+		WHEN (LWA."Good Source Protein" IS NOT NULL) THEN LWA."Good Source Protein"
+		ELSE 'N'
+	END AS "Good Source Protein",
+	CASE
+		WHEN (LWA."Heart Healthy" IS NOT NULL) THEN LWA."Heart Healthy"
+		ELSE 'N'
+	END AS "Heart Healthy",
+	CASE
+		WHEN (LWA."High Fiber" IS NOT NULL) THEN LWA."High Fiber"
+		ELSE 'N'
+	END AS "High Fiber",
+	CASE
+		WHEN (LWA."Kosher" IS NOT NULL) THEN LWA."Kosher"
+		ELSE 'N'
+	END AS "Kosher",
+	CASE
+		WHEN (LWA."Lactose Free" IS NOT NULL) THEN LWA."Lactose Free"
+		ELSE 'N'
+	END AS "Lactose Free",
+	CASE
+		WHEN (LWA."Low Sodium" IS NOT NULL) THEN LWA."Low Sodium"
+		ELSE 'N'
+	END AS "Low Sodium",
+	CASE
+		WHEN (LWA."No Added Sugar" IS NOT NULL) THEN LWA."No Added Sugar"
+		ELSE 'N'
+	END AS "No Added Sugar",
+	CASE
+		WHEN (LWA."Non Dairy" IS NOT NULL) THEN LWA."Non Dairy"
+		ELSE 'N'
+	END AS "Non Dairy",
+	CASE
+		WHEN (LWA."Non GMO" IS NOT NULL) THEN LWA."Non GMO"
+		ELSE 'N'
+	END AS "Non GMO",
+	CASE
+		WHEN (LWA."Nothing Artificial" IS NOT NULL) THEN LWA."Nothing Artificial"
+		ELSE 'N'
+	END AS "Nothing Artificial",
+	CASE
+		WHEN (LWA."Nut Free" IS NOT NULL) THEN LWA."Nut Free"
+		ELSE 'N'
+	END AS "Nut Free",
+	CASE
+		WHEN (LWA."Organic" IS NOT NULL) THEN LWA."Organic"
+		ELSE 'N'
+	END AS "Organic",
+	CASE
+		WHEN (LWA."Sustainable" IS NOT NULL) THEN LWA."Sustainable"
+		ELSE 'N'
+	END AS "Sustainable",
+	CASE
+		WHEN (LWA."Vegan Plant Based" IS NOT NULL) THEN LWA."Vegan Plant Based"
+		ELSE 'N'
+	END AS "Vegan Plant Based",
+	CASE
+		WHEN (LWA."Whole Grain" IS NOT NULL) THEN LWA."Whole Grain"
+		ELSE 'N'
+	END AS "Whole Grain",
+	DD.DIRECTOR AS "Director",
+	CASE
+		WHEN (KEHE.UPC IS NOT NULL) THEN 'Y'
+		ELSE 'N'
+	END AS "Kehe",
+	CASE
+		WHEN (WF.UPC IS NOT NULL) THEN 'Y'
+		ELSE 'N'
+	END AS "Winter Flyer",
+	CASE
+		WHEN (SF.UPC IS NOT NULL) THEN 'Y'
+		ELSE 'N'
+	END AS "Spring Flyer",
+	CASE
+		WHEN (SMF.UPC IS NOT NULL) THEN 'Y'
+		ELSE 'N'
+	END AS "Summer Flyer",
+	CASE
+		WHEN (SPB.UPC IS NOT NULL) THEN 'Y'
+		ELSE 'N'
+	END AS "Summer Flyer (B)",
+	CASE
+		WHEN (FF.UPC IS NOT NULL) THEN 'Y'
+		ELSE 'N'
+	END AS "Fall Flyer",
+	CASE
+		WHEN (TM.UPC IS NOT NULL) THEN 'Y'
+		ELSE 'N'
+	END AS "Tex Mex",
+	CASE
+		WHEN (SPECIALTY.UPC IS NOT NULL) THEN SPECIALTY."MI Local"
+		ELSE 'N'
+	END AS "MI Local",
+	CASE
+		WHEN (SPECIALTY.UPC IS NOT NULL) THEN SPECIALTY."MN Local"
+		ELSE 'N'
+	END AS "MN Local",
+	CASE
+		WHEN (SPECIALTY.UPC IS NOT NULL) THEN SPECIALTY."ND Local"
+		ELSE 'N'
+	END AS "ND Local",
+	CASE
+		WHEN (SPECIALTY.UPC IS NOT NULL) THEN SPECIALTY."NE Local"
+		ELSE 'N'
+	END AS "NE Local",
+	CASE
+		WHEN (SPECIALTY.UPC IS NOT NULL) THEN SPECIALTY."SD Local"
+		ELSE 'N'
+	END AS "SD Local",
+	CASE
+		WHEN (SPECIALTY.UPC IS NOT NULL) THEN SPECIALTY."WI Local"
+		ELSE 'N'
+	END AS "WI Local",
+	CASE
+		WHEN (SPECIALTY.UPC IS NOT NULL) THEN SPECIALTY."IA Local"
+		ELSE 'N'
+	END AS "IA Local",
+	CASE
+		WHEN (SPECIALTY.UPC IS NOT NULL) THEN SPECIALTY."OH Local"
+		ELSE 'N'
+	END AS "OH Local",
+	CASE
+		WHEN (SPECIALTY.UPC IS NOT NULL) THEN SPECIALTY."Sunrise Local"
+		ELSE 'N'
+	END AS "Sunrise Local",
+	MA."Meat Cut Type",
+	MA."Full Service",
+	PA."Produce Bag Type" AS "Bag Type",
+	PA."Produce Convention Type" AS "Convention Type",
+	A.SKU_NBR AS "SKU Nbr",
+    '' as "Anchor Group ID",
+    '' as "Anchor Group",
+--	AP.ANCHOR_PRICE_ID AS "Anchor Group ID",
+--	TRIM(AP.ANCHOR_PRICE_ID) || ' - ' || TRIM(AP.ANCHOR_PRICE_DESC) AS "Anchor Group",
+	CASE
+		WHEN (CBD.UPC IS NOT NULL) THEN 'Y'
+		ELSE 'N'
+	END AS "CBD Flg",
+	V.VENDOR,
+	CASE
+		WHEN (FVH.FVH IS NOT NULL) THEN FVH.FVH
+		ELSE 'Unassigned'
+	END AS FVH,
+	CASE
+		WHEN (FD.ITEM IS NOT NULL) THEN 'Y'
+		ELSE 'N'
+	END AS "Fresh Divide",
+    '' as "Anchor Name and Number",
+--	TRIM(AP.ANCHOR_PRICE_ID) || ' - ' || TRIM(AP.ANCHOR_PRICE_DESC) AS "Anchor Name and Number",
+	CASE
+		WHEN (FA.ITEM IS NOT NULL) THEN FA."Plant Type"
+		ELSE NULL
+	END AS "Plant Type",
+	CASE
+		WHEN F.DEPT_KEY in (12, 15, 50, 10, 90, 60, 11, 40, 41, 170, 13) THEN 'Center Store'
+		WHEN F.DEPT_KEY in (20, 110, 30, 120, 70, 80) THEN 'Fresh'
+	ELSE 'Other'
+	END AS "CS or Fresh",
+	KVI.FFN AS "FFN (KVI)",
+	KVI.FFS AS "FFS (KVI)",
+	KVI.DW AS "DW (KVI)",
+	KVI.VG AS "VG (KVI)",
+	KVI.NE AS "NE (KVI)",
+	KVI.DAK AS "DAK (KVI)",
+	KVI.MN AS "MN (KVI)",
+	CASE
+		WHEN (FK.UPC IS NOT NULL) THEN 'Y'
+		ELSE 'N'
+	END AS "February Kehe",
+	CASE
+		WHEN H.MDSE_GRP_KEY in (1951, 1587, 1586, 1588) THEN 'Bakery Cakes'
+    	WHEN H.MDSE_GRP_KEY in (1953, 1963, 1575, 1580, 1577) THEN 'Bakery Bread & Buns/Rolls'
+		WHEN H.MDSE_GRP_KEY in (1950, 1959, 1589, 1590, 1585) THEN 'Bakery Cookies & Brownies/Bars'
+		WHEN H.MDSE_GRP_KEY in (1583, 1954, 1952, 1584) THEN 'Bakery Breakfast Sweets & Muffins'
+		WHEN H.MDSE_GRP_KEY in (1955, 1592) THEN 'Bakery Pies'
+		WHEN H.MDSE_GRP_KEY in (1989, 1603, 1597, 1599, 1609, 1598, 1602, 1600, 1605, 1601, 1607, 1604) THEN 'Specialty'
+		WHEN H.MDSE_GRP_KEY in (1615, 1990, 836) THEN 'Spreads & Dips'
+		WHEN H.MDSE_GRP_KEY in (1987, 1595) THEN 'Deli Cheese'
+		WHEN H.MDSE_GRP_KEY in (1986, 1611, 1610) THEN 'Deli Meat'
+    	WHEN H.MDSE_GRP_KEY in (1993, 1617, 841, 1946) THEN 'Meal Solutions- Entrees'
+		WHEN H.MDSE_GRP_KEY in (1643, 1994, 846) THEN 'Meal Solutions- Sides'
+		WHEN H.MDSE_GRP_KEY in (1644, 1991) THEN 'Snacking'
+		WHEN H.MDSE_GRP_KEY in (1992, 1653) THEN 'Deli Bread'
+		WHEN H.MDSE_GRP_KEY in (845, 1995, 2001, 1640, 1641) THEN 'Sandwiches'
+		WHEN H.MDSE_GRP_KEY in (1988, 835, 1634, 1636, 1633, 1638, 1635) THEN 'Salads'
+		WHEN H.MDSE_GRP_KEY in (2001, 2009, 2012, 2004, 2003, 2000, 2005, 2007, 2011) THEN 'Venues'
+		WHEN H.MDSE_GRP_KEY in (1985, 1613) THEN 'Poultry'
+		WHEN E.MDSE_CATGY_KEY in (6310) THEN 'Soup'
+		WHEN H.MDSE_GRP_KEY in (1997, 1619) THEN 'Platters'
+    ELSE H.MDSE_GRP_NAME
+	END AS "Monday Merch Groups",
+	CASE
+		WHEN F.DEPT_KEY in (90, 60, 10, 11, 40, 41, 20, 110, 70, 80, 30, 120) THEN 'Y'
+		ELSE 'N'
+	END AS "OwnBrand Dept",
+	INIT.INITIATIVE AS "Initiative",
+	JBP.VENDOR AS "JBP Vendor"
+FROM
+	SBX_BIZ.MARKETING.MDSE_ITEM A
+JOIN SBX_BIZ.MARKETING.MDSE_CLASS B ON
+	A.MDSE_CLASS_KEY = B.MDSE_CLASS_KEY
+LEFT JOIN EDW.MDM.MDSE_CLASS_MANAGER_VW C ON
+	A.MDSE_CLASS_KEY = C.MDSE_CLASS_KEY
+LEFT JOIN SBX_BIZ.MARKETING.CATEGORY_MANAGER D ON
+	C.CATGY_MANAGER_KEY = D.CATGY_MANAGER_KEY
+JOIN SBX_BIZ.MARKETING.MDSE_CATEGORY E ON
+	B.MDSE_CATGY_KEY = E.MDSE_CATGY_KEY
+JOIN SBX_BIZ.MARKETING.MDSE_GROUP H ON
+	E.MDSE_GRP_KEY = H.MDSE_GRP_KEY
+JOIN SBX_BIZ.MARKETING.DEPARTMENT F ON
+	H.DEPT_KEY = F.DEPT_KEY
+JOIN SBX_BIZ.MARKETING.DEPARTMENT_GROUP G ON
+	F.DEPT_GRP_KEY = G.DEPT_GRP_KEY
+JOIN SBX_BIZ.MARKETING.ITEM_BRAND I ON
+	A.ITEM_BRAND_CD = I.ITEM_BRAND_CD
+LEFT JOIN SBX_BIZ.MARKETING.I_LIVING_WELL_UPCS J ON
+	A.ITEM_ID = J.UPC
+LEFT JOIN SBX_BIZ.MARKETING.I_PRIVATE_LABEL_CODES K ON
+	I.ITEM_BRAND_CD = K.ITEM_BRAND_CD
+LEFT JOIN SBX_BIZ.MARKETING.I_PROGRAMS L ON
+	A.ITEM_ID = L.UPC
+LEFT JOIN SBX_BIZ.MARKETING.I_ANALYTICS_P_HCY M ON
+	A.ITEM_ID = M.UPC
+LEFT JOIN SBX_BIZ.MARKETING.I_BWL_PROMO_BLOCKS BWL ON
+	A.ITEM_ID = BWL.UPC
+JOIN SBX_BIZ.MARKETING.V_ITEM_SLS_LST_3FY Z ON
+	A.ITEM_ID = Z."Item"
+LEFT JOIN SBX_BIZ.MARKETING.V_LIVING_WELL_ATTRIBUTES LWA ON
+	A.ITEM_ID = LWA.UPC
+LEFT JOIN SBX_BIZ.MARKETING.I_DIRECTOR_DEPT DD ON
+	F.DEPT_NAME = DD.DEPARTMENT
+LEFT JOIN SBX_BIZ.MARKETING.I_KEHE_ITEMS KEHE ON
+	A.ITEM_ID = KEHE.UPC
+LEFT JOIN SBX_BIZ.MARKETING.I_WINTER_FLYER WF ON
+	A.ITEM_ID = WF.UPC
+LEFT JOIN SBX_BIZ.MARKETING.I_SPRING_FLYER SF ON
+	A.ITEM_ID = SF.UPC
+LEFT JOIN SBX_BIZ.MARKETING.I_SUMMER_PART_B SPB ON
+	A.ITEM_ID = SPB.UPC
+LEFT JOIN SBX_BIZ.MARKETING.I_FALL_FLYER FF ON
+	A.ITEM_ID = FF.UPC
+LEFT JOIN SBX_BIZ.MARKETING.I_SPECIALTY_LOCAL SPECIALTY ON
+	A.ITEM_ID = SPECIALTY.UPC
+LEFT JOIN SBX_BIZ.MARKETING.I_MEAT_ATTRIBUTES MA ON
+	A.ITEM_ID = MA.UPC
+LEFT JOIN SBX_BIZ.MARKETING.I_PRODUCE_ATTRIBUTES PA ON
+	A.ITEM_ID = PA.UPC
+--LEFT JOIN SBX_BIZ.MARKETING.PRIMARY_SKU PSKU ON
+--	A.SKU_NBR = PSKU.SKU_NBR
+--LEFT JOIN SBX_BIZ.MARKETING.ANCHOR_PRICE AP ON      --upc to edl. phq item master (UPC_EAN),  item id to vendor item, vendor item to price association code
+--	PSKU.ANCHOR_PRICE_ID = AP.ANCHOR_PRICE_ID
+LEFT JOIN SBX_BIZ.MARKETING.I_CBD_UPC CBD ON
+	A.ITEM_ID = CBD.UPC
+LEFT JOIN SBX_BIZ.MARKETING.I_VENDOR V ON
+	A.ITEM_ID = V.UPC
+LEFT JOIN SBX_BIZ.MARKETING.I_FVH_FLG FVH ON
+	H.MDSE_GRP_NAME = FVH."Group"
+LEFT JOIN SBX_BIZ.MARKETING.I_SUMMER_FLYER SMF ON
+	A.ITEM_ID = SMF.UPC
+LEFT JOIN SBX_BIZ.MARKETING.I_TEX_MEX TM ON
+	A.ITEM_ID = TM.UPC
+LEFT JOIN SBX_BIZ.MARKETING.I_FRESH_DIVIDE_UPC FD ON
+	A.ITEM_ID = FD.ITEM
+LEFT JOIN SBX_BIZ.MARKETING.I_FLORAL_ATTRIBUTES FA ON
+	A.ITEM_ID = FA.Item
+LEFT JOIN SBX_BIZ.MARKETING.I_KVI_UPC KVI ON
+	A.ITEM_ID = KVI.UPC
+LEFT JOIN SBX_BIZ.MARKETING.I_FEB_KEHE FK ON
+	A.ITEM_ID = FK.UPC
+LEFT JOIN SBX_BIZ.MARKETING.I_INITIATIVE INIT ON
+	A.ITEM_ID = INIT.UPC
+LEFT JOIN SBX_BIZ.MARKETING.I_JBP_UPC JBP ON
+	A.ITEM_ID = JBP.UPC
+WHERE
+	I.ITEM_BRAND_KEY NOT IN (13114, 16799)
+;
+
+--V_BANNER
+
+create or replace view SBX_BIZ.MARKETING.V_BANNER
+as
+SELECT   Distinct C.MKTG_CHAIN_DESC AS "Banner",
+         C.MKTG_CHAIN_ID AS "Banner ID",
+         CASE 
+              WHEN F.SALES_CHAIN_DESC in ('UMW', 'Family Fresh', 'Omaha') THEN 'West'
+              ELSE CASE 
+                        WHEN F.SALES_CHAIN_DESC = 'Martins' THEN 'Martins'
+                        ELSE 'Michigan' 
+                   END 
+         END AS "Division",
+         CASE 
+              WHEN (C.MKTG_CHAIN_DESC like 'Forest Hills Foods%') THEN 'D&W Fresh Markets' 
+              ELSE C.MKTG_CHAIN_DESC 
+         END AS "Banner FHF"
+FROM     SBX_BIZ.MARKETING.LINE A 
+         JOIN SBX_BIZ.MARKETING.SALES_LINE_FORMAT B ON A.FORMAT_TYPE_ID = B.FORMAT_TYPE_ID
+         LEFT JOIN SBX_BIZ.MARKETING.MKTG_CHAIN C ON A.MKTG_CHAIN_ID = C.MKTG_CHAIN_ID
+         LEFT JOIN SBX_BIZ.MARKETING."CHAIN" F ON A.SALES_CHAIN_ID = F.SALES_CHAIN_ID
+WHERE    B.FORMAT_TYPE_DESC like 'Supermarket%'
+;
+
+--V_EXEC_DASH_ITEM
+create or replace view SBX_BIZ.MARKETING.V_EXEC_DASH_ITEM
+as
+SELECT   Distinct (TRIM(H.MDSE_GRP_KEY) || ' - ' || TRIM(CASE WHEN (K.ITEM_BRAND_CD IS NOT NULL) THEN 'Y' ELSE 'N' END)) AS "Group OB Key",
+         H.MDSE_GRP_NAME AS "Group",
+         H.MDSE_GRP_KEY AS "Group ID",
+         F.DEPT_NAME AS "Department",
+         CASE 
+              WHEN (K.ITEM_BRAND_CD IS NOT NULL) THEN 'Y' 
+              ELSE 'N' 
+         END AS "OwnBrand Flg",
+         CASE 
+              WHEN F.DEPT_KEY in (12, 15, 50, 10, 90, 60, 11, 40, 41, 13) THEN 'Center Store' 
+              WHEN F.DEPT_KEY in (20, 110, 30, 120, 70, 80) THEN 'Fresh' 
+              ELSE 'Other' 
+         END AS "Core Store",
+         CASE 
+              WHEN F.DEPT_KEY in (90, 60, 10, 11, 40, 41, 20, 110, 70, 80, 30, 120) THEN 'Y' 
+              ELSE 'N' 
+         END AS "OwnBrand Dept",
+         CASE 
+              WHEN F.DEPT_KEY in (230, 170) THEN 'N' 
+              ELSE 'Y' 
+         END AS "Promo % Dept"
+FROM     SBX_BIZ.MARKETING.MDSE_ITEM A 
+         JOIN SBX_BIZ.MARKETING.MDSE_CLASS B ON A.MDSE_CLASS_KEY = B.MDSE_CLASS_KEY 
+         LEFT JOIN EDW.MDM.MDSE_CLASS_MANAGER_VW C ON A.MDSE_CLASS_KEY = C.MDSE_CLASS_KEY 
+         LEFT JOIN EDW.MDM.CATEGORY_MANAGER D ON C.CATGY_MANAGER_KEY = D.CATGY_MANAGER_KEY 
+         JOIN SBX_BIZ.MARKETING.MDSE_CATEGORY E ON B.MDSE_CATGY_KEY = E.MDSE_CATGY_KEY 
+         JOIN SBX_BIZ.MARKETING.MDSE_GROUP H ON E.MDSE_GRP_KEY = H.MDSE_GRP_KEY 
+         JOIN SBX_BIZ.MARKETING.DEPARTMENT F ON H.DEPT_KEY = F.DEPT_KEY 
+         JOIN SBX_BIZ.MARKETING.DEPARTMENT_GROUP G ON F.DEPT_GRP_KEY = G.DEPT_GRP_KEY 
+         JOIN SBX_BIZ.MARKETING.ITEM_BRAND I ON A.ITEM_BRAND_CD = I.ITEM_BRAND_CD 
+         LEFT JOIN SBX_BIZ.MARKETING.I_PRIVATE_LABEL_CODES K ON I.ITEM_BRAND_CD = K.ITEM_BRAND_CD
+;
+
+--V_EXEC_DASH_STO_CW_TTL_TRN
+create or replace view SBX_BIZ.MARKETING.V_EXEC_DASH_STO_CW_TTL_TRN
+as
+SELECT   TRIM(B.STORE_NBR) || ' - ' || TRIM(C.SALES_DT) AS "Comp Store Key",
+         B.STORE_NBR AS "Store Nbr",
+         C.SALES_DT AS "Wk End Dt",
+         COUNT(DISTINCT (TRIM(C.SALES_DT) || ' - ' || TRIM(A.LOYALTY_CARD_NBR) || ' - ' || TRIM(B.SALES_LINE_ID) || ' - ' || TRIM(A.REGISTER_ID) || ' - ' || TRIM(A.TRANS_NBR))) AS "Transactions"
+FROM     SBX_BIZ.MARKETING.RSAL_DY_LN_ITM_TRN A 
+         JOIN SBX_BIZ.MARKETING.LINE B ON A.SALES_LINE_ID = B.SALES_LINE_ID 
+         JOIN SBX_BIZ.MARKETING.FISCAL_DAY C ON A.SALES_DT = C.SALES_DT 
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK D ON C.FISCAL_WEEK_ID = D.FISCAL_WEEK_ID 
+         JOIN SBX_BIZ.MARKETING.MDSE_ITEM E ON A.ITEM_ID = E.ITEM_ID 
+         JOIN SBX_BIZ.MARKETING.MDSE_CLASS F ON E.MDSE_CLASS_KEY = F.MDSE_CLASS_KEY 
+         JOIN SBX_BIZ.MARKETING.MDSE_CATEGORY G ON F.MDSE_CATGY_KEY = G.MDSE_CATGY_KEY 
+         JOIN SBX_BIZ.MARKETING.MDSE_GROUP H ON H.MDSE_GRP_KEY = G.MDSE_GRP_KEY 
+         JOIN SBX_BIZ.MARKETING.MKTG_CHAIN L ON B.MKTG_CHAIN_ID = L.MKTG_CHAIN_ID
+WHERE    D.END_DT >= (SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+AND      D.END_DT <= (SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE (V_FISCAL_CALENDAR."Dt" = (CURRENT_DATE() - 1)))
+AND      (B.FORMAT_TYPE_ID = 'SUPERMKT')
+AND      (B.LOYALTY_STATUS_CD <> 'DUMMY')
+AND      (B.CUST_STATUS_KEY < 3)
+GROUP BY 1, 2, 3
+UNION ALL
+SELECT   TRIM(B.STORE_NBR) || ' - ' || TRIM(C.SALES_DT) AS "Comp Store Key",
+         B.STORE_NBR AS "Store Nbr",
+         A.SALES_DT AS "Wk End Dt",
+         COUNT(DISTINCT (TRIM(C.SALES_DT) || ' - ' || TRIM(A.LOYALTY_CARD_NBR) || ' - ' || TRIM(B.SALES_LINE_ID) || ' - ' || TRIM(A.REGISTER_ID) || ' - ' || TRIM(A.TRANS_NBR))) AS "Transactions"
+FROM     SBX_BIZ.MARKETING.RSAL_DY_LN_ITM_TRN A 
+         JOIN SBX_BIZ.MARKETING.LINE B ON A.SALES_LINE_ID = B.SALES_LINE_ID 
+         JOIN SBX_BIZ.MARKETING.FISCAL_DAY C ON A.SALES_DT = C.LY_SALES_DT 
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK D ON C.FISCAL_WEEK_ID = D.FISCAL_WEEK_ID 
+         JOIN SBX_BIZ.MARKETING.MDSE_ITEM E ON A.ITEM_ID = E.ITEM_ID 
+         JOIN SBX_BIZ.MARKETING.MDSE_CLASS F ON E.MDSE_CLASS_KEY = F.MDSE_CLASS_KEY 
+         JOIN SBX_BIZ.MARKETING.MDSE_CATEGORY G ON F.MDSE_CATGY_KEY = G.MDSE_CATGY_KEY 
+         JOIN SBX_BIZ.MARKETING.MDSE_GROUP H ON H.MDSE_GRP_KEY = G.MDSE_GRP_KEY 
+         JOIN SBX_BIZ.MARKETING.MKTG_CHAIN L ON B.MKTG_CHAIN_ID = L.MKTG_CHAIN_ID
+WHERE    D.END_DT >= (SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))
+AND      D.END_DT <= (SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE (V_FISCAL_CALENDAR."Dt" = (CURRENT_DATE() - 1)))
+AND      (B.FORMAT_TYPE_ID = 'SUPERMKT')
+AND      (B.LOYALTY_STATUS_CD <> 'DUMMY')
+AND      (B.CUST_STATUS_KEY < 3)
+GROUP BY 1, 2, 3
+UNION ALL 
+SELECT   TRIM(B.STORE_NBR) || ' - ' || TRIM(C.SALES_DT) AS "Comp Store Key",
+         B.STORE_NBR AS "Store Nbr",
+         A.SALES_DT AS "Wk End Dt",
+         COUNT(DISTINCT (TRIM(C.SALES_DT) || ' - ' || TRIM(A.LOYALTY_CARD_NBR) || ' - ' || TRIM(B.SALES_LINE_ID) || ' - ' || TRIM(A.REGISTER_ID) || ' - ' || TRIM(A.TRANS_NBR))) AS "Transactions"
+FROM     SBX_BIZ.MARKETING.RSAL_DY_LN_ITM_TRN A 
+         JOIN SBX_BIZ.MARKETING.LINE B ON A.SALES_LINE_ID = B.SALES_LINE_ID 
+         JOIN (SELECT A.FISCAL_WEEK_ID, A.SALES_DT, A.LY_SALES_DT, B.LY_SALES_DT AS LLY_SALES_DT FROM SBX_BIZ.MARKETING.FISCAL_DAY A 
+         JOIN SBX_BIZ.MARKETING.FISCAL_DAY B ON B.SALES_DT = A.LY_SALES_DT) C ON A.SALES_DT = C.LLY_SALES_DT 
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK D ON C.FISCAL_WEEK_ID = D.FISCAL_WEEK_ID 
+         JOIN SBX_BIZ.MARKETING.MDSE_ITEM E ON A.ITEM_ID = E.ITEM_ID 
+         JOIN SBX_BIZ.MARKETING.MDSE_CLASS F ON E.MDSE_CLASS_KEY = F.MDSE_CLASS_KEY 
+         JOIN SBX_BIZ.MARKETING.MDSE_CATEGORY G ON F.MDSE_CATGY_KEY = G.MDSE_CATGY_KEY 
+         JOIN SBX_BIZ.MARKETING.MDSE_GROUP H ON H.MDSE_GRP_KEY = G.MDSE_GRP_KEY 
+         JOIN SBX_BIZ.MARKETING.MKTG_CHAIN L ON B.MKTG_CHAIN_ID = L.MKTG_CHAIN_ID
+WHERE    D.END_DT >= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+     AND (V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1)))
+AND      (D.END_DT <= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE (V_FISCAL_CALENDAR."Dt" = (CURRENT_DATE() - 1))))
+AND      (B.FORMAT_TYPE_ID = 'SUPERMKT')
+AND      (B.LOYALTY_STATUS_CD <> 'DUMMY')
+AND      (B.CUST_STATUS_KEY < 3)
+GROUP BY 1, 2, 3;
+
+
+SELECT   A."Household ID",
+         A."Wk End Dt",
+         A."Store Nbr",
+         CASE 
+              WHEN ((( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE ((V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)) AND (V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1)))) - A."First Purchase Date") <= 7) THEN 'Y' 
+              ELSE 'N' 
+         END AS "New Household",
+         TRIM(A."Store Nbr") || ' - ' || TRIM(A."Wk End Dt") AS "Comp Store Key"
+FROM     ( SELECT A17.HOUSEHOLD_KEY AS "Household ID", A14.SALES_DT AS "Wk End Dt", A15.STORE_NBR AS "Store Nbr", MIN(A17.FIRST_PURCH_DATE) AS "First Purchase Date" FROM SBX_BIZ.MARKETING.RSAL_DY_LN_ITM_TRN A11 
+         JOIN SBX_BIZ.MARKETING.MDSE_ITEM A12 ON A11.ITEM_ID = A12.ITEM_ID 
+         JOIN SBX_BIZ.MARKETING.MDSE_CLASS A13 ON A12.MDSE_CLASS_KEY = A13.MDSE_CLASS_KEY 
+         JOIN SBX_BIZ.MARKETING.FISCAL_DAY A14 ON A11.SALES_DT = A14.SALES_DT 
+         JOIN SBX_BIZ.MARKETING.LINE A15 ON A11.SALES_LINE_ID = A15.SALES_LINE_ID 
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK A16 ON A14.FISCAL_WEEK_ID = A16.FISCAL_WEEK_ID 
+         JOIN SBX_BIZ.MARKETING.LOYALTY_CARD A17 ON A11.LOYALTY_CARD_NBR = A17.LOYALTY_CARD_NBR WHERE A15.CUST_STATUS_KEY < 3 AND A15.FORMAT_TYPE_ID <> 'WHSE' AND A16.END_DT >= (SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7) AND V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1)) AND A16.END_DT <= (SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Dt" = (CURRENT_DATE() - 1)) AND A15.FORMAT_TYPE_ID like ('SUPERMKT%') AND A15.LOYALTY_STATUS_CD <> 'DUMMY' AND A17.HOUSEHOLD_KEY > 0 GROUP BY 1, 2, 3 ) A
+
+UNION ALL
+
+
+--V_EXEC_DASH_TTL_CW_HH
+create or replace view SBX_BIZ.MARKETING.V_EXEC_DASH_TTL_CW_HH
+as
+SELECT   A."Household ID",
+         A."Wk End Dt",
+         A."Store Nbr",
+         CASE 
+              WHEN ((( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE ((V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)) AND (V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1)))) - A."First Purchase Date") <= 7) THEN 'Y' 
+              ELSE 'N' 
+         END AS "New Household",
+         TRIM(A."Store Nbr") || ' - ' || TRIM(A."Wk End Dt") AS "Comp Store Key"
+FROM     ( SELECT A17.HOUSEHOLD_KEY AS "Household ID", A11.SALES_DT AS "Wk End Dt", A15.STORE_NBR AS "Store Nbr", MIN(A17.FIRST_PURCH_DATE) AS "First Purchase Date" FROM SBX_BIZ.MARKETING.RSAL_DY_LN_ITM_TRN A11 
+         JOIN SBX_BIZ.MARKETING.MDSE_ITEM A12 ON A11.ITEM_ID = A12.ITEM_ID 
+         JOIN SBX_BIZ.MARKETING.MDSE_CLASS A13 ON A12.MDSE_CLASS_KEY = A13.MDSE_CLASS_KEY 
+         JOIN SBX_BIZ.MARKETING.FISCAL_DAY A14 ON A11.SALES_DT = A14.LY_SALES_DT 
+         JOIN SBX_BIZ.MARKETING.LINE A15 ON A11.SALES_LINE_ID = A15.SALES_LINE_ID 
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK A16 ON A14.FISCAL_WEEK_ID = A16.FISCAL_WEEK_ID 
+         JOIN SBX_BIZ.MARKETING.LOYALTY_CARD A17 ON A11.LOYALTY_CARD_NBR = A17.LOYALTY_CARD_NBR WHERE ((((((A15.CUST_STATUS_KEY < 3) AND (A15.FORMAT_TYPE_ID <> 'WHSE')) AND ((A16.END_DT >= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE ((V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)) AND (V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))))) AND (A16.END_DT <= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE (V_FISCAL_CALENDAR."Dt" = (CURRENT_DATE() - 1)))))) AND (A15.FORMAT_TYPE_ID like ('SUPERMKT%'))) AND (A15.LOYALTY_STATUS_CD <> 'DUMMY')) AND (A17.HOUSEHOLD_KEY > 0)) GROUP BY 1, 2, 3) A
+UNION ALL 
+SELECT   A."Household ID",
+         A."Wk End Dt",
+         A."Store Nbr",
+         CASE 
+              WHEN ((( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE ((V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)) AND (V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1)))) - A."First Purchase Date") <= 7) THEN 'Y' 
+              ELSE 'N' 
+         END AS "New Household",
+         TRIM(A."Store Nbr") || ' - ' || TRIM(A."Wk End Dt") AS "Comp Store Key"
+FROM     ( SELECT A17.HOUSEHOLD_KEY AS "Household ID", A11.SALES_DT AS "Wk End Dt", A15.STORE_NBR AS "Store Nbr", MIN(A17.FIRST_PURCH_DATE) AS "First Purchase Date" FROM SBX_BIZ.MARKETING.RSAL_DY_LN_ITM_TRN A11 
+         JOIN SBX_BIZ.MARKETING.MDSE_ITEM A12 ON A11.ITEM_ID = A12.ITEM_ID 
+         JOIN SBX_BIZ.MARKETING.MDSE_CLASS A13 ON A12.MDSE_CLASS_KEY = A13.MDSE_CLASS_KEY 
+         JOIN ( SELECT A.FISCAL_WEEK_ID, A.SALES_DT, A.LY_SALES_DT, B.LY_SALES_DT AS LLY_SALES_DT FROM (SBX_BIZ.MARKETING.FISCAL_DAY A 
+         JOIN SBX_BIZ.MARKETING.FISCAL_DAY B ON ((B.SALES_DT = A.LY_SALES_DT)))) A14 ON A11.SALES_DT = A14.LLY_SALES_DT 
+         JOIN SBX_BIZ.MARKETING.LINE A15 ON A11.SALES_LINE_ID = A15.SALES_LINE_ID 
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK A16 ON A14.FISCAL_WEEK_ID = A16.FISCAL_WEEK_ID 
+         JOIN SBX_BIZ.MARKETING.LOYALTY_CARD A17 ON A11.LOYALTY_CARD_NBR = A17.LOYALTY_CARD_NBR WHERE ((((((A15.CUST_STATUS_KEY < 3) AND (A15.FORMAT_TYPE_ID <> 'WHSE')) AND ((A16.END_DT >= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE ((V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)) AND (V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))))) AND (A16.END_DT <= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE (V_FISCAL_CALENDAR."Dt" = (CURRENT_DATE() - 1)))))) AND (A15.FORMAT_TYPE_ID like ('SUPERMKT%'))) AND (A15.LOYALTY_STATUS_CD <> 'DUMMY')) AND (A17.HOUSEHOLD_KEY > 0)) GROUP BY 1, 2, 3) A
+;
+
+
+--V_EXEC_DASH_STO_CW_GRP_ECOM_SLS
+create or replace view SBX_BIZ.MARKETING.V_EXEC_DASH_STO_CW_GRP_ECOM_SLS
+as
+SELECT   TRIM(A15.STORE_NBR) || ' - ' || TRIM(A14.SALES_DT) AS "Comp Store Key",
+         A15.STORE_NBR AS "Store Nbr",
+         TRIM(G.MDSE_GRP_KEY) || ' - ' || TRIM(CASE WHEN (I.ITEM_BRAND_CD IS NOT NULL) THEN 'Y' ELSE 'N' END) AS "Group OB Key",
+         A14.SALES_DT AS "Wk End Dt",
+         SUM(A11.TOTAL_SALES_AMT) AS "Sales Dollars (eComm)",
+         SUM(CASE WHEN K.EVENT_TYPE = 'Promotion' THEN A11.TOTAL_SALES_AMT ELSE '0' END) AS "Sales Dollars Promo (eComm)",
+         SUM(A11.TOTAL_SALES_QTY) AS "Sales Quantity (eComm)",
+         SUM(CASE WHEN K.EVENT_TYPE = 'Promotion' THEN A11.TOTAL_SALES_QTY ELSE '0' END) "Sales Quantity Promo (eComm)",
+         SUM(A11.TOTAL_SALES_WGT) AS "Sales Weight (eComm)",
+         SUM(CASE WHEN K.EVENT_TYPE = 'Promotion' THEN A11.TOTAL_SALES_WGT ELSE '0' END) AS "Sales Weight Promo (eComm)"
+FROM     SBX_BIZ.MARKETING.RSAL_DY_LN_ITM_TRN A11 
+         LEFT JOIN SBX_BIZ.MARKETING.MDSE_ITEM A12 ON A11.ITEM_ID = A12.ITEM_ID 
+         LEFT JOIN SBX_BIZ.MARKETING.MDSE_CLASS A13 ON A12.MDSE_CLASS_KEY = A13.MDSE_CLASS_KEY 
+         JOIN SBX_BIZ.MARKETING.FISCAL_DAY A14 ON A11.SALES_DT = A14.SALES_DT 
+         LEFT JOIN SBX_BIZ.MARKETING.LINE A15 ON A11.SALES_LINE_ID = A15.SALES_LINE_ID 
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK A16 ON A14.FISCAL_WEEK_ID = A16.FISCAL_WEEK_ID 
+         LEFT JOIN SBX_BIZ.MARKETING.MDSE_CLASS E ON A12.MDSE_CLASS_KEY = E.MDSE_CLASS_KEY 
+         LEFT JOIN SBX_BIZ.MARKETING.MDSE_CATEGORY F ON E.MDSE_CATGY_KEY = F.MDSE_CATGY_KEY 
+         LEFT JOIN SBX_BIZ.MARKETING.MDSE_GROUP G ON F.MDSE_GRP_KEY = G.MDSE_GRP_KEY 
+         LEFT JOIN (SELECT DISTINCT ITEM_BRAND.ITEM_BRAND_CD FROM SBX_BIZ.MARKETING.ITEM_BRAND) H ON A12.ITEM_BRAND_CD = H.ITEM_BRAND_CD 
+         LEFT JOIN SBX_BIZ.MARKETING.I_PRIVATE_LABEL_CODES I ON H.ITEM_BRAND_CD = I.ITEM_BRAND_CD 
+         LEFT JOIN SBX_BIZ.MARKETING.I_EVENT_CODE_LARGE K ON A11.EVENT_CD = K.EVENT_CD
+WHERE    (((A16.END_DT >= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE ((V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7))
+                    AND (V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1)))))
+        AND (A16.END_DT <= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE (V_FISCAL_CALENDAR."Dt" = (CURRENT_DATE() - 1)))))
+     AND (A11.REGISTER_ID = '045'))
+GROUP BY 1, 2, 3, 4
+UNION ALL
+SELECT   TRIM(A15.STORE_NBR) || ' - ' || TRIM(A14.SALES_DT) AS "Comp Store Key",
+         A15.STORE_NBR AS "Store Nbr",
+         TRIM(G.MDSE_GRP_KEY) || ' - ' || TRIM (CASE WHEN I.ITEM_BRAND_CD IS NOT NULL THEN 'Y' ELSE 'N' END) AS "Group OB Key",
+         A11.SALES_DT AS "Wk End Dt",
+         SUM(A11.TOTAL_SALES_AMT) AS "Sales Dollars (eComm)",
+         SUM(CASE WHEN K.EVENT_TYPE = 'Promotion' THEN A11.TOTAL_SALES_AMT ELSE '0' END) AS "Sales Dollars Promo (eComm)",
+         SUM(A11.TOTAL_SALES_QTY) AS "Sales Quantity (eComm)",
+         SUM(CASE WHEN K.EVENT_TYPE = 'Promotion' THEN A11.TOTAL_SALES_QTY ELSE '0' END) AS "Sales Quantity Promo (eComm)",
+         SUM(A11.TOTAL_SALES_WGT) AS "Sales Weight (eComm)",
+         SUM(CASE WHEN K.EVENT_TYPE = 'Promotion' THEN A11.TOTAL_SALES_WGT ELSE '0' END) AS "Sales Weight Promo (eComm)"
+FROM     SBX_BIZ.MARKETING.RSAL_DY_LN_ITM_TRN A11 
+         LEFT JOIN SBX_BIZ.MARKETING.MDSE_ITEM A12 ON A11.ITEM_ID = A12.ITEM_ID 
+         LEFT JOIN SBX_BIZ.MARKETING.MDSE_CLASS A13 ON A12.MDSE_CLASS_KEY = A13.MDSE_CLASS_KEY 
+         JOIN SBX_BIZ.MARKETING.FISCAL_DAY A14 ON A11.SALES_DT = A14.LY_SALES_DT 
+         LEFT JOIN SBX_BIZ.MARKETING.LINE A15 ON A11.SALES_LINE_ID = A15.SALES_LINE_ID 
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK A16 ON A14.FISCAL_WEEK_ID = A16.FISCAL_WEEK_ID 
+         LEFT JOIN SBX_BIZ.MARKETING.MDSE_CLASS E ON A12.MDSE_CLASS_KEY = E.MDSE_CLASS_KEY 
+         LEFT JOIN SBX_BIZ.MARKETING.MDSE_CATEGORY F ON E.MDSE_CATGY_KEY = F.MDSE_CATGY_KEY 
+         LEFT JOIN SBX_BIZ.MARKETING.MDSE_GROUP G ON F.MDSE_GRP_KEY = G.MDSE_GRP_KEY 
+         LEFT JOIN (SELECT DISTINCT ITEM_BRAND.ITEM_BRAND_CD FROM SBX_BIZ.MARKETING.ITEM_BRAND) H ON A12.ITEM_BRAND_CD = H.ITEM_BRAND_CD 
+         LEFT JOIN SBX_BIZ.MARKETING.I_PRIVATE_LABEL_CODES I ON H.ITEM_BRAND_CD = I.ITEM_BRAND_CD 
+         LEFT JOIN SBX_BIZ.MARKETING.I_EVENT_CODE_LARGE K ON A11.EVENT_CD = K.EVENT_CD
+WHERE    (((A16.END_DT >= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE ((V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7))
+                    AND (V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1)))))
+        AND (A16.END_DT <= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE (V_FISCAL_CALENDAR."Dt" = (CURRENT_DATE() - 1)))))
+     AND (A11.REGISTER_ID = '045'))
+GROUP BY 1, 2, 3, 4
+UNION ALL
+SELECT   TRIM(A15.STORE_NBR) || ' - ' || TRIM(A14.SALES_DT) AS "Comp Store Key",
+         A15.STORE_NBR AS "Store Nbr",
+         TRIM(G.MDSE_GRP_KEY) || ' - ' || TRIM(CASE WHEN I.ITEM_BRAND_CD IS NOT NULL THEN 'Y' ELSE 'N' END) AS "Group OB Key",
+         A11.SALES_DT AS "Wk End Dt",
+         SUM(A11.TOTAL_SALES_AMT) AS "Sales Dollars (eComm)",
+         SUM(CASE WHEN K.EVENT_TYPE = 'Promotion' THEN A11.TOTAL_SALES_AMT ELSE '0' END) AS "Sales Dollars Promo (eComm)",
+         SUM(A11.TOTAL_SALES_QTY) AS "Sales Quantity (eComm)",
+         SUM(CASE WHEN K.EVENT_TYPE = 'Promotion' THEN A11.TOTAL_SALES_QTY ELSE '0' END) AS "Sales Quantity Promo (eComm)",
+         SUM(A11.TOTAL_SALES_WGT) AS "Sales Weight (eComm)",
+         SUM(CASE WHEN K.EVENT_TYPE = 'Promotion' THEN A11.TOTAL_SALES_WGT ELSE '0' END) AS "Sales Weight Promo (eComm)"
+FROM     SBX_BIZ.MARKETING.RSAL_DY_LN_ITM_TRN A11 
+         LEFT JOIN SBX_BIZ.MARKETING.MDSE_ITEM A12 ON A11.ITEM_ID = A12.ITEM_ID 
+         LEFT JOIN SBX_BIZ.MARKETING.MDSE_CLASS A13 ON A12.MDSE_CLASS_KEY = A13.MDSE_CLASS_KEY 
+         JOIN (SELECT A.FISCAL_WEEK_ID, A.SALES_DT, A.LY_SALES_DT, B.LY_SALES_DT AS LLY_SALES_DT FROM SBX_BIZ.MARKETING.FISCAL_DAY A 
+         JOIN SBX_BIZ.MARKETING.FISCAL_DAY B ON B.SALES_DT = A.LY_SALES_DT) A14 ON A11.SALES_DT = A14.LLY_SALES_DT 
+         LEFT JOIN SBX_BIZ.MARKETING.LINE A15 ON A11.SALES_LINE_ID = A15.SALES_LINE_ID 
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK A16 ON A14.FISCAL_WEEK_ID = A16.FISCAL_WEEK_ID 
+         LEFT JOIN SBX_BIZ.MARKETING.MDSE_CLASS E ON A12.MDSE_CLASS_KEY = E.MDSE_CLASS_KEY 
+         LEFT JOIN SBX_BIZ.MARKETING.MDSE_CATEGORY F ON E.MDSE_CATGY_KEY = F.MDSE_CATGY_KEY 
+         LEFT JOIN SBX_BIZ.MARKETING.MDSE_GROUP G ON F.MDSE_GRP_KEY = G.MDSE_GRP_KEY 
+         LEFT JOIN (SELECT DISTINCT ITEM_BRAND.ITEM_BRAND_CD FROM SBX_BIZ.MARKETING.ITEM_BRAND) H ON A12.ITEM_BRAND_CD = H.ITEM_BRAND_CD 
+         LEFT JOIN SBX_BIZ.MARKETING.I_PRIVATE_LABEL_CODES I ON H.ITEM_BRAND_CD = I.ITEM_BRAND_CD 
+         LEFT JOIN SBX_BIZ.MARKETING.I_EVENT_CODE_LARGE K ON A11.EVENT_CD = K.EVENT_CD
+WHERE    (((A16.END_DT >= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE ((V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7))
+                    AND (V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1)))))
+        AND (A16.END_DT <= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE (V_FISCAL_CALENDAR."Dt" = (CURRENT_DATE() - 1)))))
+     AND (A11.REGISTER_ID = '045'))
+GROUP BY 1, 2, 3, 4
+;
+
+
+--V_EXEC_DASH_STO_CW_GRP_ECOM_TRN
+create or replace view SBX_BIZ.MARKETING.V_EXEC_DASH_STO_CW_GRP_ECOM_TRN
+as
+SELECT   TRIM(B.STORE_NBR) || ' - ' || TRIM(C.SALES_DT) AS "Comp Store Key",
+         B.STORE_NBR AS "Store Nbr",
+         C.SALES_DT AS "Wk End Dt",
+         COUNT(DISTINCT (TRIM(C.SALES_DT) || ' - ' || TRIM(A.LOYALTY_CARD_NBR) || ' - ' || TRIM(B.SALES_LINE_ID) || ' - ' || TRIM(A.REGISTER_ID) || ' - ' || TRIM(A.TRANS_NBR))) AS "Transactions (FL)"
+FROM     SBX_BIZ.MARKETING.RSAL_DY_LN_ITM_TRN A 
+         JOIN SBX_BIZ.MARKETING.LINE B ON A.SALES_LINE_ID = B.SALES_LINE_ID 
+         JOIN SBX_BIZ.MARKETING.FISCAL_DAY C ON A.SALES_DT = C.SALES_DT 
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK D ON C.FISCAL_WEEK_ID = D.FISCAL_WEEK_ID 
+         JOIN SBX_BIZ.MARKETING.MDSE_ITEM E ON A.ITEM_ID = E.ITEM_ID 
+         JOIN SBX_BIZ.MARKETING.MDSE_CLASS F ON E.MDSE_CLASS_KEY = F.MDSE_CLASS_KEY 
+         JOIN SBX_BIZ.MARKETING.MDSE_CATEGORY G ON F.MDSE_CATGY_KEY = G.MDSE_CATGY_KEY 
+         JOIN SBX_BIZ.MARKETING.MDSE_GROUP H ON H.MDSE_GRP_KEY = G.MDSE_GRP_KEY 
+         JOIN SBX_BIZ.MARKETING.MKTG_CHAIN L ON B.MKTG_CHAIN_ID = L.MKTG_CHAIN_ID
+WHERE    D.END_DT >= ( SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE (V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)
+        AND (V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))))
+AND      D.END_DT <= (SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Dt" = CURRENT_DATE() - 1)
+AND      B.FORMAT_TYPE_ID = 'SUPERMKT'
+AND      B.LOYALTY_STATUS_CD <> 'DUMMY'
+AND      B.CUST_STATUS_KEY < 3
+AND      A.REGISTER_ID = '045'
+GROUP BY 1, 2, 3
+
+UNION ALL
+
+SELECT   TRIM(B.STORE_NBR) || ' - ' || TRIM(C.SALES_DT) AS "Comp Store Key",
+         B.STORE_NBR AS "Store Nbr",
+         A.SALES_DT AS "Wk End Dt",
+         COUNT(DISTINCT (TRIM(C.SALES_DT) || ' - ' || TRIM(A.LOYALTY_CARD_NBR) || ' - ' || TRIM(B.SALES_LINE_ID) || ' - ' || TRIM(A.REGISTER_ID) || ' - ' || TRIM(A.TRANS_NBR))) AS "Transactions"
+FROM     SBX_BIZ.MARKETING.RSAL_DY_LN_ITM_TRN A 
+         JOIN SBX_BIZ.MARKETING.LINE B ON A.SALES_LINE_ID = B.SALES_LINE_ID 
+         JOIN SBX_BIZ.MARKETING.FISCAL_DAY C ON A.SALES_DT = C.LY_SALES_DT 
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK D ON C.FISCAL_WEEK_ID = D.FISCAL_WEEK_ID 
+         JOIN SBX_BIZ.MARKETING.MDSE_ITEM E ON A.ITEM_ID = E.ITEM_ID 
+         JOIN SBX_BIZ.MARKETING.MDSE_CLASS F ON E.MDSE_CLASS_KEY = F.MDSE_CLASS_KEY 
+         JOIN SBX_BIZ.MARKETING.MDSE_CATEGORY G ON F.MDSE_CATGY_KEY = G.MDSE_CATGY_KEY 
+         JOIN SBX_BIZ.MARKETING.MDSE_GROUP H ON H.MDSE_GRP_KEY = G.MDSE_GRP_KEY 
+         JOIN SBX_BIZ.MARKETING.MKTG_CHAIN L ON B.MKTG_CHAIN_ID = L.MKTG_CHAIN_ID
+WHERE    D.END_DT >= (SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE ((V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7))
+        AND (V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))))
+AND      D.END_DT <= (SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE (V_FISCAL_CALENDAR."Dt" = (CURRENT_DATE() - 1)))
+AND      B.FORMAT_TYPE_ID = 'SUPERMKT'
+AND      B.LOYALTY_STATUS_CD <> 'DUMMY'
+AND      B.CUST_STATUS_KEY < 3
+AND      A.REGISTER_ID = '045'
+GROUP BY 1, 2, 3
+
+UNION ALL
+
+SELECT   TRIM(B.STORE_NBR) || ' - ' || TRIM(C.SALES_DT) AS "Comp Store Key",
+         B.STORE_NBR AS "Store Nbr",
+         A.SALES_DT AS "Wk End Dt",
+         COUNT(DISTINCT (TRIM(C.SALES_DT) || ' - ' || TRIM(A.LOYALTY_CARD_NBR) || ' - ' || TRIM(B.SALES_LINE_ID) || ' - ' || TRIM(A.REGISTER_ID) || ' - ' || TRIM(A.TRANS_NBR))) AS "Transactions"
+FROM     SBX_BIZ.MARKETING.RSAL_DY_LN_ITM_TRN A 
+         JOIN SBX_BIZ.MARKETING.LINE B ON A.SALES_LINE_ID = B.SALES_LINE_ID 
+         JOIN (SELECT A.FISCAL_WEEK_ID, A.SALES_DT, A.LY_SALES_DT, B.LY_SALES_DT AS LLY_SALES_DT FROM (SBX_BIZ.MARKETING.FISCAL_DAY A 
+         JOIN SBX_BIZ.MARKETING.FISCAL_DAY B ON ((B.SALES_DT = A.LY_SALES_DT)))) C ON A.SALES_DT = C.LLY_SALES_DT 
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK D ON C.FISCAL_WEEK_ID = D.FISCAL_WEEK_ID 
+         JOIN SBX_BIZ.MARKETING.MDSE_ITEM E ON A.ITEM_ID = E.ITEM_ID 
+         JOIN SBX_BIZ.MARKETING.MDSE_CLASS F ON E.MDSE_CLASS_KEY = F.MDSE_CLASS_KEY 
+         JOIN SBX_BIZ.MARKETING.MDSE_CATEGORY G ON F.MDSE_CATGY_KEY = G.MDSE_CATGY_KEY 
+         JOIN SBX_BIZ.MARKETING.MDSE_GROUP H ON H.MDSE_GRP_KEY = G.MDSE_GRP_KEY 
+         JOIN SBX_BIZ.MARKETING.MKTG_CHAIN L ON B.MKTG_CHAIN_ID = L.MKTG_CHAIN_ID
+WHERE    D.END_DT >= (SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE ((V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7))
+        AND (V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1))))
+AND      D.END_DT <= (SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE (V_FISCAL_CALENDAR."Dt" = (CURRENT_DATE() - 1)))
+AND      B.FORMAT_TYPE_ID = 'SUPERMKT'
+AND      B.LOYALTY_STATUS_CD <> 'DUMMY'
+AND      B.CUST_STATUS_KEY < 3
+AND      A.REGISTER_ID = '045'
+GROUP BY 1, 2, 3
+;
+
+
+
+--V_FL_STORE_CW
+create or replace view SBX_BIZ.MARKETING.V_FL_STORE_CW
+as
+SELECT   TRIM(A."Store Nbr") || ' - ' || TRIM(A."Dt") AS "FL Store Key",
+         CASE 
+              WHEN B."Store Nbr" IS NOT NULL THEN 'Y' 
+              ELSE 'N' 
+         END AS "FL Store"
+FROM     (SELECT C.STORE_NBR AS "Store Nbr", D."Dt" FROM (SBX_BIZ.MARKETING.LINE C CROSS 
+         JOIN (SELECT A.SALES_DT AS "Dt" FROM SBX_BIZ.MARKETING.FISCAL_DAY A 
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK D ON A.FISCAL_WEEK_ID = D.FISCAL_WEEK_ID WHERE D.END_DT >= (SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE ((V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)) AND (V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1)))) AND D.END_DT <= (SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE (V_FISCAL_CALENDAR."Dt" = (CURRENT_DATE() - 1)))) D) WHERE (((C.CUST_STATUS_KEY < 3) AND (C.FORMAT_TYPE_ID like ('SUPERMKT%'))) AND (C.LOYALTY_STATUS_CD <> 'DUMMY'))) A 
+         LEFT JOIN ((SELECT Distinct C.SALES_DT AS "Dt", B.STORE_NBR AS "Store Nbr" FROM SBX_BIZ.MARKETING.RSAL_DY_LN_ITM_TRN A 
+         JOIN SBX_BIZ.MARKETING.LINE B ON A.SALES_LINE_ID = B.SALES_LINE_ID 
+         JOIN SBX_BIZ.MARKETING.FISCAL_DAY C ON A.SALES_DT = C.SALES_DT 
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK D ON C.FISCAL_WEEK_ID = D.FISCAL_WEEK_ID WHERE D.END_DT >= (SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Wk End Dt" >= CURRENT_DATE() - 7 AND V_FISCAL_CALENDAR."Wk End Dt" <= CURRENT_DATE() - 1) AND D.END_DT <= (SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE V_FISCAL_CALENDAR."Dt" = CURRENT_DATE() - 1) AND A.REGISTER_ID = '045') UNION ( SELECT Distinct (C.SALES_DT - 364) AS "Dt", B.STORE_NBR AS "Store Nbr" FROM SBX_BIZ.MARKETING.RSAL_DY_LN_ITM_TRN A 
+         JOIN SBX_BIZ.MARKETING.LINE B ON A.SALES_LINE_ID = B.SALES_LINE_ID 
+         JOIN SBX_BIZ.MARKETING.FISCAL_DAY C ON A.SALES_DT = C.SALES_DT 
+         JOIN SBX_BIZ.MARKETING.FISCAL_WEEK D ON C.FISCAL_WEEK_ID = D.FISCAL_WEEK_ID WHERE D.END_DT >= (SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE ((V_FISCAL_CALENDAR."Wk End Dt" >= (CURRENT_DATE() - 7)) AND (V_FISCAL_CALENDAR."Wk End Dt" <= (CURRENT_DATE() - 1)))) AND D.END_DT <= (SELECT DISTINCT V_FISCAL_CALENDAR."Wk End Dt" FROM SBX_BIZ.MARKETING.V_FISCAL_CALENDAR WHERE (V_FISCAL_CALENDAR."Dt" = (CURRENT_DATE() - 1))) AND A.REGISTER_ID = '045')) B ON A."Store Nbr" = B."Store Nbr" AND A."Dt" = B."Dt"
+;
+
+
+

@@ -76,3 +76,5 @@ WHERE    (((HD.S_GL_DEPT_ID IN ('8100', '8500'))
 AND      DWL.FISCAL_WEEK_ID = 202208
 --AND      dwl.dept_id in ('8578', '0933', '0820', '1150', '1641', '1654', '1404')
 ;
+
+select * from WH_OWNER.MDV_RPT_TREE where dept_id = 1152;

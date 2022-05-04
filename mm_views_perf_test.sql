@@ -1,0 +1,43 @@
+--Snowflake
+--xsmall - 278.09 seconds
+SELECT   SUM(TOTAL_SALES_AMT) AS "Sales Dollars"
+FROM     EDW.RTL.STR_TRANS_DTL_AGG_MV AS dlit 
+         INNER JOIN EDW.RTL.STORE_DIM AS sto ON dlit.STORE_NBR = sto.STORE_NBR and sto.FORMAT_TYPE_ID = 1
+         INNER JOIN EDW.MDM.DATE_DIM d on dlit.SALES_DATE_ID = d.DATE_PK
+WHERE    d.FULL_DATE BETWEEN '2018-12-30' AND CURRENT_DATE
+;
+
+
+--18.04 seconds
+--Netezza
+SELECT   SUM(TOTAL_SALES_AMT) AS "Sales Dollars"
+FROM     WH_OWNER.RSAL_DY_LN_ITM_TRN AS dlit 
+         INNER JOIN WH_OWNER.SALES_SITE AS sto ON dlit.SALES_LINE_ID = sto.SALES_SITE_ID and trim(sto.FORMAT_TYPE_ID) = 'SUPERMKT'
+WHERE    dlit.SALES_DT BETWEEN '2018-12-30' AND CURRENT_DATE
+;
+
+
+--pbi
+--in-memory cube
+--2.1 seconds
+
+
+----------------------------------------------------------------------------------------------------------
+SELECT   SUM(TOTAL_SALES_AMT)
+FROM     WH_OWNER.RSAL_DY_LN_ITM_TRN AS t
+WHERE    t.SALES_DT BETWEEN '2018-12-31' AND '2022-04-29'
+--AND      t.STORE_NBR <> 0
+;
+
+
+SELECT   SUM(TOTAL_SALES_AMT)
+FROM     SBX_BIZ.MARKETING.RSAL_DY_LN_ITM_TRN_MV AS t
+WHERE    t.SALES_DT BETWEEN '2018-12-31' AND '2022-04-29'
+;
+
+
+SELECT   SUM(TOTAL_SALES_AMT)
+FROM     EDW.RTL.STR_TRANS_DTL_AGG_MV AS t
+WHERE    SALES_DATE_ID BETWEEN 20181231 AND 20220429
+AND      t.STORE_NBR <> 0
+;

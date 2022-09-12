@@ -14,8 +14,9 @@ SELECT   i.FACILITYID,
          bd.ALLOW_AMT
 FROM     CRMADMIN.T_BICEPS_DEAL bd 
          inner join CRMADMIN.T_WHSE_ITEM i on i.FACILITYID = bd.FACILITYID and i.ITEM_NBR_CD = bd.ITEM_NBR
-WHERE    (bd.DATE_START <= '2022-05-21'
-     AND  bd.DATE_END >= '2022-04-24')
+WHERE    (bd.DATE_START <= '2022-08-13'
+     AND  bd.DATE_END >= '2022-07-17')
 AND      (bd.AMT_OI > 0
      OR  bd.AMT_BBACK > 0)
 ORDER BY i.FACILITYID, i.UPC_CASE
+;

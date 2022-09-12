@@ -1,4 +1,70 @@
+
+
+
+
+
+
+--MOVED TO SNOWSIGHT...............................................
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 --extract sql
+
+create or replace view SBX_IT.PATRICK_KRSNAK.PPA_RPT_OVERLAP_DEALS
+as
 SELECT   paa.DEAL_SOURCE,
          paa.DEAL_TYPE,
          paa.FACILITY_ID,
@@ -15,18 +81,53 @@ SELECT   paa.DEAL_SOURCE,
          paa.EVENT_START,
          paa.EVENT_END,
          paa.EVENT_TYPE_AMT,
-         pal.DEAL_SOURCE,
-         pal.DEAL_TYPE,
-         pal.PRESELL_FLG,
-         pal.DEAL_NBR,
-         pal.ALLOW_DATE_EFF,
-         pal.ALLOW_DATE_EXP,
-         pal.ALLOW_AMT
+         pal.DEAL_SOURCE DEAL_SOURCE_LEGACY,
+         pal.DEAL_TYPE DEAL_TYPE_LEGACY,
+         pal.PRESELL_FLG PRESELL_FLG_LEGACY,
+         pal.DEAL_NBR DEAL_NBR_LEGACY,
+         pal.ALLOW_DATE_EFF ALLOW_DATE_EFF_LEGACY,
+         pal.ALLOW_DATE_EXP ALLOW_DATE_EXP_LEGACY,
+         pal.ALLOW_AMT ALLOW_AMT_LEGACY
 FROM     SBX_IT.PATRICK_KRSNAK.PPA_ALLOWANCES_ACOUSTIC_VW paa 
          inner join SBX_IT.PATRICK_KRSNAK.PPA_ALLOWANCES_LEGACY_VW pal on paa.DEAL_TYPE = pal.DEAL_TYPE and paa.FACILITY_ID = pal.FACILITYID and paa.ITEM_NBR = pal.ITEM_NBR_HS
 WHERE    (pal.ALLOW_DATE_EFF between paa.EVENT_START and paa.EVENT_END
      OR  pal.ALLOW_DATE_EXP between paa.EVENT_START and paa.EVENT_END)
 order by paa.CATEGORY_MANAGER, paa.UPC_CONSUMER, paa.FACILITY_ID
+;
+--union all
+
+create or replace view SBX_IT.PATRICK_KRSNAK.PPA_RPT_LEGACY_CONTRACTS
+as
+SELECT   pal.DEAL_SOURCE,
+         pal.DEAL_TYPE,
+         pal.FACILITYID,
+         pal.CATEGORY_MANAGER,
+         pal.ITEM_NBR_HS,
+         pal.UPC_CASE,
+         pal.UPC_UNIT,
+         pal.ITEM_DESCRIP,
+         pal.STORE_PACK,
+         pal.ITEM_SIZE,
+         pal.ITEM_SIZE_UOM,
+         pal.PRESELL_FLG,
+         pal.DEAL_NBR,
+         pal.ALLOW_DATE_EFF,
+         pal.ALLOW_DATE_EXP,
+         pal.ALLOW_AMT,
+         paa.DEAL_SOURCE DEAL_SOURCE_ACOUSTIC,
+         paa.DEAL_TYPE DEAL_TYPE_ACOUSTIC,
+         paa.PRESELL_FLG PRESELL_FLG_ACOUSTIC,
+         paa.OFFER_NBR OFFER_NBR_ACOUSTIC,
+         paa.EVENT_START EVENT_START_ACOUSTIC,
+         paa.EVENT_END EVENT_END_ACOUSTIC,
+         paa.EVENT_TYPE_AMT EVENT_TYPE_AMT_ACOUSTIC
+FROM     SBX_IT.PATRICK_KRSNAK.PPA_ALLOWANCES_LEGACY_VW pal 
+         inner join SBX_IT.PATRICK_KRSNAK.PPA_ALLOWANCES_ACOUSTIC_VW paa on paa.FACILITY_ID = pal.FACILITYID and paa.ITEM_NBR = pal.ITEM_NBR_HS
+WHERE    pal.DEAL_TYPE = 'VEND_CONTRACT'
+AND      paa.DEAL_TYPE = 'PA'
+AND      (paa.EVENT_START between pal.ALLOW_DATE_EFF and pal.ALLOW_DATE_EXP
+     OR  paa.EVENT_END between pal.ALLOW_DATE_EFF and pal.ALLOW_DATE_EXP)
+ORDER BY pal.CATEGORY_MANAGER, pal.UPC_UNIT, pal.FACILITYID
 ;
 
 

@@ -5700,3 +5700,23 @@ AND      LOYAL.HOUSEHOLD_KEY <> 0
 AND      LOYAL.LOYALTY_CARD_NBR <> 0
 AND      MAN.HOUSEHOLD_KEY IS NULL
 GROUP BY A11.DEPT_KEY, D.SALES_DT, LINE.STORE_NBR
+;
+
+create or replace view SBX_BIZ.MARKETING.V_SEN_DISC_REDEEMER_SALES_DAY_STORE
+as
+SELECT   fd.FISCAL_WEEK_ID,
+         sdrd.SALES_DT,
+         sdrd.STORE_NBR,
+         sdrd.MANAGER,
+         sdrd.POST_REDEEM,
+         sum(sdrd.TRANS_TY) TRANS_TY,
+         sum(sdrd.SALES_TY) SALES_TY,
+         sum(sdrd.SALES_QTY_TY) SALES_QTY_TY,
+         sum(sdrd.PROFIT_TY) PROFIT_TY,
+         sum(sdrd.TRANS_LY) TRANS_LY,
+         sum(sdrd.SALES_LY) SALES_LY,
+         sum(sdrd.SALES_QTY_LY) SALES_QTY_LY,
+         sum(sdrd.PROFIT_LY) PROFIT_LY
+FROM     SBX_BIZ.MARKETING.V_SEN_DISC_REDEEMER_DEPT_SALES_DAY_STORE sdrd inner join SBX_BIZ.MARKETING.FISCAL_DAY fd on fd.SALES_DT = sdrd.SALES_DT
+GROUP BY 1, 2, 3, 4, 5
+;
